@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Boxes } from "lucide-react";
+import { Boxes, Download } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { garantiaStatusMap } from "@/lib/status";
 import type { VwGarantia } from "@/types";
@@ -12,14 +12,16 @@ export function GarantiaCard({ garantia, prazoTotal }: { garantia: VwGarantia; p
   const progresso = Math.min(100, Math.max(0, (garantia.dias_restantes / (garantia.garantia_dias || prazoTotal)) * 100));
 
   return (
-    <Link href={`/ordens-servico/${garantia.os_id}`}>
-      <Card
-        className={
-          garantia.status_garantia === "critica"
-            ? "border-warning/40 bg-warning/5 p-4"
-            : "p-4 hover:border-primary/30"
-        }
-      >
+    <Card
+      className={
+        garantia.status_garantia === "critica"
+          ? "relative border-warning/40 bg-warning/5 p-4"
+          : "relative p-4 hover:border-primary/30"
+      }
+    >
+      <Link href={`/ordens-servico/${garantia.os_id}`} className="absolute inset-0 z-0" aria-label={`Ver OS #${garantia.numero}`} />
+
+      <div className="pointer-events-none relative z-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-lg bg-accent text-primary">
@@ -30,7 +32,19 @@ export function GarantiaCard({ garantia, prazoTotal }: { garantia: VwGarantia; p
               <p className="text-xs text-muted-foreground">{garantia.equipamento_tipo ?? "Equipamento"}</p>
             </div>
           </div>
-          <Badge variant={status.variant}>{status.label}</Badge>
+          <div className="flex items-center gap-1.5">
+            <Badge variant={status.variant}>{status.label}</Badge>
+            <a
+              href={`/api/garantias/${garantia.os_id}/certificado`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Baixar certificado de garantia"
+              className="pointer-events-auto flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
+            >
+              <Download className="size-4" />
+            </a>
+          </div>
         </div>
 
         <div className="mt-3 flex flex-col gap-0.5 text-xs text-muted-foreground">
@@ -60,7 +74,7 @@ export function GarantiaCard({ garantia, prazoTotal }: { garantia: VwGarantia; p
             }
           />
         </div>
-      </Card>
-    </Link>
+      </div>
+    </Card>
   );
 }

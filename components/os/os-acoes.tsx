@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Printer, MessageCircle, CheckCircle2 } from "lucide-react";
+import { Printer, MessageCircle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -73,6 +73,15 @@ export function OsAcoes({
         <MessageCircle className="size-4" />
         Compartilhar no WhatsApp
       </Button>
+
+      {status === "finalizado" && (
+        <Button asChild variant="outline">
+          <a href={`/api/garantias/${osId}/certificado`} target="_blank" rel="noopener noreferrer">
+            <ShieldCheck className="size-4" />
+            Baixar Certificado de Garantia
+          </a>
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
