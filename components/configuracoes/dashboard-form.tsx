@@ -53,6 +53,24 @@ export function DashboardForm({ config }: { config: Configuracao }) {
             <span className="text-sm text-foreground">Lista &quot;O que fazer hoje&quot;</span>
           </label>
 
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cards extras</p>
+          <label className="flex items-center gap-2.5">
+            <Checkbox name="dashboard_mostrar_pdv_hoje" defaultChecked={config.dashboard_mostrar_pdv_hoje} />
+            <span className="text-sm text-foreground">Vendas do PDV hoje</span>
+          </label>
+          <label className="flex items-center gap-2.5">
+            <Checkbox name="dashboard_mostrar_fretes_pendentes" defaultChecked={config.dashboard_mostrar_fretes_pendentes} />
+            <span className="text-sm text-foreground">Fretes pendentes de pagamento</span>
+          </label>
+          <label className="flex items-center gap-2.5">
+            <Checkbox name="dashboard_mostrar_garantias_vencendo" defaultChecked={config.dashboard_mostrar_garantias_vencendo} />
+            <span className="text-sm text-foreground">Garantias vencendo em breve</span>
+          </label>
+          <label className="flex items-center gap-2.5">
+            <Checkbox name="dashboard_mostrar_orcamentos_pendentes" defaultChecked={config.dashboard_mostrar_orcamentos_pendentes} />
+            <span className="text-sm text-foreground">Orçamentos aguardando resposta</span>
+          </label>
+
           <div className="max-w-xs">
             <Label htmlFor="dashboard_os_parada_dias" className="mb-1.5 block">
               Alertar OS parada após quantos dias sem atualização

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { AlertTriangle, ClipboardList, Truck } from "lucide-react";
+import { AlertTriangle, ClipboardList, Truck, FileBarChart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -67,7 +68,17 @@ export default async function FinanceiroPage() {
       <PageHeader
         title="Financeiro"
         description="Gerencie suas contas a pagar e despesas operacionais."
-        actions={<LancarDespesaDialog />}
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/financeiro/relatorio">
+                <FileBarChart className="size-4" />
+                Relatório
+              </Link>
+            </Button>
+            <LancarDespesaDialog />
+          </>
+        }
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">

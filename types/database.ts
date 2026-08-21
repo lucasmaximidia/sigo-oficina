@@ -533,6 +533,10 @@ export interface Database {
           dashboard_mostrar_os_paradas: boolean;
           dashboard_mostrar_tarefas: boolean;
           dashboard_os_parada_dias: number;
+          dashboard_mostrar_pdv_hoje: boolean;
+          dashboard_mostrar_fretes_pendentes: boolean;
+          dashboard_mostrar_garantias_vencendo: boolean;
+          dashboard_mostrar_orcamentos_pendentes: boolean;
           updated_at: string;
         };
         Insert: {
@@ -557,6 +561,10 @@ export interface Database {
           dashboard_mostrar_os_paradas?: boolean;
           dashboard_mostrar_tarefas?: boolean;
           dashboard_os_parada_dias?: number;
+          dashboard_mostrar_pdv_hoje?: boolean;
+          dashboard_mostrar_fretes_pendentes?: boolean;
+          dashboard_mostrar_garantias_vencendo?: boolean;
+          dashboard_mostrar_orcamentos_pendentes?: boolean;
           updated_at?: string;
         };
         Update: {
@@ -581,6 +589,10 @@ export interface Database {
           dashboard_mostrar_os_paradas?: boolean;
           dashboard_mostrar_tarefas?: boolean;
           dashboard_os_parada_dias?: number;
+          dashboard_mostrar_pdv_hoje?: boolean;
+          dashboard_mostrar_fretes_pendentes?: boolean;
+          dashboard_mostrar_garantias_vencendo?: boolean;
+          dashboard_mostrar_orcamentos_pendentes?: boolean;
           updated_at?: string;
         };
         Relationships: [];

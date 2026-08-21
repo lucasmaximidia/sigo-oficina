@@ -563,6 +563,10 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
       dashboard_mostrar_os_paradas: formData.get("dashboard_mostrar_os_paradas") === "on",
       dashboard_mostrar_tarefas: formData.get("dashboard_mostrar_tarefas") === "on",
       dashboard_os_parada_dias: Number(str(formData, "dashboard_os_parada_dias") ?? "3"),
+      dashboard_mostrar_pdv_hoje: formData.get("dashboard_mostrar_pdv_hoje") === "on",
+      dashboard_mostrar_fretes_pendentes: formData.get("dashboard_mostrar_fretes_pendentes") === "on",
+      dashboard_mostrar_garantias_vencendo: formData.get("dashboard_mostrar_garantias_vencendo") === "on",
+      dashboard_mostrar_orcamentos_pendentes: formData.get("dashboard_mostrar_orcamentos_pendentes") === "on",
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);

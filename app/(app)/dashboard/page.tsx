@@ -1,12 +1,24 @@
 import Link from "next/link";
-import { Hourglass, Wrench, PackageCheck, ReceiptText, CalendarDays, AlertTriangle, Circle } from "lucide-react";
+import {
+  Hourglass,
+  Wrench,
+  PackageCheck,
+  ReceiptText,
+  CalendarDays,
+  AlertTriangle,
+  Circle,
+  ShoppingCart,
+  Truck,
+  ShieldAlert,
+  FileText,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { TarefasCard } from "@/components/dashboard/tarefas-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaStatus } from "@/types";
 
@@ -41,19 +53,18 @@ export default async function DashboardPage() {
   const em3dias = new Date(hoje);
   em3dias.setDate(em3dias.getDate() + 3);
 
-  const { data: config } = await supabase
-    .from("configuracoes")
-    .select(
-      "dashboard_mostrar_stats, dashboard_mostrar_agenda, dashboard_mostrar_os_paradas, dashboard_mostrar_tarefas, dashboard_os_parada_dias"
-    )
-    .eq("id", 1)
-    .single();
+  const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
 
   const mostrarStats = config?.dashboard_mostrar_stats ?? true;
   const mostrarAgenda = config?.dashboard_mostrar_agenda ?? true;
   const mostrarOsParadas = config?.dashboard_mostrar_os_paradas ?? true;
   const mostrarTarefas = config?.dashboard_mostrar_tarefas ?? true;
   const paradaDias = config?.dashboard_os_parada_dias ?? 3;
+  const mostrarPdvHoje = config?.dashboard_mostrar_pdv_hoje ?? true;
+  const mostrarFretesPendentes = config?.dashboard_mostrar_fretes_pendentes ?? true;
+  const mostrarGarantiasVencendo = config?.dashboard_mostrar_garantias_vencendo ?? true;
+  const mostrarOrcamentosPendentes = config?.dashboard_mostrar_orcamentos_pendentes ?? true;
+  const mostrarExtras = mostrarPdvHoje || mostrarFretesPendentes || mostrarGarantiasVencendo || mostrarOrcamentosPendentes;
 
   const limiteParada = new Date(hoje);
   limiteParada.setDate(limiteParada.getDate() - paradaDias);
@@ -98,6 +109,23 @@ export default async function DashboardPage() {
       .order("data_hora_inicio", { ascending: true }),
     supabase.from("tarefas").select("*").eq("data", hojeStr).order("created_at", { ascending: true }),
   ]);
+
+  const [{ data: vendasHoje }, { data: fretesPendentes }, { data: garantiasCriticas }, { count: orcamentosPendentes }] =
+    await Promise.all([
+      mostrarPdvHoje
+        ? supabase.from("vendas_pdv").select("total").gte("created_at", `${hojeStr}T00:00:00`).lt("created_at", `${amanhaStr}T00:00:00`)
+        : Promise.resolve({ data: null }),
+      mostrarFretesPendentes ? supabase.from("fretes").select("valor_custo").eq("status", "pendente") : Promise.resolve({ data: null }),
+      mostrarGarantiasVencendo
+        ? supabase.from("vw_garantias").select("os_id").eq("status_garantia", "critica")
+        : Promise.resolve({ data: null }),
+      mostrarOrcamentosPendentes
+        ? supabase.from("orcamentos").select("id", { count: "exact", head: true }).in("status", ["rascunho", "enviado"])
+        : Promise.resolve({ count: null }),
+    ]);
+
+  const totalVendasHoje = (vendasHoje ?? []).reduce((acc, v) => acc + v.total, 0);
+  const totalFretesPendentes = (fretesPendentes ?? []).reduce((acc, f) => acc + f.valor_custo, 0);
 
   const diasParado = (updatedAt: string) => {
     return Math.floor((hoje.getTime() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24));
@@ -185,6 +213,31 @@ export default async function DashboardPage() {
                 ))}
               </CardContent>
             </Card>
+          )}
+        </div>
+      )}
+
+      {mostrarExtras && (
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:mt-6">
+          {mostrarPdvHoje && (
+            <Link href="/pdv">
+              <StatCard icon={ShoppingCart} label="Vendas do PDV hoje" value={formatCurrency(totalVendasHoje)} hint={`${vendasHoje?.length ?? 0} vendas`} />
+            </Link>
+          )}
+          {mostrarFretesPendentes && (
+            <Link href="/financeiro">
+              <StatCard icon={Truck} label="Fretes Pendentes" value={formatCurrency(totalFretesPendentes)} hint={`${fretesPendentes?.length ?? 0} a pagar`} />
+            </Link>
+          )}
+          {mostrarGarantiasVencendo && (
+            <Link href="/garantias">
+              <StatCard icon={ShieldAlert} label="Garantias Vencendo" value={garantiasCriticas?.length ?? 0} hint="Nos próximos 15 dias" />
+            </Link>
+          )}
+          {mostrarOrcamentosPendentes && (
+            <Link href="/orcamentos">
+              <StatCard icon={FileText} label="Orçamentos Pendentes" value={orcamentosPendentes ?? 0} hint="Aguardando resposta" />
+            </Link>
           )}
         </div>
       )}
