@@ -1,7 +1,7 @@
 "use client";
 
 import { ConfirmDeleteButton } from "@/components/financeiro/confirm-delete-button";
-import { deleteContaPagar, deleteDespesa, deleteVendaPdv, estornarPagamentoOS } from "@/lib/actions";
+import { deleteContaPagar, deleteDespesa, deleteVendaPdv, reabrirOrdemServico } from "@/lib/actions";
 
 export function ExcluirContaButton({ id, descricao }: { id: string; descricao: string }) {
   return (
@@ -48,8 +48,8 @@ export function ExcluirEntradaButton({
     <ConfirmDeleteButton
       title="Remover este pagamento?"
       description={`O pagamento registrado na ${origemLabel} será removido e ela volta para "Aguardando pagamento". A OS em si, seus itens e o cliente não são afetados — você pode registrar o pagamento correto depois.`}
-      onConfirm={() => estornarPagamentoOS(id)}
-      successMessage="Pagamento removido"
+      onConfirm={() => reabrirOrdemServico(id)}
+      successMessage="Pagamento removido — a OS foi reaberta"
     />
   );
 }

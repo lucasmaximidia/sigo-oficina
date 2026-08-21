@@ -1,14 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { osStatusSteps } from "@/lib/status";
@@ -32,9 +26,8 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
 
   if (status === "cancelado") {
     return (
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+      <div className="flex items-center justify-center rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <p className="text-sm font-semibold text-destructive">Esta ordem de serviço foi cancelada.</p>
-        <StatusMenu status={status} isPending={isPending} onChange={handleChange} />
       </div>
     );
   }
@@ -50,10 +43,9 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-1 items-center overflow-x-auto">
-          {osStatusSteps.map((step, index) => {
+    <div className="flex flex-col items-center gap-5">
+      <div className="flex w-full items-center overflow-x-auto">
+        {osStatusSteps.map((step, index) => {
           const done = index < currentIndex;
           const active = index === currentIndex;
           return (
@@ -88,57 +80,31 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
               )}
             </div>
           );
-          })}
-        </div>
-        <StatusMenu status={status} isPending={isPending} onChange={handleChange} />
+        })}
       </div>
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="outline" size="sm" disabled={isPending || currentIndex <= 0} onClick={handleVoltar}>
-          <ChevronLeft className="size-4" />
-          Voltar Etapa
-        </Button>
+      <div className="flex items-center gap-3">
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="lg"
+          className="rounded-full px-5"
+          disabled={isPending || currentIndex <= 0}
+          onClick={handleVoltar}
+        >
+          <ChevronLeft className="size-4" />
+          Voltar
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          className="rounded-full px-5"
           disabled={isPending || currentIndex < 0 || currentIndex >= osStatusSteps.length - 1}
           onClick={handleAvancar}
         >
-          Avançar Etapa
+          Avançar
           <ChevronRight className="size-4" />
         </Button>
       </div>
     </div>
-  );
-}
-
-function StatusMenu({
-  status,
-  isPending,
-  onChange,
-}: {
-  status: OsStatus;
-  isPending: boolean;
-  onChange: (status: OsStatus) => void;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isPending} className="shrink-0">
-          Alterar Status
-          <ChevronDown className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {osStatusSteps.map((step) => (
-          <DropdownMenuItem key={step.value} onSelect={() => onChange(step.value)} disabled={step.value === status}>
-            {step.label}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem onSelect={() => onChange("cancelado")} variant="destructive">
-          Cancelar OS
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
