@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Printer, MessageCircle, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Printer, MessageCircle, CheckCircle2, ShieldCheck, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,6 +72,13 @@ export function OsAcoes({
       <Button type="button" variant="secondary" onClick={handleWhatsapp}>
         <MessageCircle className="size-4" />
         Compartilhar no WhatsApp
+      </Button>
+
+      <Button asChild variant="outline">
+        <a href={`/api/ordens-servico/${osId}/etiqueta`} target="_blank" rel="noopener noreferrer">
+          <Tag className="size-4" />
+          Baixar Etiqueta (PNG)
+        </a>
       </Button>
 
       {status === "finalizado" && (

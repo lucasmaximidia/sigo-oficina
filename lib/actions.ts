@@ -496,6 +496,17 @@ export async function updateConfiguracoesGarantia(formData: FormData) {
   revalidatePath("/garantias/configuracoes");
 }
 
+export async function updateConfiguracoesEtiqueta(formData: FormData) {
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      etiqueta_subtitulo: str(formData, "etiqueta_subtitulo") ?? "Assistência técnica especializada",
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
 // ---------- Orçamentos ----------
 export async function createOrcamento(formData: FormData) {
   let clienteId = str(formData, "cliente_id");

@@ -526,6 +526,7 @@ export interface Database {
           garantia_logo_certificado_url: string | null;
           garantia_assinatura_digital: boolean;
           garantia_qrcode: boolean;
+          etiqueta_subtitulo: string;
           updated_at: string;
         };
         Insert: {
@@ -544,6 +545,7 @@ export interface Database {
           garantia_logo_certificado_url?: string | null;
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
+          etiqueta_subtitulo?: string;
           updated_at?: string;
         };
         Update: {
@@ -562,6 +564,7 @@ export interface Database {
           garantia_logo_certificado_url?: string | null;
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
+          etiqueta_subtitulo?: string;
           updated_at?: string;
         };
         Relationships: [];

@@ -21,6 +21,17 @@ export function formatDate(value: string | Date) {
   }).format(date);
 }
 
+const COMBINING_DIACRITICS = new RegExp("[\\u0300-\\u036f]", "g");
+
+export function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(COMBINING_DIACRITICS, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function formatDateTime(value: string | Date) {
   const date = typeof value === "string" ? new Date(value) : value;
   return new Intl.DateTimeFormat("pt-BR", {
