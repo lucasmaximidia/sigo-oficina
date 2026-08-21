@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
@@ -64,6 +64,16 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
       <Card className="mb-5 p-4 md:p-5">
         <OsStepIndicator osId={os.id} status={os.status as OsStatus} />
       </Card>
+
+      {os.status !== "finalizado" && os.status !== "cancelado" && os.data_finalizacao && (
+        <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <RotateCcw className="size-4.5 shrink-0 text-warning" />
+          <p className="text-sm text-warning">
+            Esta OS foi reaberta — o pagamento anterior foi removido. Finalize novamente quando o pagamento for
+            confirmado.
+          </p>
+        </div>
+      )}
 
       <div className="mb-5">
         <OsParadaToggle osId={os.id} parada={os.parada} motivo={os.parada_motivo} />
@@ -157,7 +167,13 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
 
           {os.origem === "frete" && (
             <Card>
-              <CardContent className="pt-5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="size-4.5 text-primary" />
+                  Custo do Frete
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
               </CardContent>
             </Card>

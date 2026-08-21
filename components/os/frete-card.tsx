@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Truck, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
@@ -62,11 +62,7 @@ export function FreteCard({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Truck className="size-4 text-primary" />
-          Custo do frete
-        </p>
+      <div className="flex items-center justify-end">
         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
       </div>
       <p className="text-xs text-muted-foreground">

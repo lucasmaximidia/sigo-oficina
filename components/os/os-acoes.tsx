@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Printer, MessageCircle, CheckCircle2, ShieldCheck, Tag, Trash2 } from "lucide-react";
+import { Printer, MessageCircle, CheckCircle2, ShieldCheck, Tag, Trash2, Ban, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { formatCurrency } from "@/lib/utils";
-import { setOrdemServicoPagamento, updateOrdemServicoStatus, deleteOrdemServico } from "@/lib/actions";
+import {
+  setOrdemServicoPagamento,
+  updateOrdemServicoStatus,
+  deleteOrdemServico,
+  reabrirOrdemServico,
+} from "@/lib/actions";
 import type { FormaPagamento, OsStatus, TipoCartao } from "@/types";
 
 function hoje() {
@@ -43,6 +48,7 @@ export function OsAcoes({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmarExcluir, setConfirmarExcluir] = useState(false);
+  const [confirmarCancelar, setConfirmarCancelar] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
   const [dataPagamento, setDataPagamento] = useState(hoje());
   const [tipoCartao, setTipoCartao] = useState<TipoCartao>("debito");
@@ -50,6 +56,8 @@ export function OsAcoes({
   const [valorRecebidoLiquido, setValorRecebidoLiquido] = useState(total);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [isCancelando, startCancelar] = useTransition();
+  const [isReabrindo, startReabrir] = useTransition();
 
   function handlePrint() {
     window.print();
@@ -91,6 +99,29 @@ export function OsAcoes({
         router.push("/ordens-servico");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao excluir OS");
+      }
+    });
+  }
+
+  function handleCancelar() {
+    startCancelar(async () => {
+      try {
+        await updateOrdemServicoStatus(osId, "cancelado");
+        toast.success("Ordem de serviço cancelada");
+        setConfirmarCancelar(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao cancelar OS");
+      }
+    });
+  }
+
+  function handleReabrir() {
+    startReabrir(async () => {
+      try {
+        await reabrirOrdemServico(osId);
+        toast.success("Ordem de serviço reaberta");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao reabrir OS");
       }
     });
   }
@@ -207,6 +238,38 @@ export function OsAcoes({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {(status === "finalizado" || status === "cancelado") && (
+        <Button type="button" variant="outline" onClick={handleReabrir} disabled={isReabrindo}>
+          <RotateCcw className="size-4" />
+          {isReabrindo ? "Reabrindo..." : "Reabrir OS"}
+        </Button>
+      )}
+
+      {status !== "cancelado" && (
+        <Dialog open={confirmarCancelar} onOpenChange={setConfirmarCancelar}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline">
+              <Ban className="size-4" />
+              Cancelar OS
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancelar ordem de serviço?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              A OS #OS-{String(numero).padStart(4, "0")} fica marcada como cancelada, mas continua no histórico — nada é
+              apagado. Você pode reabri-la depois se precisar.
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="destructive" onClick={handleCancelar} disabled={isCancelando}>
+                {isCancelando ? "Cancelando..." : "Sim, cancelar OS"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={confirmarExcluir} onOpenChange={setConfirmarExcluir}>
         <DialogTrigger asChild>
