@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,11 +75,10 @@ export function DashboardForm({ config }: { config: Configuracao }) {
             <Label htmlFor="dashboard_os_parada_dias" className="mb-1.5 block">
               Alertar OS parada após quantos dias sem atualização
             </Label>
-            <Input
+            <NumericInput
               id="dashboard_os_parada_dias"
               name="dashboard_os_parada_dias"
-              type="number"
-              min={1}
+              decimal={false}
               defaultValue={config.dashboard_os_parada_dias}
             />
             <p className="mt-1.5 text-xs text-muted-foreground">

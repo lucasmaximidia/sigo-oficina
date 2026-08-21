@@ -8,6 +8,7 @@ import type {
   OsUrgencia,
   OsOrigem,
   FormaPagamento,
+  TipoCartao,
   ItemOrigem,
   AgendaTipo,
   AgendaStatus,
@@ -25,10 +26,16 @@ function num(fd: FormData, key: string) {
   const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : NaN;
   return Number.isFinite(n) ? n : 0;
 }
+// Campos de texto livre digitados pelo usuário são sempre salvos em maiúsculo,
+// independente de como foram digitados (padroniza cadastros e relatórios).
+function strUp(fd: FormData, key: string) {
+  const v = str(fd, key);
+  return v ? v.toUpperCase() : v;
+}
 
 // ---------- Clientes ----------
 export async function createCliente(formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { data, error } = await supabase
     .from("clientes")
@@ -37,10 +44,10 @@ export async function createCliente(formData: FormData) {
       telefone: str(formData, "telefone"),
       email: str(formData, "email"),
       cpf_cnpj: str(formData, "cpf_cnpj"),
-      endereco: str(formData, "endereco"),
-      bairro: str(formData, "bairro"),
-      cidade: str(formData, "cidade"),
-      estado: str(formData, "estado"),
+      endereco: strUp(formData, "endereco"),
+      bairro: strUp(formData, "bairro"),
+      cidade: strUp(formData, "cidade"),
+      estado: strUp(formData, "estado"),
     })
     .select("id")
     .single();
@@ -51,7 +58,7 @@ export async function createCliente(formData: FormData) {
 }
 
 export async function updateCliente(id: string, formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase
     .from("clientes")
@@ -60,10 +67,10 @@ export async function updateCliente(id: string, formData: FormData) {
       telefone: str(formData, "telefone"),
       email: str(formData, "email"),
       cpf_cnpj: str(formData, "cpf_cnpj"),
-      endereco: str(formData, "endereco"),
-      bairro: str(formData, "bairro"),
-      cidade: str(formData, "cidade"),
-      estado: str(formData, "estado"),
+      endereco: strUp(formData, "endereco"),
+      bairro: strUp(formData, "bairro"),
+      cidade: strUp(formData, "cidade"),
+      estado: strUp(formData, "estado"),
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -71,14 +78,14 @@ export async function updateCliente(id: string, formData: FormData) {
 }
 
 export async function createEquipamento(clienteId: string, formData: FormData) {
-  const tipo = str(formData, "tipo");
+  const tipo = strUp(formData, "tipo");
   if (!tipo) throw new Error("Tipo é obrigatório");
   const { error } = await supabase.from("equipamentos").insert({
     cliente_id: clienteId,
     tipo,
-    marca: str(formData, "marca"),
-    modelo: str(formData, "modelo"),
-    numero_serie: str(formData, "numero_serie"),
+    marca: strUp(formData, "marca"),
+    modelo: strUp(formData, "modelo"),
+    numero_serie: strUp(formData, "numero_serie"),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/clientes");
@@ -89,7 +96,7 @@ export async function createOrdemServico(formData: FormData) {
   let clienteId = str(formData, "cliente_id");
 
   if (!clienteId) {
-    const nome = str(formData, "cliente_nome");
+    const nome = strUp(formData, "cliente_nome");
     if (!nome) throw new Error("Informe o cliente");
     const { data: novoCliente, error: clienteError } = await supabase
       .from("clientes")
@@ -101,16 +108,16 @@ export async function createOrdemServico(formData: FormData) {
   }
 
   let equipamentoId: string | null = null;
-  const tipoEquipamento = str(formData, "equipamento_tipo");
+  const tipoEquipamento = strUp(formData, "equipamento_tipo");
   if (tipoEquipamento) {
     const { data: equipamento, error: equipamentoError } = await supabase
       .from("equipamentos")
       .insert({
         cliente_id: clienteId,
         tipo: tipoEquipamento,
-        marca: str(formData, "equipamento_marca"),
-        modelo: str(formData, "equipamento_modelo"),
-        numero_serie: str(formData, "equipamento_serie"),
+        marca: strUp(formData, "equipamento_marca"),
+        modelo: strUp(formData, "equipamento_modelo"),
+        numero_serie: strUp(formData, "equipamento_serie"),
       })
       .select("id")
       .single();
@@ -128,7 +135,7 @@ export async function createOrdemServico(formData: FormData) {
     .insert({
       cliente_id: clienteId,
       equipamento_id: equipamentoId,
-      problema_relatado: str(formData, "problema_relatado"),
+      problema_relatado: strUp(formData, "problema_relatado"),
       urgencia: (str(formData, "urgencia") as OsUrgencia) ?? "media",
       origem: (str(formData, "origem") as OsOrigem) ?? "balcao",
       status: "aguardando_orcamento",
@@ -178,17 +185,50 @@ export async function setOrdemServicoParada(id: string, parada: boolean, motivo?
   revalidatePath("/dashboard");
 }
 
-export async function setOrdemServicoPagamento(id: string, formaPagamento: FormaPagamento) {
+export async function deleteOrdemServico(id: string) {
+  const { error } = await supabase.from("ordens_servico").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
+  revalidatePath("/financeiro");
+  revalidatePath("/garantias");
+}
+
+export async function setOrdemServicoPagamento(
+  id: string,
+  input: {
+    formaPagamento: FormaPagamento;
+    dataPagamento: string;
+    tipoCartao?: TipoCartao | null;
+    valorPagoBruto?: number | null;
+    valorRecebidoLiquido?: number | null;
+  }
+) {
+  const isCartao = input.formaPagamento === "cartao";
   const { error } = await supabase
     .from("ordens_servico")
-    .update({ forma_pagamento: formaPagamento })
+    .update({
+      forma_pagamento: input.formaPagamento,
+      data_pagamento: input.dataPagamento,
+      tipo_cartao: isCartao ? input.tipoCartao ?? null : null,
+      valor_pago_bruto: isCartao ? input.valorPagoBruto ?? null : null,
+      valor_recebido_liquido: isCartao ? input.valorRecebidoLiquido ?? null : null,
+    })
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/financeiro");
+}
+
+export async function setOrdemServicoRetirada(id: string, dataRetirada: string) {
+  const { error } = await supabase.from("ordens_servico").update({ data_retirada: dataRetirada }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/garantias");
 }
 
 export async function addOsItem(osId: string, formData: FormData) {
-  const descricao = str(formData, "descricao");
+  const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const pecaId = str(formData, "peca_id");
 
@@ -228,7 +268,7 @@ export async function removeOsItem(itemId: string, osId: string) {
 
 // ---------- Fretes ----------
 export async function createPrestadorFrete(formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { data, error } = await supabase
     .from("prestadores_frete")
@@ -268,12 +308,12 @@ export async function marcarFretePago(freteId: string, osId: string) {
 
 // ---------- Estoque ----------
 export async function createPeca(formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase.from("pecas").insert({
     nome,
-    codigo: str(formData, "codigo"),
-    categoria: str(formData, "categoria"),
+    codigo: strUp(formData, "codigo"),
+    categoria: strUp(formData, "categoria"),
     quantidade: Number(str(formData, "quantidade") ?? "0"),
     quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
     preco_custo: num(formData, "preco_custo"),
@@ -285,14 +325,14 @@ export async function createPeca(formData: FormData) {
 }
 
 export async function updatePeca(id: string, formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase
     .from("pecas")
     .update({
       nome,
-      codigo: str(formData, "codigo"),
-      categoria: str(formData, "categoria"),
+      codigo: strUp(formData, "codigo"),
+      categoria: strUp(formData, "categoria"),
       quantidade: Number(str(formData, "quantidade") ?? "0"),
       quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
       preco_custo: num(formData, "preco_custo"),
@@ -305,13 +345,13 @@ export async function updatePeca(id: string, formData: FormData) {
 }
 
 export async function createLojaParceira(formData: FormData) {
-  const nome = str(formData, "nome");
+  const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase.from("lojas_parceiras").insert({
     nome,
-    especialidade: str(formData, "especialidade"),
+    especialidade: strUp(formData, "especialidade"),
     telefone: str(formData, "telefone"),
-    tempo_entrega: str(formData, "tempo_entrega"),
+    tempo_entrega: strUp(formData, "tempo_entrega"),
     desconto_percentual: num(formData, "desconto_percentual"),
   });
   if (error) throw new Error(error.message);
@@ -352,7 +392,7 @@ export async function finalizarVendaPdv(input: {
     .from("vendas_pdv")
     .insert({
       cliente_id: input.clienteId,
-      cliente_nome_avulso: input.clienteNomeAvulso,
+      cliente_nome_avulso: input.clienteNomeAvulso ? input.clienteNomeAvulso.toUpperCase() : input.clienteNomeAvulso,
       forma_pagamento: input.pagamentos[0].forma_pagamento,
       subtotal,
       desconto: input.desconto,
@@ -404,14 +444,14 @@ export async function finalizarVendaPdv(input: {
 
 // ---------- Financeiro ----------
 export async function createContaPagar(formData: FormData) {
-  const descricao = str(formData, "descricao");
+  const descricao = strUp(formData, "descricao");
   const vencimento = str(formData, "vencimento");
   if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
   const { error } = await supabase.from("financeiro_contas").insert({
     descricao,
-    categoria: str(formData, "categoria"),
-    fornecedor: str(formData, "fornecedor"),
-    numero_documento: str(formData, "numero_documento"),
+    categoria: strUp(formData, "categoria"),
+    fornecedor: strUp(formData, "fornecedor"),
+    numero_documento: strUp(formData, "numero_documento"),
     valor: num(formData, "valor"),
     vencimento,
   });
@@ -431,11 +471,11 @@ export async function marcarContaPaga(id: string) {
 }
 
 export async function createDespesa(formData: FormData) {
-  const descricao = str(formData, "descricao");
+  const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const { error } = await supabase.from("financeiro_despesas").insert({
     descricao,
-    categoria: str(formData, "categoria"),
+    categoria: strUp(formData, "categoria"),
     valor: num(formData, "valor"),
     data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
   });
@@ -445,7 +485,7 @@ export async function createDespesa(formData: FormData) {
 
 // ---------- Agenda ----------
 export async function createAgendaEvento(formData: FormData) {
-  const titulo = str(formData, "titulo");
+  const titulo = strUp(formData, "titulo");
   const data = str(formData, "data");
   const hora = str(formData, "hora") ?? "09:00";
   if (!titulo || !data) throw new Error("Título e data são obrigatórios");
@@ -453,10 +493,10 @@ export async function createAgendaEvento(formData: FormData) {
     titulo,
     tipo: (str(formData, "tipo") as AgendaTipo) ?? "oficina",
     cliente_id: str(formData, "cliente_id"),
-    endereco: str(formData, "endereco"),
+    endereco: strUp(formData, "endereco"),
     data_hora_inicio: new Date(`${data}T${hora}`).toISOString(),
-    tecnico: str(formData, "tecnico"),
-    observacoes: str(formData, "observacoes"),
+    tecnico: strUp(formData, "tecnico"),
+    observacoes: strUp(formData, "observacoes"),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/agenda");
@@ -472,7 +512,7 @@ export async function updateAgendaStatus(id: string, status: AgendaStatus) {
 
 // ---------- Tarefas ----------
 export async function createTarefa(formData: FormData) {
-  const titulo = str(formData, "titulo");
+  const titulo = strUp(formData, "titulo");
   if (!titulo) throw new Error("Título é obrigatório");
   const { error } = await supabase.from("tarefas").insert({ titulo });
   if (error) throw new Error(error.message);
@@ -581,7 +621,7 @@ export async function createOrcamento(formData: FormData) {
   let clienteId = str(formData, "cliente_id");
 
   if (!clienteId) {
-    const nome = str(formData, "cliente_nome");
+    const nome = strUp(formData, "cliente_nome");
     if (!nome) throw new Error("Informe o cliente");
     const { data: novoCliente, error: clienteError } = await supabase
       .from("clientes")
@@ -600,7 +640,7 @@ export async function createOrcamento(formData: FormData) {
     .from("orcamentos")
     .insert({
       cliente_id: clienteId,
-      descricao: str(formData, "descricao"),
+      descricao: strUp(formData, "descricao"),
       data_validade: dataValidade.toISOString().slice(0, 10),
     })
     .select("id")
@@ -615,8 +655,8 @@ export async function updateOrcamentoDetalhes(id: string, formData: FormData) {
   const { error } = await supabase
     .from("orcamentos")
     .update({
-      descricao: str(formData, "descricao"),
-      observacoes: str(formData, "observacoes"),
+      descricao: strUp(formData, "descricao"),
+      observacoes: strUp(formData, "observacoes"),
       desconto: num(formData, "desconto"),
       data_validade: str(formData, "data_validade") ?? undefined,
     })
@@ -633,7 +673,7 @@ export async function updateOrcamentoStatus(id: string, status: OrcamentoStatus)
 }
 
 export async function addOrcamentoItem(orcamentoId: string, formData: FormData) {
-  const descricao = str(formData, "descricao");
+  const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const { error } = await supabase.from("orcamento_itens").insert({
     orcamento_id: orcamentoId,

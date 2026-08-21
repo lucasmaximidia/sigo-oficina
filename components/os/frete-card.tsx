@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Truck, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -102,14 +102,11 @@ export function FreteCard({
         <Label htmlFor="valor_custo_frete" className="mb-1.5 block">
           Valor pago ao prestador (R$)
         </Label>
-        <Input
+        <NumericInput
           id="valor_custo_frete"
-          type="number"
-          step="0.01"
-          min={0}
-          value={valorCusto}
+          defaultValue={frete?.valor_custo ?? 0}
           disabled={status === "pago"}
-          onChange={(e) => setValorCusto(Number(e.target.value) || 0)}
+          onValueChange={setValorCusto}
         />
       </div>
 

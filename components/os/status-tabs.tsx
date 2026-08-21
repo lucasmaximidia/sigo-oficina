@@ -5,8 +5,8 @@ import type { OsStatus } from "@/types";
 const tabs: { value: OsStatus | "todos"; label: string }[] = [
   { value: "todos", label: "Todos" },
   { value: "aguardando_orcamento", label: "Aguardando orçamento" },
-  { value: "em_execucao", label: "Em execução" },
   { value: "aguardando_pecas", label: "Aguardando peças" },
+  { value: "em_execucao", label: "Em execução" },
   { value: "aguardando_pagamento", label: "Aguardando pagamento" },
   { value: "finalizado", label: "Finalizado" },
 ];

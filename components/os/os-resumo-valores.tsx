@@ -3,11 +3,14 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { updateOrdemServicoValores } from "@/lib/actions";
 import type { OrdemServico } from "@/types";
+
+const tipoCartaoLabel: Record<string, string> = { debito: "Débito", credito: "Crédito" };
 
 export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPecas: number }) {
   const [maoObra, setMaoObra] = useState(os.valor_mao_obra);
@@ -34,43 +37,19 @@ export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPec
         <Label htmlFor="valor_mao_obra" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Mão de Obra (R$)
         </Label>
-        <Input
-          id="valor_mao_obra"
-          name="valor_mao_obra"
-          type="number"
-          step="0.01"
-          min={0}
-          value={maoObra}
-          onChange={(e) => setMaoObra(Number(e.target.value) || 0)}
-        />
+        <NumericInput id="valor_mao_obra" name="valor_mao_obra" defaultValue={os.valor_mao_obra} onValueChange={setMaoObra} />
       </div>
       <div>
         <Label htmlFor="valor_frete" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Frete / Deslocamento (R$)
         </Label>
-        <Input
-          id="valor_frete"
-          name="valor_frete"
-          type="number"
-          step="0.01"
-          min={0}
-          value={frete}
-          onChange={(e) => setFrete(Number(e.target.value) || 0)}
-        />
+        <NumericInput id="valor_frete" name="valor_frete" defaultValue={os.valor_frete} onValueChange={setFrete} />
       </div>
       <div>
         <Label htmlFor="desconto" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Desconto (R$)
         </Label>
-        <Input
-          id="desconto"
-          name="desconto"
-          type="number"
-          step="0.01"
-          min={0}
-          value={desconto}
-          onChange={(e) => setDesconto(Number(e.target.value) || 0)}
-        />
+        <NumericInput id="desconto" name="desconto" defaultValue={os.desconto} onValueChange={setDesconto} />
       </div>
 
       <input type="hidden" name="diagnostico" value={os.diagnostico ?? ""} />
@@ -102,6 +81,39 @@ export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPec
       <Button type="submit" disabled={isPending} className="mt-1">
         {isPending ? "Salvando..." : "Salvar Alterações"}
       </Button>
+
+      {os.forma_pagamento && (
+        <div className="flex flex-col gap-1 border-t border-border pt-3 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span>Forma de pagamento</span>
+            <span className="font-medium text-foreground">{formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento}</span>
+          </div>
+          {os.data_pagamento && (
+            <div className="flex items-center justify-between">
+              <span>Data do pagamento</span>
+              <span className="font-medium text-foreground">{formatDate(os.data_pagamento)}</span>
+            </div>
+          )}
+          {os.forma_pagamento === "cartao" && os.tipo_cartao && (
+            <div className="flex items-center justify-between">
+              <span>Tipo de cartão</span>
+              <span className="font-medium text-foreground">{tipoCartaoLabel[os.tipo_cartao] ?? os.tipo_cartao}</span>
+            </div>
+          )}
+          {os.forma_pagamento === "cartao" && os.valor_pago_bruto != null && (
+            <div className="flex items-center justify-between">
+              <span>Valor passado</span>
+              <span className="font-medium text-foreground">{formatCurrency(os.valor_pago_bruto)}</span>
+            </div>
+          )}
+          {os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null && (
+            <div className="flex items-center justify-between">
+              <span>Valor que entrou no caixa</span>
+              <span className="font-medium text-success">{formatCurrency(os.valor_recebido_liquido)}</span>
+            </div>
+          )}
+        </div>
+      )}
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -49,20 +50,26 @@ export function LancarDespesaDialog() {
             <Label htmlFor="descricao" className="mb-1.5 block">
               Descrição
             </Label>
-            <Input id="descricao" name="descricao" required placeholder="Ex: Combustível, materiais de limpeza..." />
+            <Input
+              id="descricao"
+              name="descricao"
+              required
+              placeholder="Ex: Combustível, materiais de limpeza..."
+              className="uppercase"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="categoria" className="mb-1.5 block">
                 Categoria
               </Label>
-              <Input id="categoria" name="categoria" placeholder="Ex: Transporte" />
+              <Input id="categoria" name="categoria" placeholder="Ex: Transporte" className="uppercase" />
             </div>
             <div>
               <Label htmlFor="valor" className="mb-1.5 block">
                 Valor (R$)
               </Label>
-              <Input id="valor" name="valor" type="number" step="0.01" min={0} required />
+              <NumericInput id="valor" name="valor" required />
             </div>
           </div>
           <div>

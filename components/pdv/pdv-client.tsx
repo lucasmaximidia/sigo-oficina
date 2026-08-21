@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
@@ -38,6 +39,7 @@ export function PdvClient({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [pagamentos, setPagamentos] = useState<PagamentoSelecionado[]>([{ forma_pagamento: "dinheiro", valor: 0 }]);
   const [desconto, setDesconto] = useState(0);
+  const [saleKey, setSaleKey] = useState(0);
   const [clienteNome, setClienteNome] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -155,6 +157,7 @@ export function PdvClient({
         toast.success("Venda finalizada com sucesso!");
         setCart([]);
         setDesconto(0);
+        setSaleKey((k) => k + 1);
         setClienteNome("");
         setPagamentos([{ forma_pagamento: "dinheiro", valor: 0 }]);
       } catch (error) {
@@ -237,11 +240,10 @@ export function PdvClient({
                     )}
                   </p>
                 </div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={item.valor_unitario}
-                  onChange={(e) => updateValor(item.key, Number(e.target.value) || 0)}
+                <NumericInput
+                  key={item.key}
+                  defaultValue={item.valor_unitario}
+                  onValueChange={(v) => updateValor(item.key, v)}
                   className="h-9 w-24 text-right"
                 />
                 <p className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
@@ -296,12 +298,10 @@ export function PdvClient({
                     return (
                       <div key={p.forma_pagamento} className="flex items-center gap-2">
                         <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">{info.label}</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min={0}
-                          value={p.valor}
-                          onChange={(e) => updatePagamentoValor(p.forma_pagamento, Number(e.target.value) || 0)}
+                        <NumericInput
+                          key={p.forma_pagamento}
+                          defaultValue={p.valor}
+                          onValueChange={(v) => updatePagamentoValor(p.forma_pagamento, v)}
                           className="h-9"
                         />
                       </div>
@@ -326,7 +326,7 @@ export function PdvClient({
 
             <div>
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Desconto (R$)</p>
-              <Input type="number" step="0.01" min={0} value={desconto} onChange={(e) => setDesconto(Number(e.target.value) || 0)} />
+              <NumericInput key={saleKey} defaultValue={desconto} onValueChange={setDesconto} />
             </div>
 
             <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -346,6 +346,7 @@ export function PdvClient({
               placeholder="Nome do Cliente (Opcional)"
               value={clienteNome}
               onChange={(e) => setClienteNome(e.target.value)}
+              className="uppercase"
             />
 
             <Button size="lg" onClick={finalizar} disabled={isPending || !pagamentosBatem || cart.length === 0}>

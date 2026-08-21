@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Package, Store, Zap } from "lucide-react";
+import { Plus, Trash2, Package, Store, Zap, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Dialog,
   DialogContent,
@@ -30,10 +31,17 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
   const [open, setOpen] = useState(false);
   const [origem, setOrigem] = useState<ItemOrigem>("estoque");
   const [pecaId, setPecaId] = useState<string>("");
+  const [pecaQuery, setPecaQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const pecaSelecionada = useMemo(() => pecas.find((p) => p.id === pecaId), [pecas, pecaId]);
   const total = itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+
+  const pecaResultados = useMemo(() => {
+    if (pecaSelecionada || !pecaQuery.trim()) return [];
+    const q = pecaQuery.trim().toLowerCase();
+    return pecas.filter((p) => p.nome.toLowerCase().includes(q) || p.codigo?.toLowerCase().includes(q)).slice(0, 8);
+  }, [pecas, pecaQuery, pecaSelecionada]);
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -42,6 +50,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
         toast.success("Item adicionado");
         setOpen(false);
         setPecaId("");
+        setPecaQuery("");
         setOrigem("estoque");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao adicionar item");
@@ -77,7 +86,15 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
             <form action={handleSubmit} className="flex flex-col gap-4">
               <div>
                 <Label className="mb-1.5 block">Origem</Label>
-                <Select name="origem" value={origem} onValueChange={(v) => setOrigem(v as ItemOrigem)}>
+                <Select
+                  name="origem"
+                  value={origem}
+                  onValueChange={(v) => {
+                    setOrigem(v as ItemOrigem);
+                    setPecaId("");
+                    setPecaQuery("");
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -92,23 +109,55 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
               {origem === "estoque" && (
                 <div>
                   <Label className="mb-1.5 block">Peça do estoque</Label>
-                  <Select
-                    value={pecaId}
-                    onValueChange={(v) => {
-                      setPecaId(v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma peça..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {pecas.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome} ({p.quantidade} em estoque)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {pecaSelecionada ? (
+                    <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/30 bg-accent/40 p-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">{pecaSelecionada.nome}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {pecaSelecionada.quantidade} em estoque · {formatCurrency(pecaSelecionada.preco_venda)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPecaId("");
+                          setPecaQuery("");
+                        }}
+                        className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-white"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        className="pl-9"
+                        placeholder="Buscar peça por nome ou código..."
+                        value={pecaQuery}
+                        onChange={(e) => setPecaQuery(e.target.value)}
+                        autoComplete="off"
+                      />
+                      {pecaResultados.length > 0 && (
+                        <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+                          {pecaResultados.map((p) => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setPecaId(p.id);
+                                setPecaQuery(p.nome);
+                              }}
+                              className="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm hover:bg-secondary"
+                            >
+                              <span className="font-medium text-foreground">{p.nome}</span>
+                              <span className="text-xs text-muted-foreground">{p.quantidade} em estoque</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <input type="hidden" name="peca_id" value={pecaId} />
                 </div>
               )}
@@ -118,11 +167,13 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                   Descrição
                 </Label>
                 <Input
+                  key={`descricao-${pecaId}`}
                   id="descricao"
                   name="descricao"
                   required
                   defaultValue={pecaSelecionada?.nome ?? ""}
                   placeholder="Ex: Mão de obra avulsa, correia, mangueira..."
+                  className="uppercase"
                 />
               </div>
 
@@ -131,18 +182,16 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                   <Label htmlFor="quantidade" className="mb-1.5 block">
                     Quantidade
                   </Label>
-                  <Input id="quantidade" name="quantidade" type="number" min={1} defaultValue={1} />
+                  <NumericInput id="quantidade" name="quantidade" decimal={false} defaultValue={1} />
                 </div>
                 <div>
                   <Label htmlFor="valor_unitario" className="mb-1.5 block">
                     Valor unitário (R$)
                   </Label>
-                  <Input
+                  <NumericInput
+                    key={`valor-${pecaId}`}
                     id="valor_unitario"
                     name="valor_unitario"
-                    type="number"
-                    step="0.01"
-                    min={0}
                     defaultValue={pecaSelecionada?.preco_venda ?? 0}
                   />
                 </div>

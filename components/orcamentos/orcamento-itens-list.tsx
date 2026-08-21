@@ -6,6 +6,7 @@ import { Plus, Trash2, Package, Hammer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Dialog,
   DialogContent,
@@ -121,11 +122,13 @@ export function OrcamentoItensList({
                     Descrição
                   </Label>
                   <Input
+                    key={`descricao-${pecaId}`}
                     id="descricao"
                     name="descricao"
                     required
                     defaultValue={pecaSelecionada?.nome ?? ""}
                     placeholder={tipo === "peca" ? "Ex: Correia de transmissão" : "Ex: Mão de obra - diagnóstico e reparo"}
+                    className="uppercase"
                   />
                 </div>
 
@@ -134,18 +137,16 @@ export function OrcamentoItensList({
                     <Label htmlFor="quantidade" className="mb-1.5 block">
                       Quantidade
                     </Label>
-                    <Input id="quantidade" name="quantidade" type="number" min={1} defaultValue={1} />
+                    <NumericInput id="quantidade" name="quantidade" decimal={false} defaultValue={1} />
                   </div>
                   <div>
                     <Label htmlFor="valor_unitario" className="mb-1.5 block">
                       Valor unitário (R$)
                     </Label>
-                    <Input
+                    <NumericInput
+                      key={`valor-${pecaId}`}
                       id="valor_unitario"
                       name="valor_unitario"
-                      type="number"
-                      step="0.01"
-                      min={0}
                       defaultValue={pecaSelecionada?.preco_venda ?? 0}
                     />
                   </div>

@@ -75,19 +75,19 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
             <Label htmlFor="equipamento_marca" className="mb-1.5 block">
               Marca
             </Label>
-            <Input id="equipamento_marca" name="equipamento_marca" placeholder="Ex: Brastemp" />
+            <Input id="equipamento_marca" name="equipamento_marca" placeholder="Ex: Brastemp" className="uppercase" />
           </div>
           <div>
             <Label htmlFor="equipamento_modelo" className="mb-1.5 block">
               Modelo
             </Label>
-            <Input id="equipamento_modelo" name="equipamento_modelo" placeholder="Ex: BWH12AB" />
+            <Input id="equipamento_modelo" name="equipamento_modelo" placeholder="Ex: BWH12AB" className="uppercase" />
           </div>
           <div className="sm:col-span-3">
             <Label htmlFor="equipamento_serie" className="mb-1.5 block">
               Número de série (opcional)
             </Label>
-            <Input id="equipamento_serie" name="equipamento_serie" placeholder="S/N" />
+            <Input id="equipamento_serie" name="equipamento_serie" placeholder="S/N" className="uppercase" />
           </div>
         </CardContent>
       </Card>
@@ -106,6 +106,7 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
               name="problema_relatado"
               placeholder="Descreva o problema relatado pelo cliente..."
               rows={4}
+              className="uppercase"
             />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
