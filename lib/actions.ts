@@ -276,7 +276,8 @@ export async function createPeca(formData: FormData) {
     categoria: str(formData, "categoria"),
     quantidade: Number(str(formData, "quantidade") ?? "0"),
     quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
-    preco_unitario: num(formData, "preco_unitario"),
+    preco_custo: num(formData, "preco_custo"),
+    preco_venda: num(formData, "preco_venda"),
     fornecedor_id: str(formData, "fornecedor_id"),
   });
   if (error) throw new Error(error.message);
@@ -294,7 +295,8 @@ export async function updatePeca(id: string, formData: FormData) {
       categoria: str(formData, "categoria"),
       quantidade: Number(str(formData, "quantidade") ?? "0"),
       quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
-      preco_unitario: num(formData, "preco_unitario"),
+      preco_custo: num(formData, "preco_custo"),
+      preco_venda: num(formData, "preco_venda"),
       fornecedor_id: str(formData, "fornecedor_id"),
     })
     .eq("id", id);

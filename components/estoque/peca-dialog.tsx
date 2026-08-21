@@ -79,7 +79,7 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
               <Input id="categoria" name="categoria" defaultValue={peca?.categoria ?? ""} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="quantidade" className="mb-1.5 block">
                 Estoque
@@ -98,17 +98,32 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
                 defaultValue={peca?.quantidade_minima ?? 2}
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="preco_unitario" className="mb-1.5 block">
-                Preço (R$)
+              <Label htmlFor="preco_custo" className="mb-1.5 block">
+                Preço de Custo (R$)
               </Label>
               <Input
-                id="preco_unitario"
-                name="preco_unitario"
+                id="preco_custo"
+                name="preco_custo"
                 type="number"
                 step="0.01"
                 min={0}
-                defaultValue={peca?.preco_unitario ?? 0}
+                defaultValue={peca?.preco_custo ?? 0}
+              />
+            </div>
+            <div>
+              <Label htmlFor="preco_venda" className="mb-1.5 block">
+                Preço de Venda (R$)
+              </Label>
+              <Input
+                id="preco_venda"
+                name="preco_venda"
+                type="number"
+                step="0.01"
+                min={0}
+                defaultValue={peca?.preco_venda ?? 0}
               />
             </div>
           </div>
