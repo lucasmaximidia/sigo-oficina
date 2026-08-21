@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ClipboardList, Truck, FileBarChart } from "lucide-react";
+import { AlertTriangle, ClipboardList, Truck, FileBarChart, TrendingUp, Wrench, ShoppingCart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -12,9 +12,45 @@ import { LancarDespesaDialog } from "@/components/financeiro/lancar-despesa-dial
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
+import { ExcluirContaButton, ExcluirDespesaButton, ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { contaStatusMap, freteStatusMap } from "@/lib/status";
+import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import type { ContaStatus } from "@/types";
+
+interface OsEntradaRow {
+  id: string;
+  numero: number;
+  data_pagamento: string | null;
+  data_finalizacao: string | null;
+  forma_pagamento: string | null;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+  valor_recebido_liquido: number | null;
+  clientes: { nome: string } | null;
+}
+
+interface VendaEntradaRow {
+  id: string;
+  numero: number;
+  created_at: string;
+  forma_pagamento: string;
+  total: number;
+  cliente_nome_avulso: string | null;
+  clientes: { nome: string } | null;
+}
+
+interface Entrada {
+  id: string;
+  tipo: "os" | "pdv";
+  origemLabel: string;
+  origemHref?: string;
+  cliente: string;
+  data: string;
+  formaPagamento: string;
+  valor: number;
+}
 
 interface FreteRow {
   id: string;
@@ -35,7 +71,7 @@ export default async function FinanceiroPage() {
   const em7dias = new Date(hoje);
   em7dias.setDate(em7dias.getDate() + 7);
 
-  const [{ data: contas }, { data: despesas }, { data: fretes }] = await Promise.all([
+  const [{ data: contas }, { data: despesas }, { data: fretes }, { data: osPagas }, { data: vendas }] = await Promise.all([
     supabase.from("financeiro_contas").select("*").order("vencimento", { ascending: true }),
     supabase.from("financeiro_despesas").select("*").order("data", { ascending: false }),
     supabase
@@ -44,7 +80,59 @@ export default async function FinanceiroPage() {
         "id, os_id, valor_custo, status, data_pagamento, created_at, ordens_servico(numero, valor_frete), prestadores_frete(nome)"
       )
       .order("created_at", { ascending: false }),
+    supabase
+      .from("ordens_servico")
+      .select<string, OsEntradaRow>(
+        "id, numero, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido, clientes(nome)"
+      )
+      .not("forma_pagamento", "is", null)
+      .order("data_pagamento", { ascending: false }),
+    supabase
+      .from("vendas_pdv")
+      .select<string, VendaEntradaRow>("id, numero, created_at, forma_pagamento, total, cliente_nome_avulso, clientes(nome)")
+      .order("created_at", { ascending: false }),
   ]);
+
+  const osIdsPagas = (osPagas ?? []).map((os) => os.id);
+  const { data: itensDasOsPagas } = osIdsPagas.length
+    ? await supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsPagas)
+    : { data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] };
+
+  const totalItensPorOs = new Map<string, number>();
+  for (const item of itensDasOsPagas ?? []) {
+    totalItensPorOs.set(item.os_id, (totalItensPorOs.get(item.os_id) ?? 0) + item.quantidade * item.valor_unitario);
+  }
+
+  const entradasOs: Entrada[] = (osPagas ?? []).map((os) => {
+    const totalItens = totalItensPorOs.get(os.id) ?? 0;
+    const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
+    const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
+    return {
+      id: os.id,
+      tipo: "os",
+      origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
+      origemHref: `/ordens-servico/${os.id}`,
+      cliente: os.clientes?.nome ?? "—",
+      data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
+      formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
+      valor,
+    };
+  });
+
+  const entradasPdv: Entrada[] = (vendas ?? []).map((venda) => ({
+    id: venda.id,
+    tipo: "pdv",
+    origemLabel: `Venda #${String(venda.numero).padStart(4, "0")}`,
+    cliente: venda.clientes?.nome ?? venda.cliente_nome_avulso ?? "Cliente avulso",
+    data: venda.created_at.slice(0, 10),
+    formaPagamento: formaPagamentoLabel[venda.forma_pagamento] ?? venda.forma_pagamento,
+    valor: venda.total,
+  }));
+
+  const entradas = [...entradasOs, ...entradasPdv].sort((a, b) => (a.data < b.data ? 1 : -1));
+  const totalRecebidoNoMes = entradas
+    .filter((e) => e.data.startsWith(hojeStr.slice(0, 7)))
+    .reduce((acc, e) => acc + e.valor, 0);
 
   const fretesPendentes = (fretes ?? []).filter((f) => f.status === "pendente");
   const totalFretePendente = fretesPendentes.reduce((acc, f) => acc + f.valor_custo, 0);
@@ -81,17 +169,73 @@ export default async function FinanceiroPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
+        <StatCard icon={TrendingUp} label="Recebido este mês" value={formatCurrency(totalRecebidoNoMes)} tone="success" />
         <StatCard icon={AlertTriangle} label="Vencendo Hoje/Atrasado" value={formatCurrency(totalVencendo)} tone="danger" />
         <StatCard icon={ClipboardList} label="Próximos 7 dias" value={formatCurrency(totalProximos)} />
       </div>
 
-      <Tabs defaultValue="contas" className="mt-5">
+      <Tabs defaultValue="entradas" className="mt-5">
         <TabsList>
+          <TabsTrigger value="entradas">Entradas</TabsTrigger>
           <TabsTrigger value="contas">Contas a Pagar (Boletos)</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
           <TabsTrigger value="fretes">Fretes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="entradas">
+          <Card className="overflow-hidden p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Origem</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Forma de Pagamento</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead className="w-10">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entradas.map((entrada) => (
+                  <TableRow key={`${entrada.tipo}-${entrada.id}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        {entrada.tipo === "os" ? (
+                          <Wrench className="size-3.5 text-muted-foreground" />
+                        ) : (
+                          <ShoppingCart className="size-3.5 text-muted-foreground" />
+                        )}
+                        {entrada.origemHref ? (
+                          <Link href={entrada.origemHref} className="font-medium text-primary">
+                            {entrada.origemLabel}
+                          </Link>
+                        ) : (
+                          <span className="font-medium text-foreground">{entrada.origemLabel}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-foreground">{entrada.cliente}</TableCell>
+                    <TableCell className="text-muted-foreground">{entrada.data ? formatDate(entrada.data) : "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
+                    <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
+                    <TableCell>
+                      <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {entradas.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou
+                      uma venda é feita no PDV.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="contas">
           <div className="mb-3 flex justify-end">
@@ -106,7 +250,7 @@ export default async function FinanceiroPage() {
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead className="w-20">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,7 +269,12 @@ export default async function FinanceiroPage() {
                       <TableCell>
                         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                       </TableCell>
-                      <TableCell>{conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                          <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
+                        </div>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -150,6 +299,7 @@ export default async function FinanceiroPage() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Valor</TableHead>
+                  <TableHead className="w-10">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,11 +309,14 @@ export default async function FinanceiroPage() {
                     <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
                     <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
+                    <TableCell>
+                      <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
+                    </TableCell>
                   </TableRow>
                 ))}
                 {(despesas ?? []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
                       Nenhuma despesa lançada.
                     </TableCell>
                   </TableRow>

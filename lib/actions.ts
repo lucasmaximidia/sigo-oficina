@@ -470,6 +470,13 @@ export async function marcarContaPaga(id: string) {
   revalidatePath("/dashboard");
 }
 
+export async function deleteContaPagar(id: string) {
+  const { error } = await supabase.from("financeiro_contas").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
 export async function createDespesa(formData: FormData) {
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
@@ -481,6 +488,44 @@ export async function createDespesa(formData: FormData) {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
+}
+
+export async function deleteDespesa(id: string) {
+  const { error } = await supabase.from("financeiro_despesas").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+}
+
+export async function deleteVendaPdv(id: string) {
+  const { error } = await supabase.from("vendas_pdv").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/pdv");
+  revalidatePath("/dashboard");
+}
+
+// Remove o pagamento registrado de uma OS finalizada (corrige um lançamento
+// errado sem apagar a OS inteira). A OS volta para "aguardando pagamento" e
+// pode ser finalizada de novo com os dados corretos.
+export async function estornarPagamentoOS(id: string) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({
+      status: "aguardando_pagamento" as OsStatus,
+      forma_pagamento: null,
+      data_pagamento: null,
+      data_finalizacao: null,
+      tipo_cartao: null,
+      valor_pago_bruto: null,
+      valor_recebido_liquido: null,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/ordens-servico");
+  revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/garantias");
 }
 
 // ---------- Agenda ----------
