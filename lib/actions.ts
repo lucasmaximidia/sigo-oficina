@@ -1,0 +1,469 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { supabase } from "@/lib/supabase";
+import type {
+  Database,
+  OsStatus,
+  OsUrgencia,
+  OsOrigem,
+  FormaPagamento,
+  ItemOrigem,
+  AgendaTipo,
+  AgendaStatus,
+} from "@/types";
+
+function str(fd: FormData, key: string) {
+  const v = fd.get(key);
+  return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+}
+function num(fd: FormData, key: string) {
+  const v = fd.get(key);
+  const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : NaN;
+  return Number.isFinite(n) ? n : 0;
+}
+
+// ---------- Clientes ----------
+export async function createCliente(formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { data, error } = await supabase
+    .from("clientes")
+    .insert({
+      nome,
+      telefone: str(formData, "telefone"),
+      email: str(formData, "email"),
+      cpf_cnpj: str(formData, "cpf_cnpj"),
+      endereco: str(formData, "endereco"),
+      bairro: str(formData, "bairro"),
+      cidade: str(formData, "cidade"),
+      estado: str(formData, "estado"),
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+  revalidatePath("/dashboard");
+  return data.id as string;
+}
+
+export async function updateCliente(id: string, formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      nome,
+      telefone: str(formData, "telefone"),
+      email: str(formData, "email"),
+      cpf_cnpj: str(formData, "cpf_cnpj"),
+      endereco: str(formData, "endereco"),
+      bairro: str(formData, "bairro"),
+      cidade: str(formData, "cidade"),
+      estado: str(formData, "estado"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+}
+
+export async function createEquipamento(clienteId: string, formData: FormData) {
+  const tipo = str(formData, "tipo");
+  if (!tipo) throw new Error("Tipo é obrigatório");
+  const { error } = await supabase.from("equipamentos").insert({
+    cliente_id: clienteId,
+    tipo,
+    marca: str(formData, "marca"),
+    modelo: str(formData, "modelo"),
+    numero_serie: str(formData, "numero_serie"),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+}
+
+// ---------- Ordens de Serviço ----------
+export async function createOrdemServico(formData: FormData) {
+  let clienteId = str(formData, "cliente_id");
+
+  if (!clienteId) {
+    const nome = str(formData, "cliente_nome");
+    if (!nome) throw new Error("Informe o cliente");
+    const { data: novoCliente, error: clienteError } = await supabase
+      .from("clientes")
+      .insert({ nome, telefone: str(formData, "cliente_telefone") })
+      .select("id")
+      .single();
+    if (clienteError) throw new Error(clienteError.message);
+    clienteId = novoCliente.id;
+  }
+
+  let equipamentoId: string | null = null;
+  const tipoEquipamento = str(formData, "equipamento_tipo");
+  if (tipoEquipamento) {
+    const { data: equipamento, error: equipamentoError } = await supabase
+      .from("equipamentos")
+      .insert({
+        cliente_id: clienteId,
+        tipo: tipoEquipamento,
+        marca: str(formData, "equipamento_marca"),
+        modelo: str(formData, "equipamento_modelo"),
+        numero_serie: str(formData, "equipamento_serie"),
+      })
+      .select("id")
+      .single();
+    if (equipamentoError) throw new Error(equipamentoError.message);
+    equipamentoId = equipamento.id;
+  }
+
+  const { data: os, error } = await supabase
+    .from("ordens_servico")
+    .insert({
+      cliente_id: clienteId,
+      equipamento_id: equipamentoId,
+      problema_relatado: str(formData, "problema_relatado"),
+      urgencia: (str(formData, "urgencia") as OsUrgencia) ?? "media",
+      origem: (str(formData, "origem") as OsOrigem) ?? "balcao",
+      status: "aguardando_orcamento",
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
+  return os.id as string;
+}
+
+export async function updateOrdemServicoValores(id: string, formData: FormData) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({
+      diagnostico: str(formData, "diagnostico"),
+      valor_mao_obra: num(formData, "valor_mao_obra"),
+      valor_frete: num(formData, "valor_frete"),
+      desconto: num(formData, "desconto"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+}
+
+export async function updateOrdemServicoStatus(id: string, status: OsStatus) {
+  const patch: Database["public"]["Tables"]["ordens_servico"]["Update"] = { status };
+  if (status === "finalizado") patch.data_finalizacao = new Date().toISOString();
+  const { error } = await supabase.from("ordens_servico").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
+  revalidatePath("/garantias");
+}
+
+export async function setOrdemServicoParada(id: string, parada: boolean, motivo?: string) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({ parada, parada_motivo: parada ? motivo ?? null : null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/dashboard");
+}
+
+export async function setOrdemServicoPagamento(id: string, formaPagamento: FormaPagamento) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({ forma_pagamento: formaPagamento })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+}
+
+export async function addOsItem(osId: string, formData: FormData) {
+  const descricao = str(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const pecaId = str(formData, "peca_id");
+
+  const { error } = await supabase.from("os_itens").insert({
+    os_id: osId,
+    peca_id: pecaId,
+    descricao,
+    origem: (str(formData, "origem") as ItemOrigem) ?? "estoque",
+    quantidade: Number(str(formData, "quantidade") ?? "1"),
+    valor_unitario: num(formData, "valor_unitario"),
+  });
+  if (error) throw new Error(error.message);
+
+  if (pecaId) {
+    const quantidade = Number(str(formData, "quantidade") ?? "1");
+    const origem = str(formData, "origem");
+    if (origem === "estoque") {
+      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
+      if (peca) {
+        await supabase
+          .from("pecas")
+          .update({ quantidade: Math.max(0, peca.quantidade - quantidade) })
+          .eq("id", pecaId);
+      }
+    }
+  }
+
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/estoque");
+}
+
+export async function removeOsItem(itemId: string, osId: string) {
+  const { error } = await supabase.from("os_itens").delete().eq("id", itemId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${osId}`);
+}
+
+// ---------- Estoque ----------
+export async function createPeca(formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { error } = await supabase.from("pecas").insert({
+    nome,
+    codigo: str(formData, "codigo"),
+    categoria: str(formData, "categoria"),
+    quantidade: Number(str(formData, "quantidade") ?? "0"),
+    quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
+    preco_unitario: num(formData, "preco_unitario"),
+    fornecedor_id: str(formData, "fornecedor_id"),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/estoque");
+}
+
+export async function updatePeca(id: string, formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { error } = await supabase
+    .from("pecas")
+    .update({
+      nome,
+      codigo: str(formData, "codigo"),
+      categoria: str(formData, "categoria"),
+      quantidade: Number(str(formData, "quantidade") ?? "0"),
+      quantidade_minima: Number(str(formData, "quantidade_minima") ?? "2"),
+      preco_unitario: num(formData, "preco_unitario"),
+      fornecedor_id: str(formData, "fornecedor_id"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/estoque");
+}
+
+export async function createLojaParceira(formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { error } = await supabase.from("lojas_parceiras").insert({
+    nome,
+    especialidade: str(formData, "especialidade"),
+    telefone: str(formData, "telefone"),
+    tempo_entrega: str(formData, "tempo_entrega"),
+    desconto_percentual: num(formData, "desconto_percentual"),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/estoque");
+}
+
+// ---------- PDV ----------
+export interface PdvItemInput {
+  peca_id: string | null;
+  descricao: string;
+  tipo: "peca" | "servico";
+  quantidade: number;
+  valor_unitario: number;
+}
+
+export async function finalizarVendaPdv(input: {
+  clienteId: string | null;
+  clienteNomeAvulso: string | null;
+  formaPagamento: FormaPagamento;
+  desconto: number;
+  itens: PdvItemInput[];
+}) {
+  const subtotal = input.itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+  const total = Math.max(0, subtotal - input.desconto);
+
+  const { data: venda, error } = await supabase
+    .from("vendas_pdv")
+    .insert({
+      cliente_id: input.clienteId,
+      cliente_nome_avulso: input.clienteNomeAvulso,
+      forma_pagamento: input.formaPagamento,
+      subtotal,
+      desconto: input.desconto,
+      total,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+
+  if (input.itens.length > 0) {
+    const { error: itensError } = await supabase.from("venda_itens").insert(
+      input.itens.map((i) => ({
+        venda_id: venda.id,
+        peca_id: i.peca_id,
+        descricao: i.descricao,
+        tipo: i.tipo,
+        quantidade: i.quantidade,
+        valor_unitario: i.valor_unitario,
+      }))
+    );
+    if (itensError) throw new Error(itensError.message);
+  }
+
+  for (const item of input.itens) {
+    if (item.peca_id && item.tipo === "peca") {
+      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", item.peca_id).single();
+      if (peca) {
+        await supabase
+          .from("pecas")
+          .update({ quantidade: Math.max(0, peca.quantidade - item.quantidade) })
+          .eq("id", item.peca_id);
+      }
+    }
+  }
+
+  revalidatePath("/pdv");
+  revalidatePath("/estoque");
+  return venda.id as string;
+}
+
+// ---------- Financeiro ----------
+export async function createContaPagar(formData: FormData) {
+  const descricao = str(formData, "descricao");
+  const vencimento = str(formData, "vencimento");
+  if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
+  const { error } = await supabase.from("financeiro_contas").insert({
+    descricao,
+    categoria: str(formData, "categoria"),
+    fornecedor: str(formData, "fornecedor"),
+    numero_documento: str(formData, "numero_documento"),
+    valor: num(formData, "valor"),
+    vencimento,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
+export async function marcarContaPaga(id: string) {
+  const { error } = await supabase
+    .from("financeiro_contas")
+    .update({ status: "pago", pago_em: new Date().toISOString().slice(0, 10) })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
+export async function createDespesa(formData: FormData) {
+  const descricao = str(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const { error } = await supabase.from("financeiro_despesas").insert({
+    descricao,
+    categoria: str(formData, "categoria"),
+    valor: num(formData, "valor"),
+    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+}
+
+// ---------- Agenda ----------
+export async function createAgendaEvento(formData: FormData) {
+  const titulo = str(formData, "titulo");
+  const data = str(formData, "data");
+  const hora = str(formData, "hora") ?? "09:00";
+  if (!titulo || !data) throw new Error("Título e data são obrigatórios");
+  const { error } = await supabase.from("agenda_eventos").insert({
+    titulo,
+    tipo: (str(formData, "tipo") as AgendaTipo) ?? "oficina",
+    cliente_id: str(formData, "cliente_id"),
+    endereco: str(formData, "endereco"),
+    data_hora_inicio: new Date(`${data}T${hora}`).toISOString(),
+    tecnico: str(formData, "tecnico"),
+    observacoes: str(formData, "observacoes"),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/agenda");
+  revalidatePath("/dashboard");
+}
+
+export async function updateAgendaStatus(id: string, status: AgendaStatus) {
+  const { error } = await supabase.from("agenda_eventos").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/agenda");
+  revalidatePath("/dashboard");
+}
+
+// ---------- Tarefas ----------
+export async function createTarefa(formData: FormData) {
+  const titulo = str(formData, "titulo");
+  if (!titulo) throw new Error("Título é obrigatório");
+  const { error } = await supabase.from("tarefas").insert({ titulo });
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+}
+
+export async function toggleTarefa(id: string, concluida: boolean) {
+  const { error } = await supabase.from("tarefas").update({ concluida }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+}
+
+// ---------- Configurações ----------
+export async function updateConfiguracoesEmpresa(formData: FormData) {
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      nome_empresa: str(formData, "nome_empresa") ?? "Minha Oficina",
+      cnpj: str(formData, "cnpj"),
+      telefone: str(formData, "telefone"),
+      endereco: str(formData, "endereco"),
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
+export async function updateConfiguracoesGarantia(formData: FormData) {
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      garantia_prazo_dias: Number(str(formData, "garantia_prazo_dias") ?? "90"),
+      garantia_tipo_cobertura: str(formData, "garantia_tipo_cobertura") ?? "Garantia Total (Peças e Mão de Obra)",
+      garantia_texto_padrao: str(formData, "garantia_texto_padrao"),
+      garantia_alerta_dias: Number(str(formData, "garantia_alerta_dias") ?? "7"),
+      garantia_notificar_tecnicos: formData.get("garantia_notificar_tecnicos") === "on",
+      garantia_sms_cliente: formData.get("garantia_sms_cliente") === "on",
+      garantia_assinatura_digital: formData.get("garantia_assinatura_digital") === "on",
+      garantia_qrcode: formData.get("garantia_qrcode") === "on",
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/garantias/configuracoes");
+}
+
+export async function resetarSistema() {
+  const tabelas = [
+    "os_itens",
+    "venda_itens",
+    "vendas_pdv",
+    "agenda_eventos",
+    "financeiro_despesas",
+    "financeiro_contas",
+    "ordens_servico",
+    "equipamentos",
+    "pecas",
+    "lojas_parceiras",
+    "clientes",
+    "tarefas",
+  ] as const;
+  for (const tabela of tabelas) {
+    await supabase.from(tabela).delete().not("id", "is", null);
+  }
+  revalidatePath("/", "layout");
+}

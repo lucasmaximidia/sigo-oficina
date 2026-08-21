@@ -1,0 +1,211 @@
+import Link from "next/link";
+import { Plus, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { PageHeader } from "@/components/layout/page-header";
+import { OsStatusTabs } from "@/components/os/status-tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate } from "@/lib/utils";
+import { osStatusMap, urgenciaMap } from "@/lib/status";
+import type { OsStatus, OsUrgencia } from "@/types";
+
+export const dynamic = "force-dynamic";
+
+const PAGE_SIZE = 10;
+
+interface OsListRow {
+  id: string;
+  numero: number;
+  status: OsStatus;
+  urgencia: OsUrgencia;
+  data_entrada: string;
+  clientes: { nome: string; telefone: string | null } | null;
+  equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+}
+
+export default async function OrdensServicoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  const status = params.status as OsStatus | undefined;
+  const page = Math.max(1, Number(params.page ?? "1"));
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
+    .from("ordens_servico")
+    .select<string, OsListRow>(
+      "id, numero, status, urgencia, data_entrada, clientes(nome, telefone), equipamentos(tipo, marca, modelo)",
+      { count: "exact" }
+    )
+    .order("data_entrada", { ascending: false })
+    .range(from, to);
+
+  if (status) query = query.eq("status", status);
+
+  const { data: ordens, count } = await query;
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  return (
+    <div>
+      <PageHeader
+        title="Ordens de Serviço"
+        description="Gerencie e acompanhe o status de todas as manutenções."
+        actions={
+          <>
+            <Button asChild variant="secondary">
+              <Link href="/agenda?novo=1">Novo Agendamento</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/ordens-servico/nova">
+                <Plus className="size-4" />
+                Nova OS
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
+      <div className="mb-4">
+        <OsStatusTabs active={status ?? "todos"} />
+      </div>
+
+      <Card className="overflow-hidden p-0">
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10"></TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Equipamento</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Data Entrada</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(ordens ?? []).map((os) => {
+                const cliente = Array.isArray(os.clientes) ? os.clientes[0] : os.clientes;
+                const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
+                const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
+                const statusInfo = osStatusMap[os.status as OsStatus];
+                return (
+                  <TableRow key={os.id} className="cursor-pointer">
+                    <TableCell>
+                      <span className={`inline-block size-2.5 rounded-full ${urgencia.dotClass}`} />
+                    </TableCell>
+                    <TableCell className="font-semibold text-primary">
+                      <Link href={`/ordens-servico/${os.id}`}>#OS-{String(os.numero).padStart(4, "0")}</Link>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-foreground">{cliente?.nome ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">{cliente?.telefone ?? ""}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium text-foreground">{equipamento?.tipo ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {[equipamento?.marca, equipamento?.modelo].filter(Boolean).join(" ")}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(os.data_entrada)}</TableCell>
+                    <TableCell>
+                      <Link href={`/ordens-servico/${os.id}`}>
+                        <ChevronRight className="size-4 text-muted-foreground" />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {(ordens ?? []).length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    Nenhuma ordem de serviço encontrada.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex flex-col divide-y divide-border md:hidden">
+          {(ordens ?? []).map((os) => {
+            const cliente = Array.isArray(os.clientes) ? os.clientes[0] : os.clientes;
+            const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
+            const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
+            const statusInfo = osStatusMap[os.status as OsStatus];
+            return (
+              <Link key={os.id} href={`/ordens-servico/${os.id}`} className="flex items-start gap-3 p-4 active:bg-secondary/50">
+                <span className={`mt-1.5 inline-block size-2.5 shrink-0 rounded-full ${urgencia.dotClass}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-primary">#OS-{String(os.numero).padStart(4, "0")}</p>
+                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                  </div>
+                  <p className="mt-1 truncate text-sm font-medium text-foreground">{cliente?.nome ?? "—"}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {equipamento?.tipo} {[equipamento?.marca, equipamento?.modelo].filter(Boolean).join(" ")}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDate(os.data_entrada)}</p>
+                </div>
+              </Link>
+            );
+          })}
+          {(ordens ?? []).length === 0 && (
+            <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
+          )}
+        </div>
+
+        {total > 0 && (
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-border p-4 sm:flex-row">
+            <p className="text-sm text-muted-foreground">
+              Mostrando {from + 1} a {Math.min(to + 1, total)} de {total} registros
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+              >
+                <Link href={buildPageHref(status, page - 1)}>Anterior</Link>
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .slice(0, 5)
+                .map((p) => (
+                  <Button key={p} asChild variant={p === page ? "default" : "outline"} size="sm">
+                    <Link href={buildPageHref(status, p)}>{p}</Link>
+                  </Button>
+                ))}
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
+              >
+                <Link href={buildPageHref(status, page + 1)}>Próxima</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function buildPageHref(status: string | undefined, page: number) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  params.set("page", String(page));
+  return `/ordens-servico?${params.toString()}`;
+}
