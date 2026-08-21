@@ -5,6 +5,7 @@ import type {
   AgendaStatus,
   GarantiaStatus,
   OrcamentoStatus,
+  FreteStatus,
 } from "@/types";
 
 export const osStatusMap: Record<OsStatus, { label: string; variant: "secondary" | "info" | "warning" | "success" | "destructive" }> = {
@@ -57,4 +58,9 @@ export const orcamentoStatusMap: Record<OrcamentoStatus, { label: string; varian
   aprovado: { label: "Aprovado", variant: "success" },
   recusado: { label: "Recusado", variant: "destructive" },
   expirado: { label: "Expirado", variant: "warning" },
+};
+
+export const freteStatusMap: Record<FreteStatus, { label: string; variant: "warning" | "success" }> = {
+  pendente: { label: "Pendente", variant: "warning" },
+  pago: { label: "Pago", variant: "success" },
 };

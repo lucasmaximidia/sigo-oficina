@@ -41,6 +41,23 @@ export default async function DashboardPage() {
   const em3dias = new Date(hoje);
   em3dias.setDate(em3dias.getDate() + 3);
 
+  const { data: config } = await supabase
+    .from("configuracoes")
+    .select(
+      "dashboard_mostrar_stats, dashboard_mostrar_agenda, dashboard_mostrar_os_paradas, dashboard_mostrar_tarefas, dashboard_os_parada_dias"
+    )
+    .eq("id", 1)
+    .single();
+
+  const mostrarStats = config?.dashboard_mostrar_stats ?? true;
+  const mostrarAgenda = config?.dashboard_mostrar_agenda ?? true;
+  const mostrarOsParadas = config?.dashboard_mostrar_os_paradas ?? true;
+  const mostrarTarefas = config?.dashboard_mostrar_tarefas ?? true;
+  const paradaDias = config?.dashboard_os_parada_dias ?? 3;
+
+  const limiteParada = new Date(hoje);
+  limiteParada.setDate(limiteParada.getDate() - paradaDias);
+
   const [
     { count: aguardandoOrcamento },
     { count: emExecucao },
@@ -63,8 +80,8 @@ export default async function DashboardPage() {
     supabase
       .from("ordens_servico")
       .select<string, OsParadaRow>("id, numero, problema_relatado, parada_motivo, updated_at, clientes(nome)")
-      .eq("parada", true)
-      .neq("status", "finalizado")
+      .or(`parada.eq.true,updated_at.lt.${limiteParada.toISOString()}`)
+      .not("status", "in", "(finalizado,cancelado)")
       .order("updated_at", { ascending: true })
       .limit(5),
     supabase
@@ -99,74 +116,84 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-        <StatCard icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} hint="OS para análise" />
-        <StatCard icon={Wrench} label="OS em Aberto" value={emExecucao ?? 0} hint="Em execução/fila" />
-        <StatCard icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} hint="Prontas para retirada" />
-        <StatCard
-          icon={ReceiptText}
-          label="Boletos Vencendo"
-          value={boletosVencendo?.length ?? 0}
-          hint="Próximos 3 dias"
-          tone="danger"
-        />
-      </div>
+      {mostrarStats && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          <StatCard icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} hint="OS para análise" />
+          <StatCard icon={Wrench} label="OS em Aberto" value={emExecucao ?? 0} hint="Em execução/fila" />
+          <StatCard icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} hint="Prontas para retirada" />
+          <StatCard
+            icon={ReceiptText}
+            label="Boletos Vencendo"
+            value={boletosVencendo?.length ?? 0}
+            hint="Próximos 3 dias"
+            tone="danger"
+          />
+        </div>
+      )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:mt-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Agenda</CardTitle>
-            <Link href="/agenda" className="text-sm font-medium text-primary hover:underline">
-              Ver calendário
-            </Link>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
-              <AgendaList eventos={agendaHoje ?? []} vazio="Nenhum compromisso para hoje." />
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amanhã</p>
-              <AgendaList eventos={agendaAmanha ?? []} vazio="Nenhum compromisso para amanhã." />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="size-4.5" />
-              OS Paradas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {(osParadas ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhuma OS parada no momento.</p>
-            )}
-            {(osParadas ?? []).map((os) => (
-              <Link
-                key={os.id}
-                href={`/ordens-servico/${os.id}`}
-                className="block rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
-              >
-                <div className="flex items-center gap-2">
-                  <Circle className="size-2 shrink-0 fill-destructive text-destructive" />
-                  <p className="text-sm font-semibold text-foreground">
-                    OS #{os.numero} · Parada há {diasParado(os.updated_at)} dias
-                  </p>
+      {(mostrarAgenda || mostrarOsParadas) && (
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:mt-6">
+          {mostrarAgenda && (
+            <Card className={mostrarOsParadas ? "lg:col-span-2" : "lg:col-span-3"}>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Agenda</CardTitle>
+                <Link href="/agenda" className="text-sm font-medium text-primary hover:underline">
+                  Ver calendário
+                </Link>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
+                  <AgendaList eventos={agendaHoje ?? []} vazio="Nenhum compromisso para hoje." />
                 </div>
-                <p className="mt-1 truncate text-xs text-muted-foreground">
-                  {os.parada_motivo || os.problema_relatado || "Sem detalhes"}
-                </p>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amanhã</p>
+                  <AgendaList eventos={agendaAmanha ?? []} vazio="Nenhum compromisso para amanhã." />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:mt-6">
-        <TarefasCard tarefas={tarefas ?? []} />
-      </div>
+          {mostrarOsParadas && (
+            <Card className={mostrarAgenda ? "" : "lg:col-span-3"}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="size-4.5" />
+                  OS Paradas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {(osParadas ?? []).length === 0 && (
+                  <p className="text-sm text-muted-foreground">Nenhuma OS parada no momento.</p>
+                )}
+                {(osParadas ?? []).map((os) => (
+                  <Link
+                    key={os.id}
+                    href={`/ordens-servico/${os.id}`}
+                    className="block rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Circle className="size-2 shrink-0 fill-destructive text-destructive" />
+                      <p className="text-sm font-semibold text-foreground">
+                        OS #{os.numero} · Parada há {diasParado(os.updated_at)} dias
+                      </p>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {os.parada_motivo || os.problema_relatado || "Sem detalhes"}
+                    </p>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {mostrarTarefas && (
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:mt-6">
+          <TarefasCard tarefas={tarefas ?? []} />
+        </div>
+      )}
     </div>
   );
 }

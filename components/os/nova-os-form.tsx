@@ -108,7 +108,7 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
               rows={4}
             />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <Label className="mb-1.5 block">Urgência</Label>
               <Select name="urgencia" defaultValue="media">
@@ -134,6 +134,18 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
                   <SelectItem value="frete">Frete / coleta</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="data_entrada" className="mb-1.5 block">
+                Data de entrada
+              </Label>
+              <Input
+                id="data_entrada"
+                name="data_entrada"
+                type="date"
+                defaultValue={new Date().toISOString().slice(0, 10)}
+                max={new Date().toISOString().slice(0, 10)}
+              />
             </div>
           </div>
         </CardContent>

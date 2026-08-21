@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -74,7 +75,7 @@ export function ClienteFormDialog({ cliente }: { cliente?: Cliente }) {
               <Label htmlFor="telefone" className="mb-1.5 block">
                 Telefone
               </Label>
-              <Input id="telefone" name="telefone" defaultValue={cliente?.telefone ?? ""} />
+              <PhoneInput id="telefone" name="telefone" defaultValue={cliente?.telefone ?? ""} />
             </div>
             <div>
               <Label htmlFor="cpf_cnpj" className="mb-1.5 block">

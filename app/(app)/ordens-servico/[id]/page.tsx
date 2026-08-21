@@ -9,6 +9,7 @@ import { OsItensList } from "@/components/os/os-itens-list";
 import { OsResumoValores } from "@/components/os/os-resumo-valores";
 import { OsAcoes } from "@/components/os/os-acoes";
 import { OsParadaToggle } from "@/components/os/os-parada-toggle";
+import { FreteCard } from "@/components/os/frete-card";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -23,7 +24,7 @@ interface OsDetalheRow extends OrdemServico {
 export default async function OrdemServicoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: os }, { data: itens }, { data: pecas }] = await Promise.all([
+  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }] = await Promise.all([
     supabase
       .from("ordens_servico")
       .select<string, OsDetalheRow>(
@@ -33,6 +34,8 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
       .maybeSingle(),
     supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
+    supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
+    supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
   ]);
 
   if (!os) notFound();
@@ -151,6 +154,14 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
               <OsResumoValores os={os} totalPecas={totalPecas} />
             </CardContent>
           </Card>
+
+          {os.origem === "frete" && (
+            <Card>
+              <CardContent className="pt-5">
+                <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
+              </CardContent>
+            </Card>
+          )}
 
           {os.status === "finalizado" && (
             <Badge variant="success" className="justify-center py-2 text-sm">

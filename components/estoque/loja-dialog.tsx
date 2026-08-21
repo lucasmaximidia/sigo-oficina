@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -62,7 +63,7 @@ export function LojaDialog() {
               <Label htmlFor="telefone" className="mb-1.5 block">
                 Telefone
               </Label>
-              <Input id="telefone" name="telefone" />
+              <PhoneInput id="telefone" name="telefone" />
             </div>
             <div>
               <Label htmlFor="tempo_entrega" className="mb-1.5 block">

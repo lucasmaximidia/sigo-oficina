@@ -1,4 +1,5 @@
-import { AlertTriangle, ClipboardList } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, ClipboardList, Truck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -9,9 +10,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LancarDespesaDialog } from "@/components/financeiro/lancar-despesa-dialog";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
+import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { contaStatusMap } from "@/lib/status";
+import { contaStatusMap, freteStatusMap } from "@/lib/status";
 import type { ContaStatus } from "@/types";
+
+interface FreteRow {
+  id: string;
+  os_id: string;
+  valor_custo: number;
+  status: "pendente" | "pago";
+  data_pagamento: string | null;
+  created_at: string;
+  ordens_servico: { numero: number; valor_frete: number } | null;
+  prestadores_frete: { nome: string } | null;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +34,23 @@ export default async function FinanceiroPage() {
   const em7dias = new Date(hoje);
   em7dias.setDate(em7dias.getDate() + 7);
 
-  const [{ data: contas }, { data: despesas }] = await Promise.all([
+  const [{ data: contas }, { data: despesas }, { data: fretes }] = await Promise.all([
     supabase.from("financeiro_contas").select("*").order("vencimento", { ascending: true }),
     supabase.from("financeiro_despesas").select("*").order("data", { ascending: false }),
+    supabase
+      .from("fretes")
+      .select<string, FreteRow>(
+        "id, os_id, valor_custo, status, data_pagamento, created_at, ordens_servico(numero, valor_frete), prestadores_frete(nome)"
+      )
+      .order("created_at", { ascending: false }),
   ]);
+
+  const fretesPendentes = (fretes ?? []).filter((f) => f.status === "pendente");
+  const totalFretePendente = fretesPendentes.reduce((acc, f) => acc + f.valor_custo, 0);
+  const mesAtual = hojeStr.slice(0, 7);
+  const totalFretePagoNoMes = (fretes ?? [])
+    .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
+    .reduce((acc, f) => acc + f.valor_custo, 0);
 
   const vencendoHojeOuAtrasado = (contas ?? []).filter(
     (c) => c.status !== "pago" && c.vencimento <= hojeStr
@@ -53,6 +79,7 @@ export default async function FinanceiroPage() {
         <TabsList>
           <TabsTrigger value="contas">Contas a Pagar (Boletos)</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
+          <TabsTrigger value="fretes">Fretes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="contas">
@@ -127,6 +154,66 @@ export default async function FinanceiroPage() {
                   <TableRow>
                     <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                       Nenhuma despesa lançada.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fretes">
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StatCard icon={AlertTriangle} label="Pendente de pagamento" value={formatCurrency(totalFretePendente)} tone="danger" />
+            <StatCard icon={Truck} label="Pago este mês" value={formatCurrency(totalFretePagoNoMes)} />
+          </div>
+          <Card className="overflow-hidden p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>OS</TableHead>
+                  <TableHead>Prestador</TableHead>
+                  <TableHead>Cobrado do cliente</TableHead>
+                  <TableHead>Pago ao prestador</TableHead>
+                  <TableHead>Margem</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(fretes ?? []).map((frete) => {
+                  const statusInfo = freteStatusMap[frete.status];
+                  const cobrado = frete.ordens_servico?.valor_frete ?? 0;
+                  const margem = cobrado - frete.valor_custo;
+                  return (
+                    <TableRow key={frete.id}>
+                      <TableCell className="font-semibold text-primary">
+                        {frete.ordens_servico && (
+                          <Link href={`/ordens-servico/${frete.os_id}`}>
+                            #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
+                          </Link>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
+                      <TableCell className="font-medium text-foreground">{formatCurrency(frete.valor_custo)}</TableCell>
+                      <TableCell className={margem >= 0 ? "text-success" : "text-destructive"}>
+                        {formatCurrency(margem)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {(fretes ?? []).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                      Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem &quot;Frete&quot;
+                      numa OS.
                     </TableCell>
                   </TableRow>
                 )}

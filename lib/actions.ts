@@ -13,6 +13,7 @@ import type {
   AgendaStatus,
   OrcamentoStatus,
   OrcamentoItemTipo,
+  FreteStatus,
 } from "@/types";
 
 function str(fd: FormData, key: string) {
@@ -117,6 +118,11 @@ export async function createOrdemServico(formData: FormData) {
     equipamentoId = equipamento.id;
   }
 
+  const dataEntradaStr = str(formData, "data_entrada");
+  const dataEntrada = dataEntradaStr
+    ? new Date(`${dataEntradaStr}T${new Date().toTimeString().slice(0, 8)}`).toISOString()
+    : undefined;
+
   const { data: os, error } = await supabase
     .from("ordens_servico")
     .insert({
@@ -126,6 +132,7 @@ export async function createOrdemServico(formData: FormData) {
       urgencia: (str(formData, "urgencia") as OsUrgencia) ?? "media",
       origem: (str(formData, "origem") as OsOrigem) ?? "balcao",
       status: "aguardando_orcamento",
+      data_entrada: dataEntrada,
     })
     .select("id")
     .single();
@@ -217,6 +224,46 @@ export async function removeOsItem(itemId: string, osId: string) {
   const { error } = await supabase.from("os_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
+}
+
+// ---------- Fretes ----------
+export async function createPrestadorFrete(formData: FormData) {
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { data, error } = await supabase
+    .from("prestadores_frete")
+    .insert({ nome, telefone: str(formData, "telefone") })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/financeiro");
+  return data.id as string;
+}
+
+export async function upsertFrete(osId: string, formData: FormData) {
+  const prestadorId = str(formData, "prestador_id");
+  const { error } = await supabase.from("fretes").upsert(
+    {
+      os_id: osId,
+      prestador_id: prestadorId,
+      valor_custo: num(formData, "valor_custo"),
+    },
+    { onConflict: "os_id" }
+  );
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/financeiro");
+}
+
+export async function marcarFretePago(freteId: string, osId: string) {
+  const { error } = await supabase
+    .from("fretes")
+    .update({ status: "pago" as FreteStatus, data_pagamento: new Date().toISOString().slice(0, 10) })
+    .eq("id", freteId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/financeiro");
 }
 
 // ---------- Estoque ----------
@@ -507,6 +554,22 @@ export async function updateConfiguracoesEtiqueta(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+export async function updateConfiguracoesDashboard(formData: FormData) {
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      dashboard_mostrar_stats: formData.get("dashboard_mostrar_stats") === "on",
+      dashboard_mostrar_agenda: formData.get("dashboard_mostrar_agenda") === "on",
+      dashboard_mostrar_os_paradas: formData.get("dashboard_mostrar_os_paradas") === "on",
+      dashboard_mostrar_tarefas: formData.get("dashboard_mostrar_tarefas") === "on",
+      dashboard_os_parada_dias: Number(str(formData, "dashboard_os_parada_dias") ?? "3"),
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+}
+
 // ---------- Orçamentos ----------
 export async function createOrcamento(formData: FormData) {
   let clienteId = str(formData, "cliente_id");
@@ -591,6 +654,8 @@ export async function resetarSistema() {
     "venda_pagamentos",
     "orcamento_itens",
     "orcamentos",
+    "fretes",
+    "prestadores_frete",
     "agenda_eventos",
     "financeiro_despesas",
     "financeiro_contas",

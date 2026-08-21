@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Search, X, UserCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import type { Cliente } from "@/types";
 
@@ -96,7 +97,7 @@ export function ClientePicker({ clientes }: { clientes: Pick<Cliente, "id" | "no
           <Label htmlFor="cliente_telefone" className="mb-1.5 block">
             Telefone / WhatsApp
           </Label>
-          <Input id="cliente_telefone" name="cliente_telefone" placeholder="(11) 90000-0000" />
+          <PhoneInput id="cliente_telefone" name="cliente_telefone" placeholder="(27) 90000-0000" />
         </div>
       </div>
     </div>

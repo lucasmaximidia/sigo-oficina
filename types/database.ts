@@ -22,6 +22,7 @@ export type AgendaStatus =
 export type GarantiaStatus = "ativa" | "critica" | "expirada" | "sem_garantia";
 export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "expirado";
 export type OrcamentoItemTipo = "peca" | "mao_obra";
+export type FreteStatus = "pendente" | "pago";
 
 // Observação: os campos Row/Insert/Update abaixo são escritos como literais de
 // objeto inline (não interfaces nomeadas) de propósito — é o mesmo formato que
@@ -527,6 +528,11 @@ export interface Database {
           garantia_assinatura_digital: boolean;
           garantia_qrcode: boolean;
           etiqueta_subtitulo: string;
+          dashboard_mostrar_stats: boolean;
+          dashboard_mostrar_agenda: boolean;
+          dashboard_mostrar_os_paradas: boolean;
+          dashboard_mostrar_tarefas: boolean;
+          dashboard_os_parada_dias: number;
           updated_at: string;
         };
         Insert: {
@@ -546,6 +552,11 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_subtitulo?: string;
+          dashboard_mostrar_stats?: boolean;
+          dashboard_mostrar_agenda?: boolean;
+          dashboard_mostrar_os_paradas?: boolean;
+          dashboard_mostrar_tarefas?: boolean;
+          dashboard_os_parada_dias?: number;
           updated_at?: string;
         };
         Update: {
@@ -565,6 +576,11 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_subtitulo?: string;
+          dashboard_mostrar_stats?: boolean;
+          dashboard_mostrar_agenda?: boolean;
+          dashboard_mostrar_os_paradas?: boolean;
+          dashboard_mostrar_tarefas?: boolean;
+          dashboard_os_parada_dias?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -635,6 +651,60 @@ export interface Database {
           quantidade?: number;
           valor_unitario?: number;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      prestadores_frete: {
+        Row: {
+          id: string;
+          nome: string;
+          telefone: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          telefone?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          telefone?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      fretes: {
+        Row: {
+          id: string;
+          os_id: string;
+          prestador_id: string | null;
+          valor_custo: number;
+          status: FreteStatus;
+          data_pagamento: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          os_id: string;
+          prestador_id?: string | null;
+          valor_custo?: number;
+          status?: FreteStatus;
+          data_pagamento?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          os_id?: string;
+          prestador_id?: string | null;
+          valor_custo?: number;
+          status?: FreteStatus;
+          data_pagamento?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
