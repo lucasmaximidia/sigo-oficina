@@ -3,13 +3,13 @@ import Link from "next/link";
 import { ArrowLeft, User, Wrench, MessageSquareText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
 import { OsItensList } from "@/components/os/os-itens-list";
 import { OsResumoValores } from "@/components/os/os-resumo-valores";
 import { OsAcoes } from "@/components/os/os-acoes";
 import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
+import { OsRetiradaCard } from "@/components/os/os-retirada-card";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -164,9 +164,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
           )}
 
           {os.status === "finalizado" && (
-            <Badge variant="success" className="justify-center py-2 text-sm">
-              Garantia de {os.garantia_dias} dias ativa
-            </Badge>
+            <OsRetiradaCard osId={os.id} garantiaDias={os.garantia_dias} dataRetirada={os.data_retirada} />
           )}
         </div>
       </div>

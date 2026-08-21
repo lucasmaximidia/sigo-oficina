@@ -11,6 +11,7 @@ interface OsRelatorioRow {
   id: string;
   data_entrada: string;
   data_finalizacao: string | null;
+  data_pagamento: string | null;
   valor_mao_obra: number;
   valor_frete: number;
   desconto: number;
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
     supabase
       .from("ordens_servico")
       .select<string, OsRelatorioRow>(
-        "id, data_entrada, data_finalizacao, valor_mao_obra, valor_frete, desconto, forma_pagamento, clientes(nome), equipamentos(tipo, marca, modelo)"
+        "id, data_entrada, data_finalizacao, data_pagamento, valor_mao_obra, valor_frete, desconto, forma_pagamento, clientes(nome), equipamentos(tipo, marca, modelo)"
       )
       .eq("status", "finalizado")
       .gte("data_finalizacao", `${inicio}T00:00:00`)
@@ -86,7 +87,7 @@ export async function GET(request: Request) {
       pecas_oficina_desc: itensOficina.map((i) => i.descricao).join(", ") || "—",
       valor_total: valorTotal,
       valor_com_desconto: Math.max(0, valorTotal - os.desconto),
-      data_pagamento: os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "",
+      data_pagamento: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
       forma_pagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
     };
   });

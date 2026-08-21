@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -63,20 +64,27 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
             <Label htmlFor="nome" className="mb-1.5 block">
               Nome
             </Label>
-            <Input id="nome" name="nome" required defaultValue={peca?.nome} placeholder="Ex: Correia de Transmissão V-12" />
+            <Input
+              id="nome"
+              name="nome"
+              required
+              defaultValue={peca?.nome}
+              placeholder="Ex: Correia de Transmissão V-12"
+              className="uppercase"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="codigo" className="mb-1.5 block">
                 Código
               </Label>
-              <Input id="codigo" name="codigo" defaultValue={peca?.codigo ?? ""} />
+              <Input id="codigo" name="codigo" defaultValue={peca?.codigo ?? ""} className="uppercase" />
             </div>
             <div>
               <Label htmlFor="categoria" className="mb-1.5 block">
                 Categoria
               </Label>
-              <Input id="categoria" name="categoria" defaultValue={peca?.categoria ?? ""} />
+              <Input id="categoria" name="categoria" defaultValue={peca?.categoria ?? ""} className="uppercase" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -84,17 +92,16 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
               <Label htmlFor="quantidade" className="mb-1.5 block">
                 Estoque
               </Label>
-              <Input id="quantidade" name="quantidade" type="number" min={0} defaultValue={peca?.quantidade ?? 0} />
+              <NumericInput id="quantidade" name="quantidade" decimal={false} defaultValue={peca?.quantidade ?? 0} />
             </div>
             <div>
               <Label htmlFor="quantidade_minima" className="mb-1.5 block">
                 Mínimo
               </Label>
-              <Input
+              <NumericInput
                 id="quantidade_minima"
                 name="quantidade_minima"
-                type="number"
-                min={0}
+                decimal={false}
                 defaultValue={peca?.quantidade_minima ?? 2}
               />
             </div>
@@ -104,27 +111,13 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
               <Label htmlFor="preco_custo" className="mb-1.5 block">
                 Preço de Custo (R$)
               </Label>
-              <Input
-                id="preco_custo"
-                name="preco_custo"
-                type="number"
-                step="0.01"
-                min={0}
-                defaultValue={peca?.preco_custo ?? 0}
-              />
+              <NumericInput id="preco_custo" name="preco_custo" defaultValue={peca?.preco_custo ?? 0} />
             </div>
             <div>
               <Label htmlFor="preco_venda" className="mb-1.5 block">
                 Preço de Venda (R$)
               </Label>
-              <Input
-                id="preco_venda"
-                name="preco_venda"
-                type="number"
-                step="0.01"
-                min={0}
-                defaultValue={peca?.preco_venda ?? 0}
-              />
+              <NumericInput id="preco_venda" name="preco_venda" defaultValue={peca?.preco_venda ?? 0} />
             </div>
           </div>
           <div>

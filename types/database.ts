@@ -9,6 +9,7 @@ export type OsStatus =
 export type OsUrgencia = "baixa" | "media" | "alta";
 export type OsOrigem = "balcao" | "domicilio" | "frete";
 export type FormaPagamento = "dinheiro" | "pix" | "cartao";
+export type TipoCartao = "debito" | "credito";
 export type ItemOrigem = "estoque" | "loja_parceira" | "compra_emergencial";
 export type VendaItemTipo = "peca" | "servico";
 export type ContaStatus = "pendente" | "pago" | "atrasado";
@@ -200,6 +201,11 @@ export interface Database {
           forma_pagamento: FormaPagamento | null;
           data_entrada: string;
           data_finalizacao: string | null;
+          data_pagamento: string | null;
+          data_retirada: string | null;
+          tipo_cartao: TipoCartao | null;
+          valor_pago_bruto: number | null;
+          valor_recebido_liquido: number | null;
           garantia_dias: number;
           parada: boolean;
           parada_motivo: string | null;
@@ -222,6 +228,11 @@ export interface Database {
           forma_pagamento?: FormaPagamento | null;
           data_entrada?: string;
           data_finalizacao?: string | null;
+          data_pagamento?: string | null;
+          data_retirada?: string | null;
+          tipo_cartao?: TipoCartao | null;
+          valor_pago_bruto?: number | null;
+          valor_recebido_liquido?: number | null;
           garantia_dias?: number;
           parada?: boolean;
           parada_motivo?: string | null;
@@ -244,6 +255,11 @@ export interface Database {
           forma_pagamento?: FormaPagamento | null;
           data_entrada?: string;
           data_finalizacao?: string | null;
+          data_pagamento?: string | null;
+          data_retirada?: string | null;
+          tipo_cartao?: TipoCartao | null;
+          valor_pago_bruto?: number | null;
+          valor_recebido_liquido?: number | null;
           garantia_dias?: number;
           parada?: boolean;
           parada_motivo?: string | null;
@@ -735,6 +751,7 @@ export interface Database {
           equipamento_tipo: string | null;
           equipamento_marca: string | null;
           data_finalizacao: string;
+          data_inicio_garantia: string;
           garantia_dias: number;
           data_expiracao: string;
           dias_restantes: number;

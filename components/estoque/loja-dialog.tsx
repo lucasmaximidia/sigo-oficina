@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import {
@@ -50,13 +51,18 @@ export function LojaDialog() {
             <Label htmlFor="nome" className="mb-1.5 block">
               Nome
             </Label>
-            <Input id="nome" name="nome" required />
+            <Input id="nome" name="nome" required className="uppercase" />
           </div>
           <div>
             <Label htmlFor="especialidade" className="mb-1.5 block">
               Especialidade
             </Label>
-            <Input id="especialidade" name="especialidade" placeholder="Ex: Especialista em refrigeração" />
+            <Input
+              id="especialidade"
+              name="especialidade"
+              placeholder="Ex: Especialista em refrigeração"
+              className="uppercase"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -69,14 +75,14 @@ export function LojaDialog() {
               <Label htmlFor="tempo_entrega" className="mb-1.5 block">
                 Tempo de entrega
               </Label>
-              <Input id="tempo_entrega" name="tempo_entrega" placeholder="Ex: Entrega em 24h" />
+              <Input id="tempo_entrega" name="tempo_entrega" placeholder="Ex: Entrega em 24h" className="uppercase" />
             </div>
           </div>
           <div>
             <Label htmlFor="desconto_percentual" className="mb-1.5 block">
               Desconto (%)
             </Label>
-            <Input id="desconto_percentual" name="desconto_percentual" type="number" step="0.1" min={0} />
+            <NumericInput id="desconto_percentual" name="desconto_percentual" defaultValue={0} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

@@ -68,7 +68,7 @@ export function ClienteFormDialog({ cliente }: { cliente?: Cliente }) {
             <Label htmlFor="nome" className="mb-1.5 block">
               Nome completo
             </Label>
-            <Input id="nome" name="nome" required defaultValue={cliente?.nome} />
+            <Input id="nome" name="nome" required defaultValue={cliente?.nome} className="uppercase" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -94,26 +94,32 @@ export function ClienteFormDialog({ cliente }: { cliente?: Cliente }) {
             <Label htmlFor="endereco" className="mb-1.5 block">
               Endereço
             </Label>
-            <Input id="endereco" name="endereco" defaultValue={cliente?.endereco ?? ""} />
+            <Input id="endereco" name="endereco" defaultValue={cliente?.endereco ?? ""} className="uppercase" />
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="bairro" className="mb-1.5 block">
                 Bairro
               </Label>
-              <Input id="bairro" name="bairro" defaultValue={cliente?.bairro ?? ""} />
+              <Input id="bairro" name="bairro" defaultValue={cliente?.bairro ?? ""} className="uppercase" />
             </div>
             <div>
               <Label htmlFor="cidade" className="mb-1.5 block">
                 Cidade
               </Label>
-              <Input id="cidade" name="cidade" defaultValue={cliente?.cidade ?? ""} />
+              <Input id="cidade" name="cidade" defaultValue={cliente?.cidade ?? ""} className="uppercase" />
             </div>
             <div>
               <Label htmlFor="estado" className="mb-1.5 block">
                 UF
               </Label>
-              <Input id="estado" name="estado" maxLength={2} defaultValue={cliente?.estado ?? ""} />
+              <Input
+                id="estado"
+                name="estado"
+                maxLength={2}
+                defaultValue={cliente?.estado ?? ""}
+                className="uppercase"
+              />
             </div>
           </div>
           <DialogFooter>

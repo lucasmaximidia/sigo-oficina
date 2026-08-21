@@ -53,6 +53,7 @@ export function NovaOrcamentoForm({ clientes }: { clientes: Pick<Cliente, "id" |
               name="descricao"
               rows={3}
               placeholder="Ex: Troca do motor da máquina de lavar Brastemp 12kg"
+              className="uppercase"
             />
           </div>
           <div className="max-w-xs">

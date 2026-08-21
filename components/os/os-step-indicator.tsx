@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -39,10 +39,21 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
     );
   }
 
+  function handleVoltar() {
+    if (currentIndex > 0) handleChange(osStatusSteps[currentIndex - 1].value);
+  }
+
+  function handleAvancar() {
+    if (currentIndex >= 0 && currentIndex < osStatusSteps.length - 1) {
+      handleChange(osStatusSteps[currentIndex + 1].value);
+    }
+  }
+
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex flex-1 items-center overflow-x-auto">
-        {osStatusSteps.map((step, index) => {
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-1 items-center overflow-x-auto">
+          {osStatusSteps.map((step, index) => {
           const done = index < currentIndex;
           const active = index === currentIndex;
           return (
@@ -77,9 +88,26 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
               )}
             </div>
           );
-        })}
+          })}
+        </div>
+        <StatusMenu status={status} isPending={isPending} onChange={handleChange} />
       </div>
-      <StatusMenu status={status} isPending={isPending} onChange={handleChange} />
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="outline" size="sm" disabled={isPending || currentIndex <= 0} onClick={handleVoltar}>
+          <ChevronLeft className="size-4" />
+          Voltar Etapa
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isPending || currentIndex < 0 || currentIndex >= osStatusSteps.length - 1}
+          onClick={handleAvancar}
+        >
+          Avançar Etapa
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
     </div>
   );
 }

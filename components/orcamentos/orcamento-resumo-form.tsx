@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
@@ -39,21 +40,19 @@ export function OrcamentoResumoForm({ orcamento, totalItens }: { orcamento: Orca
         <Label htmlFor="desconto" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Desconto (R$)
         </Label>
-        <Input
-          id="desconto"
-          name="desconto"
-          type="number"
-          step="0.01"
-          min={0}
-          value={desconto}
-          onChange={(e) => setDesconto(Number(e.target.value) || 0)}
-        />
+        <NumericInput id="desconto" name="desconto" defaultValue={orcamento.desconto} onValueChange={setDesconto} />
       </div>
       <div>
         <Label htmlFor="observacoes" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Observações (aparecem no PDF)
         </Label>
-        <Textarea id="observacoes" name="observacoes" rows={3} defaultValue={orcamento.observacoes ?? ""} />
+        <Textarea
+          id="observacoes"
+          name="observacoes"
+          rows={3}
+          defaultValue={orcamento.observacoes ?? ""}
+          className="uppercase"
+        />
       </div>
       <input type="hidden" name="descricao" value={orcamento.descricao ?? ""} />
 

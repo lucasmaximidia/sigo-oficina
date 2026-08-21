@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Printer, MessageCircle, CheckCircle2, ShieldCheck, Tag } from "lucide-react";
+import { Printer, MessageCircle, CheckCircle2, ShieldCheck, Tag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,9 +15,15 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { formatCurrency } from "@/lib/utils";
-import { setOrdemServicoPagamento, updateOrdemServicoStatus } from "@/lib/actions";
-import type { FormaPagamento, OsStatus } from "@/types";
+import { setOrdemServicoPagamento, updateOrdemServicoStatus, deleteOrdemServico } from "@/lib/actions";
+import type { FormaPagamento, OsStatus, TipoCartao } from "@/types";
+
+function hoje() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export function OsAcoes({
   osId,
@@ -33,9 +40,16 @@ export function OsAcoes({
   clienteTelefone: string | null;
   total: number;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [confirmarExcluir, setConfirmarExcluir] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
+  const [dataPagamento, setDataPagamento] = useState(hoje());
+  const [tipoCartao, setTipoCartao] = useState<TipoCartao>("debito");
+  const [valorPagoBruto, setValorPagoBruto] = useState(total);
+  const [valorRecebidoLiquido, setValorRecebidoLiquido] = useState(total);
   const [isPending, startTransition] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   function handlePrint() {
     window.print();
@@ -53,12 +67,30 @@ export function OsAcoes({
   function handleFinalizar() {
     startTransition(async () => {
       try {
-        await setOrdemServicoPagamento(osId, formaPagamento);
+        await setOrdemServicoPagamento(osId, {
+          formaPagamento,
+          dataPagamento,
+          tipoCartao: formaPagamento === "cartao" ? tipoCartao : null,
+          valorPagoBruto: formaPagamento === "cartao" ? valorPagoBruto : null,
+          valorRecebidoLiquido: formaPagamento === "cartao" ? valorRecebidoLiquido : null,
+        });
         await updateOrdemServicoStatus(osId, "finalizado");
-        toast.success("Ordem finalizada! A garantia começou a contar.");
+        toast.success("Ordem finalizada! A garantia começa a contar a partir da retirada do equipamento.");
         setOpen(false);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao finalizar OS");
+      }
+    });
+  }
+
+  function handleExcluir() {
+    startDelete(async () => {
+      try {
+        await deleteOrdemServico(osId);
+        toast.success("Ordem de serviço excluída");
+        router.push("/ordens-servico");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao excluir OS");
       }
     });
   }
@@ -101,28 +133,99 @@ export function OsAcoes({
           <DialogHeader>
             <DialogTitle>Finalizar ordem de serviço</DialogTitle>
           </DialogHeader>
-          <div>
-            <Label className="mb-1.5 block">Forma de pagamento</Label>
-            <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v as FormaPagamento)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="cartao">Cartão</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="mt-3 text-sm text-muted-foreground">
+          <div className="flex flex-col gap-4">
+            <div>
+              <Label className="mb-1.5 block">Forma de pagamento</Label>
+              <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v as FormaPagamento)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="cartao">Cartão</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="data_pagamento" className="mb-1.5 block">
+                Data do pagamento
+              </Label>
+              <Input
+                id="data_pagamento"
+                type="date"
+                value={dataPagamento}
+                max={hoje()}
+                onChange={(e) => setDataPagamento(e.target.value)}
+              />
+            </div>
+
+            {formaPagamento === "cartao" && (
+              <div className="flex flex-col gap-4 rounded-xl border border-border bg-secondary/50 p-3.5">
+                <div>
+                  <Label className="mb-1.5 block">Tipo de cartão</Label>
+                  <Select value={tipoCartao} onValueChange={(v) => setTipoCartao(v as TipoCartao)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="debito">Débito</SelectItem>
+                      <SelectItem value="credito">Crédito</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="mb-1.5 block">Valor passado (R$)</Label>
+                    <NumericInput defaultValue={valorPagoBruto} onValueChange={setValorPagoBruto} />
+                  </div>
+                  <div>
+                    <Label className="mb-1.5 block">Valor que entrou (R$)</Label>
+                    <NumericInput defaultValue={valorRecebidoLiquido} onValueChange={setValorRecebidoLiquido} />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  A diferença entre os dois valores é a taxa da maquininha — o valor que entrou é o que efetivamente
+                  cai no caixa.
+                </p>
+              </div>
+            )}
+
+            <p className="text-sm text-muted-foreground">
               Total a receber: <span className="font-semibold text-foreground">{formatCurrency(total)}</span>
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Ao confirmar, a garantia do serviço começa a contar a partir de hoje.
+            <p className="text-xs text-muted-foreground">
+              Ao confirmar, a OS é finalizada. A garantia passa a contar a partir da data de retirada do equipamento
+              (informe-a depois, quando o cliente buscar).
             </p>
           </div>
           <DialogFooter>
             <Button type="button" onClick={handleFinalizar} disabled={isPending}>
               {isPending ? "Finalizando..." : "Confirmar pagamento e finalizar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmarExcluir} onOpenChange={setConfirmarExcluir}>
+        <DialogTrigger asChild>
+          <Button type="button" variant="destructive">
+            <Trash2 className="size-4" />
+            Excluir OS
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir ordem de serviço?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Essa ação não pode ser desfeita. A OS #OS-{String(numero).padStart(4, "0")}, seus itens e o frete
+            vinculado (se houver) serão apagados, e ela some do Financeiro.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="destructive" onClick={handleExcluir} disabled={isDeleting}>
+              {isDeleting ? "Excluindo..." : "Sim, excluir definitivamente"}
             </Button>
           </DialogFooter>
         </DialogContent>

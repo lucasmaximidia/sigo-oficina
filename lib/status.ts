@@ -19,8 +19,8 @@ export const osStatusMap: Record<OsStatus, { label: string; variant: "secondary"
 
 export const osStatusSteps: { value: OsStatus; label: string }[] = [
   { value: "aguardando_orcamento", label: "Aguardando Orçamento" },
-  { value: "em_execucao", label: "Em Execução" },
   { value: "aguardando_pecas", label: "Aguardando Peças" },
+  { value: "em_execucao", label: "Em Execução" },
   { value: "aguardando_pagamento", label: "Pagamento" },
   { value: "finalizado", label: "Finalizado" },
 ];

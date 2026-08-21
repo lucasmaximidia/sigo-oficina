@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,11 +53,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
                 <Label htmlFor="garantia_prazo_dias" className="mb-1.5 block">
                   Duração (dias)
                 </Label>
-                <Input
+                <NumericInput
                   id="garantia_prazo_dias"
                   name="garantia_prazo_dias"
-                  type="number"
-                  min={1}
+                  decimal={false}
                   defaultValue={config.garantia_prazo_dias}
                 />
               </div>
@@ -107,11 +106,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
                 <Label htmlFor="garantia_alerta_dias" className="mb-1.5 block">
                   Aviso Antecipado (dias)
                 </Label>
-                <Input
+                <NumericInput
                   id="garantia_alerta_dias"
                   name="garantia_alerta_dias"
-                  type="number"
-                  min={1}
+                  decimal={false}
                   defaultValue={config.garantia_alerta_dias}
                 />
               </div>

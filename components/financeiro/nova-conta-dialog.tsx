@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -49,20 +50,26 @@ export function NovaContaDialog() {
             <Label htmlFor="descricao" className="mb-1.5 block">
               Descrição
             </Label>
-            <Input id="descricao" name="descricao" required placeholder="Ex: Fornecedor EletroPeças LTDA" />
+            <Input
+              id="descricao"
+              name="descricao"
+              required
+              placeholder="Ex: Fornecedor EletroPeças LTDA"
+              className="uppercase"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="categoria" className="mb-1.5 block">
                 Categoria
               </Label>
-              <Input id="categoria" name="categoria" placeholder="Ex: Peças, Aluguel..." />
+              <Input id="categoria" name="categoria" placeholder="Ex: Peças, Aluguel..." className="uppercase" />
             </div>
             <div>
               <Label htmlFor="fornecedor" className="mb-1.5 block">
                 Fornecedor
               </Label>
-              <Input id="fornecedor" name="fornecedor" />
+              <Input id="fornecedor" name="fornecedor" className="uppercase" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -70,7 +77,7 @@ export function NovaContaDialog() {
               <Label htmlFor="valor" className="mb-1.5 block">
                 Valor (R$)
               </Label>
-              <Input id="valor" name="valor" type="number" step="0.01" min={0} required />
+              <NumericInput id="valor" name="valor" required />
             </div>
             <div>
               <Label htmlFor="vencimento" className="mb-1.5 block">
@@ -83,7 +90,12 @@ export function NovaContaDialog() {
             <Label htmlFor="numero_documento" className="mb-1.5 block">
               Número do documento (opcional)
             </Label>
-            <Input id="numero_documento" name="numero_documento" placeholder="Ex: Boleto Nfe #1209" />
+            <Input
+              id="numero_documento"
+              name="numero_documento"
+              placeholder="Ex: Boleto Nfe #1209"
+              className="uppercase"
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

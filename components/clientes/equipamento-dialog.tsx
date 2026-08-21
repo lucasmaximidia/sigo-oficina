@@ -77,20 +77,20 @@ export function EquipamentoDialog({ clienteId }: { clienteId: string }) {
               <Label htmlFor="marca" className="mb-1.5 block">
                 Marca
               </Label>
-              <Input id="marca" name="marca" />
+              <Input id="marca" name="marca" className="uppercase" />
             </div>
             <div>
               <Label htmlFor="modelo" className="mb-1.5 block">
                 Modelo
               </Label>
-              <Input id="modelo" name="modelo" />
+              <Input id="modelo" name="modelo" className="uppercase" />
             </div>
           </div>
           <div>
             <Label htmlFor="numero_serie" className="mb-1.5 block">
               Número de série
             </Label>
-            <Input id="numero_serie" name="numero_serie" />
+            <Input id="numero_serie" name="numero_serie" className="uppercase" />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

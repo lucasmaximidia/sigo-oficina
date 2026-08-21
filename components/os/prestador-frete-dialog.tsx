@@ -27,7 +27,7 @@ export function PrestadorFreteDialog({ onCreated }: { onCreated: (id: string, no
       try {
         const id = await createPrestadorFrete(formData);
         toast.success("Prestador de frete cadastrado");
-        onCreated(id, nome);
+        onCreated(id, nome.toUpperCase());
         setOpen(false);
         setNome("");
       } catch (error) {
@@ -53,7 +53,14 @@ export function PrestadorFreteDialog({ onCreated }: { onCreated: (id: string, no
             <Label htmlFor="prestador_nome" className="mb-1.5 block">
               Nome
             </Label>
-            <Input id="prestador_nome" name="nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
+            <Input
+              id="prestador_nome"
+              name="nome"
+              required
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="uppercase"
+            />
           </div>
           <div>
             <Label htmlFor="prestador_telefone" className="mb-1.5 block">
