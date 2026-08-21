@@ -3,108 +3,128 @@ import type { Configuracao } from "@/types";
 
 const cores = {
   primary: "#00647c",
-  selo: "#b45309",
   text: "#191c1e",
   muted: "#5b6b70",
   border: "#e2e6ea",
-  bgMuted: "#f7f9fb",
+  bgMuted: "#f2f4f6",
 };
 
 const styles = StyleSheet.create({
-  page: { padding: 18, fontFamily: "Helvetica", color: cores.text },
-  moldura: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: cores.primary,
-    padding: 6,
+  page: {
+    padding: 40,
+    fontSize: 10,
+    color: cores.text,
+    fontFamily: "Helvetica",
   },
-  molduraInterna: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: cores.selo,
-    padding: 30,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: cores.primary,
   },
-  header: { alignItems: "center", marginBottom: 4 },
-  empresaBloco: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
-  logo: { width: 40, height: 40, objectFit: "contain" },
-  empresaNome: { fontSize: 12, fontFamily: "Helvetica-Bold" },
-  empresaInfo: { fontSize: 7.5, color: cores.muted, marginTop: 1 },
-  tituloWrap: { alignItems: "center", marginTop: 4, marginBottom: 4 },
-  eyebrow: { fontSize: 8, color: cores.selo, letterSpacing: 2, fontFamily: "Helvetica-Bold" },
-  titulo: { fontSize: 22, fontFamily: "Helvetica-Bold", color: cores.primary, marginTop: 4 },
-  linhaTitulo: { width: 90, height: 2, backgroundColor: cores.selo, marginTop: 10, marginBottom: 22 },
-
-  seloWrap: {
-    position: "absolute",
-    top: 24,
-    right: 24,
-    alignItems: "center",
-    transform: "rotate(-9deg)",
+  empresaBloco: { flexDirection: "row", alignItems: "center", gap: 10 },
+  logo: { width: 48, height: 48, objectFit: "contain" },
+  empresaNome: { fontSize: 14, fontFamily: "Helvetica-Bold", color: cores.text },
+  empresaInfo: { fontSize: 8, color: cores.muted, marginTop: 2 },
+  tituloBloco: { alignItems: "flex-end", flexDirection: "row", gap: 10 },
+  tituloTexto: { alignItems: "flex-end" },
+  titulo: { fontSize: 18, fontFamily: "Helvetica-Bold", color: cores.primary },
+  numero: { fontSize: 9, color: cores.muted, marginTop: 2 },
+  section: { marginBottom: 18 },
+  sectionTitle: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: cores.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
-  seloCaption: { fontSize: 7, fontFamily: "Helvetica-Bold", color: cores.selo, marginTop: 3, letterSpacing: 0.5 },
-  seloCaptionSub: { fontSize: 6.5, color: cores.selo, marginTop: 1 },
-
-  corpo: { flexDirection: "row", gap: 24, marginBottom: 22 },
-  coluna: { flex: 1, gap: 14 },
-  campo: { gap: 2 },
-  campoLabel: { fontSize: 7.5, color: cores.muted, textTransform: "uppercase", letterSpacing: 0.5 },
-  campoValor: { fontSize: 11, fontFamily: "Helvetica-Bold" },
-
+  infoRow: { flexDirection: "row", justifyContent: "space-between" },
+  infoCol: { flexDirection: "column", gap: 2 },
+  infoLabel: { fontSize: 8, color: cores.muted },
+  infoValue: { fontSize: 10, fontFamily: "Helvetica-Bold", marginTop: 1 },
+  table: { borderWidth: 1, borderColor: cores.border, borderRadius: 4, overflow: "hidden" },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: cores.bgMuted,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: cores.border,
+  },
+  thDescricao: { flex: 3, fontSize: 8, fontFamily: "Helvetica-Bold", color: cores.muted, textTransform: "uppercase" },
+  thQtd: { flex: 1, fontSize: 8, fontFamily: "Helvetica-Bold", color: cores.muted, textTransform: "uppercase", textAlign: "center" },
+  tdDescricao: { flex: 3, fontSize: 9.5 },
+  tdQtd: { flex: 1, fontSize: 9.5, textAlign: "center" },
   destaqueBloco: {
+    flexDirection: "row",
+    justifyContent: "space-around",
     backgroundColor: cores.bgMuted,
     borderRadius: 4,
     padding: 14,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 22,
+    marginBottom: 18,
   },
   destaqueItem: { alignItems: "center" },
-  destaqueValor: { fontSize: 16, fontFamily: "Helvetica-Bold", color: cores.primary },
+  destaqueValor: { fontSize: 13, fontFamily: "Helvetica-Bold", color: cores.primary },
   destaqueLabel: { fontSize: 7.5, color: cores.muted, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },
-
-  textoLegal: { fontSize: 9, lineHeight: 1.6, color: cores.text, textAlign: "justify", marginBottom: 24 },
-
-  rodapeBloco: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: "auto" },
-  assinaturaLinha: { width: 200, borderTopWidth: 1, borderTopColor: cores.text, paddingTop: 4 },
+  aviso: {
+    padding: 10,
+    backgroundColor: cores.bgMuted,
+    borderRadius: 4,
+    fontSize: 8.5,
+    color: cores.muted,
+    lineHeight: 1.5,
+  },
+  rodapeAcoes: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: 24 },
+  assinaturaLinha: { width: 200, borderTopWidth: 1, borderTopColor: cores.border, paddingTop: 4 },
   assinaturaLabel: { fontSize: 8, color: cores.muted, textAlign: "center" },
   qrWrap: { alignItems: "center" },
-  qrImg: { width: 54, height: 54 },
+  qrImg: { width: 50, height: 50 },
   qrCaption: { fontSize: 6, color: cores.muted, marginTop: 3, width: 70, textAlign: "center" },
-
-  footer: { textAlign: "center", fontSize: 7, color: cores.muted, marginTop: 16 },
+  footer: {
+    position: "absolute",
+    bottom: 30,
+    left: 40,
+    right: 40,
+    textAlign: "center",
+    fontSize: 7.5,
+    color: cores.muted,
+    borderTopWidth: 1,
+    borderTopColor: cores.border,
+    paddingTop: 10,
+  },
 });
 
 function formatDatePdf(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T00:00:00`));
 }
 
-function SeloGarantia({ dias }: { dias: number }) {
+function SeloGarantia() {
   return (
-    <View style={styles.seloWrap}>
-      <Svg width={78} height={78} viewBox="0 0 78 78">
-        <Circle cx="39" cy="39" r="37" fill={cores.selo} />
-        <Circle cx="39" cy="39" r="37" fill="none" stroke="#ffffff" strokeWidth="1.5" />
-        <Circle cx="39" cy="39" r="30" fill="none" stroke="#ffffff" strokeWidth="0.75" strokeDasharray="2,2.5" />
-        <Path
-          d="M25 40 L34 49 L54 27"
-          stroke="#ffffff"
-          strokeWidth="5"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </Svg>
-      <Text style={styles.seloCaption}>GARANTIA</Text>
-      <Text style={styles.seloCaptionSub}>{dias} DIAS</Text>
-    </View>
+    <Svg width={44} height={44} viewBox="0 0 44 44">
+      <Circle cx="22" cy="22" r="21" fill={cores.primary} />
+      <Circle cx="22" cy="22" r="21" fill="none" stroke="#ffffff" strokeWidth="1" />
+      <Circle cx="22" cy="22" r="17" fill="none" stroke="#ffffff" strokeWidth="0.5" strokeDasharray="1.5,1.5" />
+      <Path d="M14 22.5 L19.5 28 L30 16" stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
   );
 }
 
 export function CertificadoPdf({
   numero,
   clienteNome,
+  clienteTelefone,
   equipamentoDescricao,
   numeroSerie,
+  itens,
   dataInicio,
   dataExpiracao,
   garantiaDias,
@@ -113,8 +133,10 @@ export function CertificadoPdf({
 }: {
   numero: number;
   clienteNome: string;
+  clienteTelefone: string | null;
   equipamentoDescricao: string;
   numeroSerie: string | null;
+  itens: { id: string; descricao: string; quantidade: number }[];
   dataInicio: string;
   dataExpiracao: string;
   garantiaDias: number;
@@ -136,97 +158,114 @@ export function CertificadoPdf({
   return (
     <Document title={`Certificado-Garantia-${numero}`}>
       <Page size="A4" style={styles.page}>
-        <View style={styles.moldura}>
-          <View style={styles.molduraInterna}>
-            <SeloGarantia dias={garantiaDias} />
-
-            <View style={styles.header}>
-              <View style={styles.empresaBloco}>
-                {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
-                {config.logo_url && <Image src={config.logo_url} style={styles.logo} />}
-                <View>
-                  <Text style={styles.empresaNome}>{config.nome_empresa}</Text>
-                  {config.cnpj && <Text style={styles.empresaInfo}>CNPJ: {config.cnpj}</Text>}
-                  {config.telefone && <Text style={styles.empresaInfo}>{config.telefone}</Text>}
-                </View>
-              </View>
-              <View style={styles.tituloWrap}>
-                <Text style={styles.eyebrow}>DOCUMENTO OFICIAL</Text>
-                <Text style={styles.titulo}>CERTIFICADO DE GARANTIA</Text>
-                <View style={styles.linhaTitulo} />
-              </View>
+        <View style={styles.header}>
+          <View style={styles.empresaBloco}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
+            {config.logo_url && <Image src={config.logo_url} style={styles.logo} />}
+            <View>
+              <Text style={styles.empresaNome}>{config.nome_empresa}</Text>
+              {config.cnpj && <Text style={styles.empresaInfo}>CNPJ: {config.cnpj}</Text>}
+              {config.telefone && <Text style={styles.empresaInfo}>{config.telefone}</Text>}
+              {config.endereco && <Text style={styles.empresaInfo}>{config.endereco}</Text>}
             </View>
-
-            <View style={styles.corpo}>
-              <View style={styles.coluna}>
-                <View style={styles.campo}>
-                  <Text style={styles.campoLabel}>Cliente</Text>
-                  <Text style={styles.campoValor}>{clienteNome}</Text>
-                </View>
-                <View style={styles.campo}>
-                  <Text style={styles.campoLabel}>Equipamento</Text>
-                  <Text style={styles.campoValor}>{equipamentoDescricao}</Text>
-                </View>
-                {numeroSerie && (
-                  <View style={styles.campo}>
-                    <Text style={styles.campoLabel}>Número de série</Text>
-                    <Text style={styles.campoValor}>{numeroSerie}</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.coluna}>
-                <View style={styles.campo}>
-                  <Text style={styles.campoLabel}>Ordem de serviço</Text>
-                  <Text style={styles.campoValor}>#OS-{String(numero).padStart(4, "0")}</Text>
-                </View>
-                <View style={styles.campo}>
-                  <Text style={styles.campoLabel}>Tipo de cobertura</Text>
-                  <Text style={styles.campoValor}>{config.garantia_tipo_cobertura}</Text>
-                </View>
-              </View>
+          </View>
+          <View style={styles.tituloBloco}>
+            <View style={styles.tituloTexto}>
+              <Text style={styles.titulo}>CERTIFICADO DE GARANTIA</Text>
+              <Text style={styles.numero}>OS #OS-{String(numero).padStart(4, "0")}</Text>
+              <Text style={styles.numero}>Emitido em {formatDatePdf(dataInicio)}</Text>
             </View>
-
-            <View style={styles.destaqueBloco}>
-              <View style={styles.destaqueItem}>
-                <Text style={styles.destaqueValor}>{formatDatePdf(dataInicio)}</Text>
-                <Text style={styles.destaqueLabel}>Início da garantia</Text>
-              </View>
-              <View style={styles.destaqueItem}>
-                <Text style={styles.destaqueValor}>{garantiaDias} dias</Text>
-                <Text style={styles.destaqueLabel}>Prazo</Text>
-              </View>
-              <View style={styles.destaqueItem}>
-                <Text style={styles.destaqueValor}>{formatDatePdf(dataExpiracao)}</Text>
-                <Text style={styles.destaqueLabel}>Válido até</Text>
-              </View>
-            </View>
-
-            <Text style={styles.textoLegal}>{texto}</Text>
-
-            <View style={styles.rodapeBloco}>
-              {config.garantia_assinatura_digital ? (
-                <View style={styles.assinaturaLinha}>
-                  <Text style={styles.assinaturaLabel}>Assinatura do Técnico Responsável</Text>
-                </View>
-              ) : (
-                <View />
-              )}
-              {config.garantia_qrcode && qrCodeDataUrl && (
-                <View style={styles.qrWrap}>
-                  {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
-                  <Image src={qrCodeDataUrl} style={styles.qrImg} />
-                  <Text style={styles.qrCaption}>Escaneie para verificar a autenticidade</Text>
-                </View>
-              )}
-            </View>
-
-            <Text style={styles.footer}>
-              {config.nome_empresa}
-              {config.telefone ? ` · ${config.telefone}` : ""}
-              {config.endereco ? ` · ${config.endereco}` : ""}
-            </Text>
+            <SeloGarantia />
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cliente e Equipamento</Text>
+          <View style={styles.infoRow}>
+            <View style={styles.infoCol}>
+              <Text style={styles.infoLabel}>Nome</Text>
+              <Text style={styles.infoValue}>{clienteNome}</Text>
+            </View>
+            <View style={styles.infoCol}>
+              <Text style={styles.infoLabel}>Telefone</Text>
+              <Text style={styles.infoValue}>{clienteTelefone || "—"}</Text>
+            </View>
+            <View style={styles.infoCol}>
+              <Text style={styles.infoLabel}>Equipamento</Text>
+              <Text style={styles.infoValue}>{equipamentoDescricao}</Text>
+            </View>
+            {numeroSerie && (
+              <View style={styles.infoCol}>
+                <Text style={styles.infoLabel}>Nº de série</Text>
+                <Text style={styles.infoValue}>{numeroSerie}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Peças e Materiais Utilizados</Text>
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.thDescricao}>Descrição</Text>
+              <Text style={styles.thQtd}>Qtd</Text>
+            </View>
+            {itens.map((item) => (
+              <View key={item.id} style={styles.tableRow}>
+                <Text style={styles.tdDescricao}>{item.descricao}</Text>
+                <Text style={styles.tdQtd}>{item.quantidade}</Text>
+              </View>
+            ))}
+            {itens.length === 0 && (
+              <View style={styles.tableRow}>
+                <Text style={styles.tdDescricao}>Nenhuma peça registrada nesta OS</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.destaqueBloco}>
+          <View style={styles.destaqueItem}>
+            <Text style={styles.destaqueValor}>{formatDatePdf(dataInicio)}</Text>
+            <Text style={styles.destaqueLabel}>Início da garantia</Text>
+          </View>
+          <View style={styles.destaqueItem}>
+            <Text style={styles.destaqueValor}>{garantiaDias} dias</Text>
+            <Text style={styles.destaqueLabel}>Prazo</Text>
+          </View>
+          <View style={styles.destaqueItem}>
+            <Text style={styles.destaqueValor}>{formatDatePdf(dataExpiracao)}</Text>
+            <Text style={styles.destaqueLabel}>Válido até</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Termo de Garantia</Text>
+          <Text style={styles.aviso}>{texto}</Text>
+        </View>
+
+        <View style={styles.rodapeAcoes}>
+          {config.garantia_assinatura_digital ? (
+            <View style={styles.assinaturaLinha}>
+              <Text style={styles.assinaturaLabel}>Assinatura do Técnico Responsável</Text>
+            </View>
+          ) : (
+            <View />
+          )}
+          {config.garantia_qrcode && qrCodeDataUrl && (
+            <View style={styles.qrWrap}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
+              <Image src={qrCodeDataUrl} style={styles.qrImg} />
+              <Text style={styles.qrCaption}>Escaneie para verificar a autenticidade</Text>
+            </View>
+          )}
+        </View>
+
+        <Text style={styles.footer}>
+          {config.nome_empresa}
+          {config.telefone ? ` · ${config.telefone}` : ""}
+          {config.endereco ? ` · ${config.endereco}` : ""}
+        </Text>
       </Page>
     </Document>
   );

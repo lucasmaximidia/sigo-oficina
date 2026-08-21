@@ -13,22 +13,23 @@ interface OsComRelacoes {
   status: string;
   data_finalizacao: string | null;
   garantia_dias: number;
-  clientes: { nome: string } | null;
+  clientes: { nome: string; telefone: string | null } | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null; numero_serie: string | null } | null;
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ osId: string }> }) {
   const { osId } = await params;
 
-  const [{ data: os }, { data: config }] = await Promise.all([
+  const [{ data: os }, { data: config }, { data: itens }] = await Promise.all([
     supabase
       .from("ordens_servico")
       .select<string, OsComRelacoes>(
-        "id, numero, status, data_finalizacao, garantia_dias, clientes(nome), equipamentos(tipo, marca, modelo, numero_serie)"
+        "id, numero, status, data_finalizacao, garantia_dias, clientes(nome, telefone), equipamentos(tipo, marca, modelo, numero_serie)"
       )
       .eq("id", osId)
       .maybeSingle(),
     supabase.from("configuracoes").select("*").eq("id", 1).single(),
+    supabase.from("os_itens").select("id, descricao, quantidade").eq("os_id", osId).order("created_at", { ascending: true }),
   ]);
 
   if (!os || !config) {
@@ -59,8 +60,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
     CertificadoPdf({
       numero: os.numero,
       clienteNome: os.clientes?.nome ?? "Cliente",
+      clienteTelefone: os.clientes?.telefone ?? null,
       equipamentoDescricao,
       numeroSerie: equipamento?.numero_serie ?? null,
+      itens: itens ?? [],
       dataInicio,
       dataExpiracao,
       garantiaDias: os.garantia_dias,
