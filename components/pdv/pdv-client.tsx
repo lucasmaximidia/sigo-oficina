@@ -91,7 +91,7 @@ export function PdvClient({
           descricao: peca.nome,
           tipo: "peca",
           quantidade: 1,
-          valor_unitario: peca.preco_unitario,
+          valor_unitario: peca.preco_venda,
         },
       ];
     });
@@ -184,7 +184,7 @@ export function PdvClient({
                   className="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm hover:bg-secondary"
                 >
                   <span className="font-medium text-foreground">{p.nome}</span>
-                  <span className="text-muted-foreground">{formatCurrency(p.preco_unitario)}</span>
+                  <span className="text-muted-foreground">{formatCurrency(p.preco_venda)}</span>
                 </button>
               ))}
             </div>

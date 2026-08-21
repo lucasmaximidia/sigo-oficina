@@ -44,7 +44,9 @@ export default async function EstoquePage() {
               <TableRow>
                 <TableHead>Item / Código</TableHead>
                 <TableHead>Em Estoque</TableHead>
-                <TableHead>Preço Unitário</TableHead>
+                <TableHead>Preço de Custo</TableHead>
+                <TableHead>Preço de Venda</TableHead>
+                <TableHead>Lucro Unitário</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-10">Ações</TableHead>
               </TableRow>
@@ -52,6 +54,8 @@ export default async function EstoquePage() {
             <TableBody>
               {(pecas ?? []).map((peca) => {
                 const status = statusPeca(peca.quantidade, peca.quantidade_minima);
+                const lucroUnitario = peca.preco_venda - peca.preco_custo;
+                const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
                 return (
                   <TableRow key={peca.id}>
                     <TableCell>
@@ -59,7 +63,14 @@ export default async function EstoquePage() {
                       {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
                     </TableCell>
                     <TableCell>{peca.quantidade} unid.</TableCell>
-                    <TableCell>{formatCurrency(peca.preco_unitario)}</TableCell>
+                    <TableCell>{formatCurrency(peca.preco_custo)}</TableCell>
+                    <TableCell>{formatCurrency(peca.preco_venda)}</TableCell>
+                    <TableCell>
+                      <p className={cn("font-medium", lucroUnitario >= 0 ? "text-success" : "text-destructive")}>
+                        {formatCurrency(lucroUnitario)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={status.variant}>{status.label}</Badge>
                     </TableCell>
@@ -71,7 +82,7 @@ export default async function EstoquePage() {
               })}
               {(pecas ?? []).length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     Nenhuma peça cadastrada.
                   </TableCell>
                 </TableRow>

@@ -143,7 +143,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                     type="number"
                     step="0.01"
                     min={0}
-                    defaultValue={pecaSelecionada?.preco_unitario ?? 0}
+                    defaultValue={pecaSelecionada?.preco_venda ?? 0}
                   />
                 </div>
               </div>

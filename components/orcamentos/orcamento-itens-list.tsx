@@ -108,7 +108,7 @@ export function OrcamentoItensList({
                       <SelectContent>
                         {pecas.map((p) => (
                           <SelectItem key={p.id} value={p.id}>
-                            {p.nome} ({formatCurrency(p.preco_unitario)})
+                            {p.nome} ({formatCurrency(p.preco_venda)})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -146,7 +146,7 @@ export function OrcamentoItensList({
                       type="number"
                       step="0.01"
                       min={0}
-                      defaultValue={pecaSelecionada?.preco_unitario ?? 0}
+                      defaultValue={pecaSelecionada?.preco_venda ?? 0}
                     />
                   </div>
                 </div>
