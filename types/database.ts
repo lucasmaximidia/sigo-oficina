@@ -20,6 +20,8 @@ export type AgendaStatus =
   | "concluido"
   | "cancelado";
 export type GarantiaStatus = "ativa" | "critica" | "expirada" | "sem_garantia";
+export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "expirado";
+export type OrcamentoItemTipo = "peca" | "mao_obra";
 
 // Observação: os campos Row/Insert/Update abaixo são escritos como literais de
 // objeto inline (não interfaces nomeadas) de propósito — é o mesmo formato que
@@ -561,6 +563,75 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      orcamentos: {
+        Row: {
+          id: string;
+          numero: number;
+          cliente_id: string;
+          descricao: string | null;
+          observacoes: string | null;
+          status: OrcamentoStatus;
+          desconto: number;
+          data_validade: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          numero?: number;
+          cliente_id: string;
+          descricao?: string | null;
+          observacoes?: string | null;
+          status?: OrcamentoStatus;
+          desconto?: number;
+          data_validade?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          numero?: number;
+          cliente_id?: string;
+          descricao?: string | null;
+          observacoes?: string | null;
+          status?: OrcamentoStatus;
+          desconto?: number;
+          data_validade?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      orcamento_itens: {
+        Row: {
+          id: string;
+          orcamento_id: string;
+          descricao: string;
+          tipo: OrcamentoItemTipo;
+          quantidade: number;
+          valor_unitario: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          orcamento_id: string;
+          descricao: string;
+          tipo?: OrcamentoItemTipo;
+          quantidade?: number;
+          valor_unitario?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          orcamento_id?: string;
+          descricao?: string;
+          tipo?: OrcamentoItemTipo;
+          quantidade?: number;
+          valor_unitario?: number;
+          created_at?: string;
         };
         Relationships: [];
       };

@@ -11,6 +11,8 @@ import type {
   ItemOrigem,
   AgendaTipo,
   AgendaStatus,
+  OrcamentoStatus,
+  OrcamentoItemTipo,
 } from "@/types";
 
 function str(fd: FormData, key: string) {
@@ -449,6 +451,33 @@ export async function updateConfiguracoesEmpresa(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+export async function uploadLogoEmpresa(formData: FormData) {
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Selecione uma imagem");
+  if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
+  if (file.size > 2 * 1024 * 1024) throw new Error("A imagem precisa ter no máximo 2MB");
+
+  const extensao = file.name.split(".").pop()?.toLowerCase() || "png";
+  const caminho = `empresa-logo.${extensao}`;
+
+  const { error: uploadError } = await supabase.storage.from("logos").upload(caminho, file, {
+    upsert: true,
+    contentType: file.type,
+  });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: publicUrlData } = supabase.storage.from("logos").getPublicUrl(caminho);
+  const logoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
+
+  const { error } = await supabase.from("configuracoes").update({ logo_url: logoUrl }).eq("id", 1);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/garantias/configuracoes");
+  revalidatePath("/orcamentos", "layout");
+  return logoUrl;
+}
+
 export async function updateConfiguracoesGarantia(formData: FormData) {
   const { error } = await supabase
     .from("configuracoes")
@@ -467,11 +496,90 @@ export async function updateConfiguracoesGarantia(formData: FormData) {
   revalidatePath("/garantias/configuracoes");
 }
 
+// ---------- Orçamentos ----------
+export async function createOrcamento(formData: FormData) {
+  let clienteId = str(formData, "cliente_id");
+
+  if (!clienteId) {
+    const nome = str(formData, "cliente_nome");
+    if (!nome) throw new Error("Informe o cliente");
+    const { data: novoCliente, error: clienteError } = await supabase
+      .from("clientes")
+      .insert({ nome, telefone: str(formData, "cliente_telefone") })
+      .select("id")
+      .single();
+    if (clienteError) throw new Error(clienteError.message);
+    clienteId = novoCliente.id;
+  }
+
+  const validadeDias = Number(str(formData, "validade_dias") ?? "15");
+  const dataValidade = new Date();
+  dataValidade.setDate(dataValidade.getDate() + validadeDias);
+
+  const { data: orcamento, error } = await supabase
+    .from("orcamentos")
+    .insert({
+      cliente_id: clienteId,
+      descricao: str(formData, "descricao"),
+      data_validade: dataValidade.toISOString().slice(0, 10),
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/orcamentos");
+  return orcamento.id as string;
+}
+
+export async function updateOrcamentoDetalhes(id: string, formData: FormData) {
+  const { error } = await supabase
+    .from("orcamentos")
+    .update({
+      descricao: str(formData, "descricao"),
+      observacoes: str(formData, "observacoes"),
+      desconto: num(formData, "desconto"),
+      data_validade: str(formData, "data_validade") ?? undefined,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/orcamentos/${id}`);
+}
+
+export async function updateOrcamentoStatus(id: string, status: OrcamentoStatus) {
+  const { error } = await supabase.from("orcamentos").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/orcamentos/${id}`);
+  revalidatePath("/orcamentos");
+}
+
+export async function addOrcamentoItem(orcamentoId: string, formData: FormData) {
+  const descricao = str(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const { error } = await supabase.from("orcamento_itens").insert({
+    orcamento_id: orcamentoId,
+    descricao,
+    tipo: (str(formData, "tipo") as OrcamentoItemTipo) ?? "peca",
+    quantidade: Number(str(formData, "quantidade") ?? "1"),
+    valor_unitario: num(formData, "valor_unitario"),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/orcamentos/${orcamentoId}`);
+}
+
+export async function removeOrcamentoItem(itemId: string, orcamentoId: string) {
+  const { error } = await supabase.from("orcamento_itens").delete().eq("id", itemId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/orcamentos/${orcamentoId}`);
+}
+
 export async function resetarSistema() {
   const tabelas = [
     "os_itens",
     "venda_itens",
     "vendas_pdv",
+    "venda_pagamentos",
+    "orcamento_itens",
+    "orcamentos",
     "agenda_eventos",
     "financeiro_despesas",
     "financeiro_contas",

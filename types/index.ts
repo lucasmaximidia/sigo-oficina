@@ -15,6 +15,8 @@ export type AgendaEvento = Database["public"]["Tables"]["agenda_eventos"]["Row"]
 export type Tarefa = Database["public"]["Tables"]["tarefas"]["Row"];
 export type Configuracao = Database["public"]["Tables"]["configuracoes"]["Row"];
 export type VwGarantia = Database["public"]["Views"]["vw_garantias"]["Row"];
+export type Orcamento = Database["public"]["Tables"]["orcamentos"]["Row"];
+export type OrcamentoItem = Database["public"]["Tables"]["orcamento_itens"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;

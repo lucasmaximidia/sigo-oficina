@@ -4,6 +4,7 @@ import type {
   ContaStatus,
   AgendaStatus,
   GarantiaStatus,
+  OrcamentoStatus,
 } from "@/types";
 
 export const osStatusMap: Record<OsStatus, { label: string; variant: "secondary" | "info" | "warning" | "success" | "destructive" }> = {
@@ -48,4 +49,12 @@ export const garantiaStatusMap: Record<GarantiaStatus, { label: string; variant:
   critica: { label: "Crítica", variant: "warning" },
   expirada: { label: "Expirada", variant: "destructive" },
   sem_garantia: { label: "Sem garantia", variant: "secondary" },
+};
+
+export const orcamentoStatusMap: Record<OrcamentoStatus, { label: string; variant: "secondary" | "info" | "success" | "destructive" | "warning" }> = {
+  rascunho: { label: "Rascunho", variant: "secondary" },
+  enviado: { label: "Enviado", variant: "info" },
+  aprovado: { label: "Aprovado", variant: "success" },
+  recusado: { label: "Recusado", variant: "destructive" },
+  expirado: { label: "Expirado", variant: "warning" },
 };
