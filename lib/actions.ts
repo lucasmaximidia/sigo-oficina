@@ -276,22 +276,33 @@ export interface PdvItemInput {
   valor_unitario: number;
 }
 
+export interface PdvPagamentoInput {
+  forma_pagamento: FormaPagamento;
+  valor: number;
+}
+
 export async function finalizarVendaPdv(input: {
   clienteId: string | null;
   clienteNomeAvulso: string | null;
-  formaPagamento: FormaPagamento;
+  pagamentos: PdvPagamentoInput[];
   desconto: number;
   itens: PdvItemInput[];
 }) {
   const subtotal = input.itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
   const total = Math.max(0, subtotal - input.desconto);
 
+  if (input.pagamentos.length === 0) throw new Error("Selecione ao menos uma forma de pagamento");
+  const totalPago = input.pagamentos.reduce((acc, p) => acc + p.valor, 0);
+  if (Math.abs(totalPago - total) > 0.01) {
+    throw new Error("A soma das formas de pagamento precisa bater com o total da venda");
+  }
+
   const { data: venda, error } = await supabase
     .from("vendas_pdv")
     .insert({
       cliente_id: input.clienteId,
       cliente_nome_avulso: input.clienteNomeAvulso,
-      forma_pagamento: input.formaPagamento,
+      forma_pagamento: input.pagamentos[0].forma_pagamento,
       subtotal,
       desconto: input.desconto,
       total,
@@ -299,6 +310,15 @@ export async function finalizarVendaPdv(input: {
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+
+  const { error: pagamentosError } = await supabase.from("venda_pagamentos").insert(
+    input.pagamentos.map((p) => ({
+      venda_id: venda.id,
+      forma_pagamento: p.forma_pagamento,
+      valor: p.valor,
+    }))
+  );
+  if (pagamentosError) throw new Error(pagamentosError.message);
 
   if (input.itens.length > 0) {
     const { error: itensError } = await supabase.from("venda_itens").insert(

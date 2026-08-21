@@ -345,6 +345,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      venda_pagamentos: {
+        Row: {
+          id: string;
+          venda_id: string;
+          forma_pagamento: FormaPagamento;
+          valor: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          venda_id: string;
+          forma_pagamento: FormaPagamento;
+          valor?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          venda_id?: string;
+          forma_pagamento?: FormaPagamento;
+          valor?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       financeiro_contas: {
         Row: {
           id: string;

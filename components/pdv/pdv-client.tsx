@@ -2,23 +2,30 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode } from "lucide-react";
+import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 import { finalizarVendaPdv, type PdvItemInput } from "@/lib/actions";
-import type { Peca, VendaPdv } from "@/types";
+import type { FormaPagamento, Peca, VendaPdv } from "@/types";
 
 interface CartItem extends PdvItemInput {
   key: string;
 }
 
-const formasPagamento: { value: "dinheiro" | "pix" | "cartao"; label: string; icon: typeof Wallet }[] = [
+interface PagamentoSelecionado {
+  forma_pagamento: FormaPagamento;
+  valor: number;
+}
+
+const formasPagamento: { value: FormaPagamento; label: string; icon: typeof Wallet }[] = [
   { value: "dinheiro", label: "Dinheiro", icon: Wallet },
   { value: "pix", label: "PIX", icon: QrCode },
   { value: "cartao", label: "Cartão", icon: CreditCard },
 ];
+
+const CENTAVO = 0.01;
 
 export function PdvClient({
   pecas,
@@ -29,7 +36,7 @@ export function PdvClient({
 }) {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao">("dinheiro");
+  const [pagamentos, setPagamentos] = useState<PagamentoSelecionado[]>([{ forma_pagamento: "dinheiro", valor: 0 }]);
   const [desconto, setDesconto] = useState(0);
   const [clienteNome, setClienteNome] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -42,6 +49,33 @@ export function PdvClient({
 
   const subtotal = cart.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
   const total = Math.max(0, subtotal - desconto);
+
+  // Com uma única forma de pagamento selecionada, o valor dela sempre
+  // acompanha o total automaticamente (não precisa digitar nada); só ao
+  // dividir entre duas ou mais formas é que os valores manuais entram em jogo.
+  const pagamentosEfetivos: PagamentoSelecionado[] =
+    pagamentos.length === 1 ? [{ ...pagamentos[0], valor: total }] : pagamentos;
+  const totalAlocado = pagamentosEfetivos.reduce((acc, p) => acc + p.valor, 0);
+  const restante = Math.round((total - totalAlocado) * 100) / 100;
+  const pagamentosBatem = Math.abs(restante) < CENTAVO;
+
+  function togglePagamento(forma: FormaPagamento) {
+    setPagamentos((prev) => {
+      const existe = prev.find((p) => p.forma_pagamento === forma);
+      if (existe) {
+        const restantes = prev.filter((p) => p.forma_pagamento !== forma);
+        if (restantes.length === 1) restantes[0] = { ...restantes[0], valor: total };
+        return restantes.length > 0 ? restantes : prev;
+      }
+      const jaAlocado = prev.reduce((acc, p) => acc + p.valor, 0);
+      const sugestao = Math.max(0, Math.round((total - jaAlocado) * 100) / 100);
+      return [...prev, { forma_pagamento: forma, valor: sugestao }];
+    });
+  }
+
+  function updatePagamentoValor(forma: FormaPagamento, valor: number) {
+    setPagamentos((prev) => prev.map((p) => (p.forma_pagamento === forma ? { ...p, valor } : p)));
+  }
 
   function addPeca(peca: Peca) {
     setCart((prev) => {
@@ -99,12 +133,16 @@ export function PdvClient({
       toast.error("Adicione ao menos um item à venda");
       return;
     }
+    if (!pagamentosBatem) {
+      toast.error("A soma das formas de pagamento precisa bater com o total da venda");
+      return;
+    }
     startTransition(async () => {
       try {
         await finalizarVendaPdv({
           clienteId: null,
           clienteNomeAvulso: clienteNome || null,
-          formaPagamento,
+          pagamentos: pagamentosEfetivos.filter((p) => p.valor > 0),
           desconto,
           itens: cart.map((item) => ({
             peca_id: item.peca_id,
@@ -118,6 +156,7 @@ export function PdvClient({
         setCart([]);
         setDesconto(0);
         setClienteNome("");
+        setPagamentos([{ forma_pagamento: "dinheiro", valor: 0 }]);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao finalizar venda");
       }
@@ -223,20 +262,21 @@ export function PdvClient({
 
       <div className="flex flex-col gap-4">
         <Card>
-          <CardContent className="flex flex-col gap-4 pt-4">
+          <CardHeader>
+            <CardTitle>Forma de Pagamento</CardTitle>
+            <p className="text-xs text-muted-foreground">Selecione uma ou mais formas para dividir o pagamento.</p>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
             <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Forma de Pagamento
-              </p>
               <div className="grid grid-cols-3 gap-2">
                 {formasPagamento.map((fp) => {
                   const Icon = fp.icon;
-                  const active = formaPagamento === fp.value;
+                  const active = pagamentos.some((p) => p.forma_pagamento === fp.value);
                   return (
                     <button
                       key={fp.value}
                       type="button"
-                      onClick={() => setFormaPagamento(fp.value)}
+                      onClick={() => togglePagamento(fp.value)}
                       className={cn(
                         "flex flex-col items-center gap-1.5 rounded-xl border py-3 text-xs font-medium transition-colors",
                         active ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-secondary"
@@ -248,6 +288,40 @@ export function PdvClient({
                   );
                 })}
               </div>
+
+              {pagamentos.length > 1 && (
+                <div className="mt-3 flex flex-col gap-2">
+                  {pagamentos.map((p) => {
+                    const info = formasPagamento.find((fp) => fp.value === p.forma_pagamento)!;
+                    return (
+                      <div key={p.forma_pagamento} className="flex items-center gap-2">
+                        <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">{info.label}</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          value={p.valor}
+                          onChange={(e) => updatePagamentoValor(p.forma_pagamento, Number(e.target.value) || 0)}
+                          className="h-9"
+                        />
+                      </div>
+                    );
+                  })}
+                  <p
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs font-medium",
+                      pagamentosBatem ? "text-success" : "text-destructive"
+                    )}
+                  >
+                    {!pagamentosBatem && <AlertCircle className="size-3.5" />}
+                    {pagamentosBatem
+                      ? "Valores conferem com o total"
+                      : restante > 0
+                        ? `Faltam ${formatCurrency(restante)} para completar o total`
+                        : `${formatCurrency(Math.abs(restante))} a mais do que o total`}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -274,7 +348,7 @@ export function PdvClient({
               onChange={(e) => setClienteNome(e.target.value)}
             />
 
-            <Button size="lg" onClick={finalizar} disabled={isPending}>
+            <Button size="lg" onClick={finalizar} disabled={isPending || !pagamentosBatem || cart.length === 0}>
               {isPending ? "Finalizando..." : "Finalizar Venda"}
             </Button>
           </CardContent>
