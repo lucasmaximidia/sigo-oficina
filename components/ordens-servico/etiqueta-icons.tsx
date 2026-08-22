@@ -57,6 +57,20 @@ export function IconCalendario({ size = 20, color = "#ffffff" }: IconProps) {
   );
 }
 
+export function IconLavadora({ size = 20, color = "#ffffff" }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="2" width="18" height="20" rx="2" stroke={color} strokeWidth={2} />
+      <circle cx="6" cy="5" r="0.6" fill={color} />
+      <circle cx="8.2" cy="5" r="0.6" fill={color} />
+      <line x1="3" y1="7" x2="21" y2="7" stroke={color} strokeWidth={1.6} />
+      <circle cx="12" cy="14.5" r="5.3" stroke={color} strokeWidth={1.8} />
+      <circle cx="12" cy="14.5" r="2.4" stroke={color} strokeWidth={1.6} />
+      <path d="M12 12.1v2.4l1.8 1.3" stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconDocumento({ size = 20, color = "#ffffff" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
