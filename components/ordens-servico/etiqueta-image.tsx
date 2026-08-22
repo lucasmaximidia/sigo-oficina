@@ -57,7 +57,7 @@ export function EtiquetaOsImage({
         justifyContent: "center",
         gap: 34,
         background: "#ffffff",
-        padding: "40px 34px",
+        padding: "10px 8px",
         fontFamily: "Inter",
         color: "#111111",
       }}
