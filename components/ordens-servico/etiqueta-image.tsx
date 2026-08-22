@@ -37,7 +37,7 @@ export function EtiquetaOsImage({
   equipamentoDescricao,
   dataEntrada,
 }: {
-  config: Pick<Configuracao, "nome_empresa" | "logo_url" | "telefone" | "etiqueta_subtitulo">;
+  config: Pick<Configuracao, "nome_empresa" | "logo_url" | "telefone" | "etiqueta_subtitulo" | "etiqueta_logo_url">;
   numero: number;
   clienteNome: string;
   clienteTelefone: string | null;
@@ -62,30 +62,52 @@ export function EtiquetaOsImage({
         color: "#111111",
       }}
     >
-      {/* Cabeçalho: detalhes da oficina (logo, nome, subtítulo e telefone) */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          {config.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={config.logo_url} width={84} height={84} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
-          ) : (
-            <div style={{ display: "flex", flexShrink: 0 }}>
-              <IconLavadora size={84} color="#111111" />
+      {/* Cabeçalho: logo própria da etiqueta (se configurada) ou nome/subtítulo/telefone em texto */}
+      {config.etiqueta_logo_url ? (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 150 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={config.etiqueta_logo_url}
+              width={ETIQUETA_LARGURA - 16}
+              height={150}
+              style={{ objectFit: "contain" }}
+              alt=""
+            />
+          </div>
+          {config.telefone && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 }}>
+              <IconTelefone size={18} color="#111111" />
+              <span style={{ fontSize: 20, fontWeight: 700 }}>{config.telefone}</span>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.12 }}>{config.nome_empresa}</span>
-            <span style={{ fontSize: 17, color: "#333333", marginTop: 2 }}>{config.etiqueta_subtitulo}</span>
-            {config.telefone && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                <IconTelefone size={20} color="#111111" />
-                <span style={{ fontSize: 24, fontWeight: 700 }}>{config.telefone}</span>
+          <div style={{ display: "flex", height: 2, background: "#111111", marginTop: 14 }} />
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            {config.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={config.logo_url} width={84} height={84} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
+            ) : (
+              <div style={{ display: "flex", flexShrink: 0 }}>
+                <IconLavadora size={84} color="#111111" />
               </div>
             )}
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.12 }}>{config.nome_empresa}</span>
+              <span style={{ fontSize: 17, color: "#333333", marginTop: 2 }}>{config.etiqueta_subtitulo}</span>
+              {config.telefone && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                  <IconTelefone size={20} color="#111111" />
+                  <span style={{ fontSize: 24, fontWeight: 700 }}>{config.telefone}</span>
+                </div>
+              )}
+            </div>
           </div>
+          <div style={{ display: "flex", height: 2, background: "#111111", marginTop: 20 }} />
         </div>
-        <div style={{ display: "flex", height: 2, background: "#111111", marginTop: 20 }} />
-      </div>
+      )}
 
       {/* Cliente */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>

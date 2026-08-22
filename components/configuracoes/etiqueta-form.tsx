@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EtiquetaLogoUpload } from "./etiqueta-logo-upload";
 import { updateConfiguracoesEtiqueta } from "@/lib/actions";
 import type { Configuracao } from "@/types";
 
@@ -33,14 +34,22 @@ export function EtiquetaForm({ config }: { config: Configuracao }) {
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           Usado na etiqueta que você imprime e cola no equipamento ao abrir uma OS (formato 50x80mm, para impressoras
-          térmicas de etiqueta). Usa a mesma logo e telefone configurados acima.
+          térmicas de etiqueta). Usa o telefone configurado acima.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-5">
+        <div>
+          <Label className="mb-1.5 block">Logo da etiqueta (opcional)</Label>
+          <EtiquetaLogoUpload logoUrl={config.etiqueta_logo_url} />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Se você enviar uma logo aqui, ela ocupa toda a parte de cima da etiqueta. Sem ela, o cabeçalho mostra o
+            nome da empresa, o subtítulo e o telefone em texto.
+          </p>
+        </div>
         <form action={handleSubmit} className="flex flex-col gap-4">
           <div>
             <Label htmlFor="etiqueta_subtitulo" className="mb-1.5 block">
-              Subtítulo (aparece abaixo do nome da empresa)
+              Subtítulo (aparece abaixo do nome da empresa, quando não há logo da etiqueta)
             </Label>
             <Input
               id="etiqueta_subtitulo"

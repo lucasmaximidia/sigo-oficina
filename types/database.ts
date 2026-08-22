@@ -547,6 +547,7 @@ export interface Database {
           garantia_assinatura_digital: boolean;
           garantia_qrcode: boolean;
           etiqueta_subtitulo: string;
+          etiqueta_logo_url: string | null;
           dashboard_mostrar_stats: boolean;
           dashboard_mostrar_agenda: boolean;
           dashboard_mostrar_os_paradas: boolean;
@@ -575,6 +576,7 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_subtitulo?: string;
+          etiqueta_logo_url?: string | null;
           dashboard_mostrar_stats?: boolean;
           dashboard_mostrar_agenda?: boolean;
           dashboard_mostrar_os_paradas?: boolean;
@@ -603,6 +605,7 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_subtitulo?: string;
+          etiqueta_logo_url?: string | null;
           dashboard_mostrar_stats?: boolean;
           dashboard_mostrar_agenda?: boolean;
           dashboard_mostrar_os_paradas?: boolean;

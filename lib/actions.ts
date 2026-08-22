@@ -612,6 +612,37 @@ export async function uploadLogoEmpresa(formData: FormData) {
   return logoUrl;
 }
 
+export async function uploadLogoEtiqueta(formData: FormData) {
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Selecione uma imagem");
+  if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
+  if (file.size > 2 * 1024 * 1024) throw new Error("A imagem precisa ter no máximo 2MB");
+
+  const extensao = file.name.split(".").pop()?.toLowerCase() || "png";
+  const caminho = `etiqueta-logo.${extensao}`;
+
+  const { error: uploadError } = await supabase.storage.from("logos").upload(caminho, file, {
+    upsert: true,
+    contentType: file.type,
+  });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: publicUrlData } = supabase.storage.from("logos").getPublicUrl(caminho);
+  const logoUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
+
+  const { error } = await supabase.from("configuracoes").update({ etiqueta_logo_url: logoUrl }).eq("id", 1);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/configuracoes");
+  return logoUrl;
+}
+
+export async function removerLogoEtiqueta() {
+  const { error } = await supabase.from("configuracoes").update({ etiqueta_logo_url: null }).eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
 export async function updateConfiguracoesGarantia(formData: FormData) {
   const { error } = await supabase
     .from("configuracoes")
