@@ -27,17 +27,19 @@ function CampoIcone({
   icon,
   label,
   valor,
+  valorSize = 24,
 }: {
   icon: React.ReactNode;
   label: string;
   valor: string;
+  valorSize?: number;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16, flex: 1, minWidth: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 16, flex: 1, width: "100%", minWidth: 0 }}>
       <IconBadge>{icon}</IconBadge>
-      <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 3 }}>
         <span style={{ fontSize: 15, color: "#5b6b70" }}>{label}</span>
-        <span style={{ fontSize: 24, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
+        <span style={{ fontSize: valorSize, fontWeight: 700, color: "#111111", lineHeight: 1.2 }}>{valor}</span>
       </div>
     </div>
   );
@@ -86,9 +88,10 @@ export function EtiquetaOsImage({
         height: ETIQUETA_ALTURA,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "center",
+        gap: 30,
         background: "#ffffff",
-        padding: "30px 32px",
+        padding: "36px 32px",
         fontFamily: "Inter",
         color: "#111111",
       }}
@@ -134,16 +137,16 @@ export function EtiquetaOsImage({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 14,
+            gap: 12,
             background: "#111111",
             borderRadius: 12,
-            padding: 20,
+            padding: "18px 16px",
           }}
         >
           <div style={{ display: "flex", flexShrink: 0 }}>
-            <IconAlerta size={30} color="#ffffff" />
+            <IconAlerta size={34} color="#ffffff" />
           </div>
-          <span style={{ fontSize: 26, fontWeight: 700, color: "#ffffff", lineHeight: 1.3, textAlign: "center" }}>
+          <span style={{ fontSize: 32, fontWeight: 700, color: "#ffffff", lineHeight: 1.25, textAlign: "center" }}>
             {problema}
           </span>
         </div>
@@ -158,10 +161,10 @@ export function EtiquetaOsImage({
       {/* Data e Nº O.S. */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <DivisorFino />
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <CampoIcone icon={<IconCalendario size={24} color="#ffffff" />} label="Data" valor={dataEntrada} />
+        <div style={{ display: "flex", alignItems: "center", width: "100%", gap: 16 }}>
+          <CampoIcone icon={<IconCalendario size={22} color="#ffffff" />} label="Data" valor={dataEntrada} valorSize={20} />
           <div style={{ display: "flex", width: 1, alignSelf: "stretch", background: "#dddddd" }} />
-          <CampoIcone icon={<IconDocumento size={24} color="#ffffff" />} label="Nº O.S." valor={numeroOs} />
+          <CampoIcone icon={<IconDocumento size={22} color="#ffffff" />} label="Nº O.S." valor={numeroOs} valorSize={20} />
         </div>
       </div>
 
