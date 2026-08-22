@@ -71,6 +71,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new ImageResponse(
     EtiquetaOsImage({
       config,
+      numero: os.numero,
       clienteNome: os.clientes?.nome ?? "Cliente não informado",
       clienteTelefone: os.clientes?.telefone ?? null,
       problema: os.problema_relatado || "Sem descrição do problema",
