@@ -46,11 +46,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       )
       .eq("id", id)
       .maybeSingle(),
-    supabase
-      .from("configuracoes")
-      .select("nome_empresa, logo_url, telefone, etiqueta_subtitulo, etiqueta_logo_url")
-      .eq("id", 1)
-      .single(),
+    supabase.from("configuracoes").select("etiqueta_logo_url").eq("id", 1).single(),
   ]);
 
   if (!os || !config) {

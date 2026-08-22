@@ -1,8 +1,16 @@
-import { IconTelefone, IconCalendario, IconDocumento, IconLavadora } from "./etiqueta-icons";
+import { IconCalendario, IconDocumento, IconLavadora } from "./etiqueta-icons";
 import type { Configuracao } from "@/types";
 
 export const ETIQUETA_LARGURA = 500;
 export const ETIQUETA_ALTURA = 800;
+
+// Grid fixo: cada zona tem uma altura exata e a soma bate certinho com
+// ETIQUETA_ALTURA, preenchendo a etiqueta de ponta a ponta sem sobra.
+const ALTURA_CABECALHO = 240;
+const ALTURA_CLIENTE = 140;
+const ALTURA_EQUIPAMENTO = 120;
+const ALTURA_DEFEITO = 200;
+const ALTURA_DATA_OS = 100;
 
 function CampoData({
   icon,
@@ -37,7 +45,7 @@ export function EtiquetaOsImage({
   equipamentoDescricao,
   dataEntrada,
 }: {
-  config: Pick<Configuracao, "nome_empresa" | "logo_url" | "telefone" | "etiqueta_subtitulo" | "etiqueta_logo_url">;
+  config: Pick<Configuracao, "etiqueta_logo_url">;
   numero: number;
   clienteNome: string;
   clienteTelefone: string | null;
@@ -54,91 +62,112 @@ export function EtiquetaOsImage({
         height: ETIQUETA_ALTURA,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        gap: 34,
         background: "#ffffff",
-        padding: "10px 8px",
         fontFamily: "Inter",
         color: "#111111",
       }}
     >
-      {/* Cabeçalho: logo própria da etiqueta (se configurada) ou nome/subtítulo/telefone em texto */}
-      {config.etiqueta_logo_url ? (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 150 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={config.etiqueta_logo_url}
-              width={ETIQUETA_LARGURA - 16}
-              height={150}
-              style={{ objectFit: "contain" }}
-              alt=""
-            />
-          </div>
-          {config.telefone && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 6 }}>
-              <IconTelefone size={18} color="#111111" />
-              <span style={{ fontSize: 20, fontWeight: 700 }}>{config.telefone}</span>
-            </div>
-          )}
-          <div style={{ display: "flex", height: 2, background: "#111111", marginTop: 14 }} />
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            {config.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={config.logo_url} width={84} height={84} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
-            ) : (
-              <div style={{ display: "flex", flexShrink: 0 }}>
-                <IconLavadora size={84} color="#111111" />
-              </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.12 }}>{config.nome_empresa}</span>
-              <span style={{ fontSize: 17, color: "#333333", marginTop: 2 }}>{config.etiqueta_subtitulo}</span>
-              {config.telefone && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                  <IconTelefone size={20} color="#111111" />
-                  <span style={{ fontSize: 24, fontWeight: 700 }}>{config.telefone}</span>
-                </div>
-              )}
-            </div>
-          </div>
-          <div style={{ display: "flex", height: 2, background: "#111111", marginTop: 20 }} />
-        </div>
-      )}
-
-      {/* Cliente */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <span style={{ fontSize: 34, fontWeight: 700 }}>{clienteNome}</span>
-        {clienteTelefone && <span style={{ fontSize: 26, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
+      {/* 1. Cabeçalho: só a imagem enviada, sem texto sobreposto */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: ALTURA_CABECALHO,
+          overflow: "hidden",
+        }}
+      >
+        {config.etiqueta_logo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={config.etiqueta_logo_url}
+            width={ETIQUETA_LARGURA}
+            height={ALTURA_CABECALHO}
+            style={{ objectFit: "contain" }}
+            alt=""
+          />
+        ) : (
+          <IconLavadora size={90} color="#cccccc" />
+        )}
       </div>
 
-      {/* Equipamento */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <span style={{ fontSize: 20, color: "#333333" }}>Equipamento:</span>
-        <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{equipamentoDescricao}</span>
-      </div>
-
-      {/* Defeito relatado */}
+      {/* 2. Cliente: nome e telefone dele */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
-          border: "2px solid #111111",
-          borderRadius: 12,
-          padding: "18px 20px",
+          width: "100%",
+          height: ALTURA_CLIENTE,
+          padding: "0 20px",
         }}
       >
-        <span style={{ fontSize: 20, color: "#333333" }}>Defeito Relatado:</span>
-        <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.25, marginTop: 6 }}>{problema}</span>
+        <DivisorFino />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 16 }}>
+          <span style={{ fontSize: 34, fontWeight: 700 }}>{clienteNome}</span>
+          {clienteTelefone && <span style={{ fontSize: 26, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
+        </div>
       </div>
 
-      {/* Data de entrada e Nº O.S. */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
+      {/* 3. Equipamento */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          width: "100%",
+          height: ALTURA_EQUIPAMENTO,
+          padding: "0 20px",
+        }}
+      >
+        <span style={{ fontSize: 20, color: "#333333" }}>Equipamento:</span>
+        <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{equipamentoDescricao}</span>
+      </div>
+
+      {/* 4. Defeito relatado */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: ALTURA_DEFEITO,
+          padding: "0 20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            width: "100%",
+            border: "2px solid #111111",
+            borderRadius: 12,
+            padding: "18px 20px",
+          }}
+        >
+          <span style={{ fontSize: 20, color: "#333333" }}>Defeito Relatado:</span>
+          <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.25, marginTop: 6 }}>{problema}</span>
+        </div>
+      </div>
+
+      {/* 5. Data de entrada e Nº O.S. */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          width: "100%",
+          height: ALTURA_DATA_OS,
+          padding: "0 20px",
+        }}
+      >
         <DivisorFino />
         <div style={{ display: "flex", alignItems: "flex-start", width: "100%", gap: 16, marginTop: 18 }}>
           <CampoData
