@@ -4,7 +4,7 @@ import type { Configuracao } from "@/types";
 export const ETIQUETA_LARGURA = 500;
 export const ETIQUETA_ALTURA = 800;
 
-function IconBadge({ children, size = 54 }: { children: React.ReactNode; size?: number }) {
+function IconBadge({ children, size = 58 }: { children: React.ReactNode; size?: number }) {
   return (
     <div
       style={{
@@ -27,7 +27,7 @@ function CampoIcone({
   icon,
   label,
   valor,
-  valorSize = 24,
+  valorSize = 28,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -37,8 +37,8 @@ function CampoIcone({
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 16, flex: 1, width: "100%", minWidth: 0 }}>
       <IconBadge>{icon}</IconBadge>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 3 }}>
-        <span style={{ fontSize: 15, color: "#5b6b70" }}>{label}</span>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 4 }}>
+        <span style={{ fontSize: 16, color: "#5b6b70" }}>{label}</span>
         <span style={{ fontSize: valorSize, fontWeight: 700, color: "#111111", lineHeight: 1.2 }}>{valor}</span>
       </div>
     </div>
@@ -88,10 +88,10 @@ export function EtiquetaOsImage({
         height: ETIQUETA_ALTURA,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
-        gap: 30,
+        justifyContent: "space-between",
+        gap: 22,
         background: "#ffffff",
-        padding: "36px 32px",
+        padding: "34px 30px",
         fontFamily: "Inter",
         color: "#111111",
       }}
@@ -101,30 +101,30 @@ export function EtiquetaOsImage({
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {config.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={config.logo_url} width={60} height={60} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
+            <img src={config.logo_url} width={64} height={64} style={{ objectFit: "contain", flexShrink: 0 }} alt="" />
           ) : (
-            <IconBadge size={60}>
-              <IconCaixa size={30} color="#ffffff" />
+            <IconBadge size={64}>
+              <IconCaixa size={32} color="#ffffff" />
             </IconBadge>
           )}
-          <span style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.08, flex: 1 }}>{config.nome_empresa}</span>
+          <span style={{ fontSize: 40, fontWeight: 800, lineHeight: 1.08, flex: 1 }}>{config.nome_empresa}</span>
         </div>
-        <span style={{ fontSize: 17, color: "#5b6b70", textAlign: "center", marginTop: 10 }}>
+        <span style={{ fontSize: 19, color: "#5b6b70", textAlign: "center", marginTop: 12 }}>
           — {config.etiqueta_subtitulo} —
         </span>
-        <div style={{ display: "flex", height: 3, background: "#111111", marginTop: 16 }} />
+        <div style={{ display: "flex", height: 3, background: "#111111", marginTop: 18 }} />
       </div>
 
       {/* Cliente */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <IconPessoa size={32} color="#111111" />
-          <span style={{ fontSize: 34, fontWeight: 700 }}>{clienteNome}</span>
+          <IconPessoa size={36} color="#111111" />
+          <span style={{ fontSize: 38, fontWeight: 700 }}>{clienteNome}</span>
         </div>
         {clienteTelefone && (
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8, paddingLeft: 46 }}>
-            <IconTelefone size={22} color="#5b6b70" />
-            <span style={{ fontSize: 24, color: "#333333" }}>{clienteTelefone}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10, paddingLeft: 50 }}>
+            <IconTelefone size={24} color="#5b6b70" />
+            <span style={{ fontSize: 27, color: "#333333" }}>{clienteTelefone}</span>
           </div>
         )}
       </div>
@@ -155,16 +155,16 @@ export function EtiquetaOsImage({
       {/* Produto */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <DivisorFino />
-        <CampoIcone icon={<IconCaixa size={26} color="#ffffff" />} label="Produto" valor={equipamentoDescricao} />
+        <CampoIcone icon={<IconCaixa size={28} color="#ffffff" />} label="Produto" valor={equipamentoDescricao} />
       </div>
 
       {/* Data e Nº O.S. */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <DivisorFino />
         <div style={{ display: "flex", alignItems: "center", width: "100%", gap: 16 }}>
-          <CampoIcone icon={<IconCalendario size={22} color="#ffffff" />} label="Data" valor={dataEntrada} valorSize={20} />
+          <CampoIcone icon={<IconCalendario size={24} color="#ffffff" />} label="Data" valor={dataEntrada} valorSize={23} />
           <div style={{ display: "flex", width: 1, alignSelf: "stretch", background: "#dddddd" }} />
-          <CampoIcone icon={<IconDocumento size={22} color="#ffffff" />} label="Nº O.S." valor={numeroOs} valorSize={20} />
+          <CampoIcone icon={<IconDocumento size={24} color="#ffffff" />} label="Nº O.S." valor={numeroOs} valorSize={23} />
         </div>
       </div>
 
@@ -172,9 +172,9 @@ export function EtiquetaOsImage({
       {config.telefone && (
         <div style={{ display: "flex", flexDirection: "column" }}>
           <DivisorFino />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14 }}>
-            <IconTelefone size={30} color="#111111" />
-            <span style={{ fontSize: 32, fontWeight: 800 }}>{config.telefone}</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+            <IconTelefone size={34} color="#111111" />
+            <span style={{ fontSize: 38, fontWeight: 800 }}>{config.telefone}</span>
           </div>
         </div>
       )}
