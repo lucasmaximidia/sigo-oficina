@@ -49,6 +49,13 @@ export function DashboardForm({ config }: { config: Configuracao }) {
             <span className="text-sm text-foreground">Alerta de OS paradas</span>
           </label>
           <label className="flex items-center gap-2.5">
+            <Checkbox
+              name="dashboard_mostrar_boletos_pendentes"
+              defaultChecked={config.dashboard_mostrar_boletos_pendentes}
+            />
+            <span className="text-sm text-foreground">Lembrete de boletos pendentes</span>
+          </label>
+          <label className="flex items-center gap-2.5">
             <Checkbox name="dashboard_mostrar_tarefas" defaultChecked={config.dashboard_mostrar_tarefas} />
             <span className="text-sm text-foreground">Lista &quot;O que fazer hoje&quot;</span>
           </label>

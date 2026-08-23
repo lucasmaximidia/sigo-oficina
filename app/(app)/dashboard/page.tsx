@@ -58,6 +58,7 @@ export default async function DashboardPage() {
   const mostrarStats = config?.dashboard_mostrar_stats ?? true;
   const mostrarAgenda = config?.dashboard_mostrar_agenda ?? true;
   const mostrarOsParadas = config?.dashboard_mostrar_os_paradas ?? true;
+  const mostrarBoletosPendentes = config?.dashboard_mostrar_boletos_pendentes ?? true;
   const mostrarTarefas = config?.dashboard_mostrar_tarefas ?? true;
   const paradaDias = config?.dashboard_os_parada_dias ?? 3;
   const mostrarPdvHoje = config?.dashboard_mostrar_pdv_hoje ?? true;
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_pagamento"),
     supabase
       .from("financeiro_contas")
-      .select("id, descricao, valor, vencimento, status")
+      .select("id, descricao, numero_documento, valor, vencimento, status")
       .neq("status", "pago")
       .lte("vencimento", em3dias.toISOString().slice(0, 10))
       .order("vencimento", { ascending: true }),
@@ -145,17 +146,10 @@ export default async function DashboardPage() {
       />
 
       {mostrarStats && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
           <StatCard icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} hint="OS para análise" />
           <StatCard icon={Wrench} label="OS em Aberto" value={emExecucao ?? 0} hint="Em execução/fila" />
           <StatCard icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} hint="Prontas para retirada" />
-          <StatCard
-            icon={ReceiptText}
-            label="Boletos Vencendo"
-            value={boletosVencendo?.length ?? 0}
-            hint="Próximos 3 dias"
-            tone="danger"
-          />
         </div>
       )}
 
@@ -214,6 +208,48 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {mostrarBoletosPendentes && (
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <ReceiptText className="size-4.5" />
+                Boletos Pendentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {(boletosVencendo ?? []).length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhum boleto vencendo nos próximos dias.</p>
+              )}
+              {(boletosVencendo ?? []).map((conta) => {
+                const atrasado = conta.vencimento < hojeStr;
+                return (
+                  <Link
+                    key={conta.id}
+                    href="/financeiro"
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Circle
+                          className={`size-2 shrink-0 ${atrasado ? "fill-destructive text-destructive" : "fill-warning text-warning"}`}
+                        />
+                        <p className="truncate text-sm font-semibold text-foreground">{conta.descricao}</p>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {atrasado ? "Venceu em" : "Vence em"} {formatDate(conta.vencimento)}
+                        {conta.numero_documento ? ` · NF ${conta.numero_documento}` : ""}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold text-foreground">{formatCurrency(conta.valor)}</p>
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
         </div>
       )}
 
