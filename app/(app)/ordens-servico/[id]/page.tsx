@@ -24,19 +24,21 @@ interface OsDetalheRow extends OrdemServico {
 export default async function OrdemServicoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }] = await Promise.all([
-    supabase
-      .from("ordens_servico")
-      .select<string, OsDetalheRow>(
-        "*, clientes(id, nome, telefone, email), equipamentos(id, tipo, marca, modelo, numero_serie)"
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
-    supabase.from("pecas").select("*").order("nome", { ascending: true }),
-    supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
-    supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
-  ]);
+  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }, { data: lojas }] =
+    await Promise.all([
+      supabase
+        .from("ordens_servico")
+        .select<string, OsDetalheRow>(
+          "*, clientes(id, nome, telefone, email), equipamentos(id, tipo, marca, modelo, numero_serie)"
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
+      supabase.from("pecas").select("*").order("nome", { ascending: true }),
+      supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
+      supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
+      supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
+    ]);
 
   if (!os) notFound();
 
@@ -134,7 +136,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
               <CardTitle>Peças e Serviços</CardTitle>
             </CardHeader>
             <CardContent>
-              <OsItensList osId={os.id} itens={itens ?? []} pecas={pecas ?? []} />
+              <OsItensList osId={os.id} itens={itens ?? []} pecas={pecas ?? []} lojas={lojas ?? []} />
             </CardContent>
           </Card>
         </div>

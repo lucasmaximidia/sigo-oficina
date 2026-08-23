@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { RelatorioForm } from "@/components/financeiro/relatorio-form";
 
-export default function RelatorioFinanceiroPage() {
+export const dynamic = "force-dynamic";
+
+export default async function RelatorioFinanceiroPage() {
+  const { data: lojas } = await supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true });
+
   return (
     <div className="mx-auto max-w-3xl">
       <Link href="/financeiro" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
@@ -11,7 +16,7 @@ export default function RelatorioFinanceiroPage() {
         Voltar para Financeiro
       </Link>
       <PageHeader title="Relatório Financeiro" description="Gere um PDF com os serviços realizados no período escolhido." />
-      <RelatorioForm />
+      <RelatorioForm lojas={lojas ?? []} />
     </div>
   );
 }

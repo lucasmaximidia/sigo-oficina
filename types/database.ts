@@ -273,6 +273,7 @@ export interface Database {
           id: string;
           os_id: string;
           peca_id: string | null;
+          loja_parceira_id: string | null;
           descricao: string;
           origem: ItemOrigem;
           quantidade: number;
@@ -283,6 +284,7 @@ export interface Database {
           id?: string;
           os_id: string;
           peca_id?: string | null;
+          loja_parceira_id?: string | null;
           descricao: string;
           origem?: ItemOrigem;
           quantidade?: number;
@@ -293,6 +295,7 @@ export interface Database {
           id?: string;
           os_id?: string;
           peca_id?: string | null;
+          loja_parceira_id?: string | null;
           descricao?: string;
           origem?: ItemOrigem;
           quantidade?: number;

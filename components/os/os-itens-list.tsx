@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { addOsItem, removeOsItem } from "@/lib/actions";
-import type { OsItem, Peca, ItemOrigem } from "@/types";
+import type { OsItem, Peca, LojaParceira, ItemOrigem } from "@/types";
 
 const origemInfo: Record<ItemOrigem, { label: string; icon: typeof Package; variant: "secondary" | "info" | "warning" }> = {
   estoque: { label: "Estoque", icon: Package, variant: "secondary" },
@@ -27,14 +27,26 @@ const origemInfo: Record<ItemOrigem, { label: string; icon: typeof Package; vari
   compra_emergencial: { label: "Compra emergencial", icon: Zap, variant: "warning" },
 };
 
-export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsItem[]; pecas: Peca[] }) {
+export function OsItensList({
+  osId,
+  itens,
+  pecas,
+  lojas,
+}: {
+  osId: string;
+  itens: OsItem[];
+  pecas: Peca[];
+  lojas: LojaParceira[];
+}) {
   const [open, setOpen] = useState(false);
   const [origem, setOrigem] = useState<ItemOrigem>("estoque");
   const [pecaId, setPecaId] = useState<string>("");
   const [pecaQuery, setPecaQuery] = useState("");
+  const [lojaParceiraId, setLojaParceiraId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   const pecaSelecionada = useMemo(() => pecas.find((p) => p.id === pecaId), [pecas, pecaId]);
+  const lojasPorId = useMemo(() => new Map(lojas.map((l) => [l.id, l.nome])), [lojas]);
   const total = itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
 
   const pecaResultados = useMemo(() => {
@@ -51,6 +63,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
         setOpen(false);
         setPecaId("");
         setPecaQuery("");
+        setLojaParceiraId("");
         setOrigem("estoque");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao adicionar item");
@@ -93,6 +106,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                     setOrigem(v as ItemOrigem);
                     setPecaId("");
                     setPecaQuery("");
+                    setLojaParceiraId("");
                   }}
                 >
                   <SelectTrigger>
@@ -105,6 +119,29 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                   </SelectContent>
                 </Select>
               </div>
+
+              {origem === "loja_parceira" && (
+                <div>
+                  <Label className="mb-1.5 block">Loja parceira</Label>
+                  <Select name="loja_parceira_id" value={lojaParceiraId} onValueChange={setLojaParceiraId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a loja..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lojas.map((loja) => (
+                        <SelectItem key={loja.id} value={loja.id}>
+                          {loja.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {lojas.length === 0 && (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Nenhuma loja parceira cadastrada. Cadastre em Estoque → Lojas Parceiras.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {origem === "estoque" && (
                 <div>
@@ -198,7 +235,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
               </div>
 
               <DialogFooter>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending || (origem === "loja_parceira" && !lojaParceiraId)}>
                   {isPending ? "Adicionando..." : "Adicionar"}
                 </Button>
               </DialogFooter>
@@ -219,7 +256,7 @@ export function OsItensList({ osId, itens, pecas }: { osId: string; itens: OsIte
                   <p className="truncate text-sm font-medium text-foreground">{item.descricao}</p>
                   <Badge variant={info.variant} className="shrink-0">
                     <Icon className="size-3" />
-                    {info.label}
+                    {item.loja_parceira_id ? (lojasPorId.get(item.loja_parceira_id) ?? info.label) : info.label}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
