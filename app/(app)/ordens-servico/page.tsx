@@ -3,6 +3,7 @@ import { Plus, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
+import { OsTableRow } from "@/components/os/os-table-row";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -96,12 +97,12 @@ export default async function OrdensServicoPage({
                 const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
                 const statusInfo = osStatusMap[os.status as OsStatus];
                 return (
-                  <TableRow key={os.id} className="cursor-pointer">
+                  <OsTableRow key={os.id} href={`/ordens-servico/${os.id}`}>
                     <TableCell>
                       <span className={`inline-block size-2.5 rounded-full ${urgencia.dotClass}`} />
                     </TableCell>
                     <TableCell className="font-semibold text-primary">
-                      <Link href={`/ordens-servico/${os.id}`}>#OS-{String(os.numero).padStart(4, "0")}</Link>
+                      #OS-{String(os.numero).padStart(4, "0")}
                     </TableCell>
                     <TableCell>
                       <p className="font-medium text-foreground">{cliente?.nome ?? "—"}</p>
@@ -118,11 +119,9 @@ export default async function OrdensServicoPage({
                     </TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(os.data_entrada)}</TableCell>
                     <TableCell>
-                      <Link href={`/ordens-servico/${os.id}`}>
-                        <ChevronRight className="size-4 text-muted-foreground" />
-                      </Link>
+                      <ChevronRight className="size-4 text-muted-foreground" />
                     </TableCell>
-                  </TableRow>
+                  </OsTableRow>
                 );
               })}
               {(ordens ?? []).length === 0 && (
