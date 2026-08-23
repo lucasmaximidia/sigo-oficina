@@ -25,14 +25,33 @@ export async function GET(request: Request) {
   const inicio = url.searchParams.get("inicio");
   const fim = url.searchParams.get("fim");
   const colunasParam = url.searchParams.get("colunas");
+  const lojaParceiraId = url.searchParams.get("loja");
 
   if (!inicio || !fim) {
     return NextResponse.json({ error: "Informe o período (inicio e fim)" }, { status: 400 });
   }
   const colunasSelecionadas = colunasParam ? colunasParam.split(",") : [];
+  const mostrarResumo = colunasSelecionadas.includes("resumo_total");
 
-  const [{ data: ordens }, { data: config }] = await Promise.all([
-    supabase
+  const { data: config } = await supabase.from("configuracoes").select("nome_empresa, logo_url").eq("id", 1).single();
+  if (!config) {
+    return NextResponse.json({ error: "Configurações não encontradas" }, { status: 500 });
+  }
+
+  let osIdsFiltro: string[] | null = null;
+  let lojaParceiraNome: string | null = null;
+  if (lojaParceiraId) {
+    const [{ data: itensDaLoja }, { data: loja }] = await Promise.all([
+      supabase.from("os_itens").select("os_id").eq("origem", "loja_parceira").eq("loja_parceira_id", lojaParceiraId),
+      supabase.from("lojas_parceiras").select("nome").eq("id", lojaParceiraId).maybeSingle(),
+    ]);
+    osIdsFiltro = [...new Set((itensDaLoja ?? []).map((i) => i.os_id))];
+    lojaParceiraNome = loja?.nome ?? null;
+  }
+
+  let ordens: OsRelatorioRow[] = [];
+  if (!osIdsFiltro || osIdsFiltro.length > 0) {
+    let query = supabase
       .from("ordens_servico")
       .select<string, OsRelatorioRow>(
         "id, data_entrada, data_finalizacao, data_pagamento, valor_mao_obra, valor_frete, desconto, forma_pagamento, clientes(nome), equipamentos(tipo, marca, modelo)"
@@ -40,19 +59,20 @@ export async function GET(request: Request) {
       .eq("status", "finalizado")
       .gte("data_finalizacao", `${inicio}T00:00:00`)
       .lte("data_finalizacao", `${fim}T23:59:59`)
-      .order("data_finalizacao", { ascending: true }),
-    supabase.from("configuracoes").select("nome_empresa, logo_url").eq("id", 1).single(),
-  ]);
-
-  if (!config) {
-    return NextResponse.json({ error: "Configurações não encontradas" }, { status: 500 });
+      .order("data_finalizacao", { ascending: true });
+    if (osIdsFiltro) query = query.in("id", osIdsFiltro);
+    const { data } = await query;
+    ordens = data ?? [];
   }
 
-  const osIds = (ordens ?? []).map((os) => os.id);
-  const { data: itens } = await supabase
-    .from("os_itens")
-    .select("os_id, descricao, origem, quantidade, valor_unitario")
-    .in("os_id", osIds);
+  const osIds = ordens.map((os) => os.id);
+  const [{ data: itens }, { data: fretes }] =
+    osIds.length > 0
+      ? await Promise.all([
+          supabase.from("os_itens").select("os_id, descricao, origem, loja_parceira_id, quantidade, valor_unitario").in("os_id", osIds),
+          supabase.from("fretes").select("os_id, valor_custo").in("os_id", osIds),
+        ])
+      : [{ data: [] }, { data: [] }];
 
   type ItemRelatorio = NonNullable<typeof itens>[number];
   const itensPorOs = new Map<string, ItemRelatorio[]>();
@@ -61,10 +81,13 @@ export async function GET(request: Request) {
     lista.push(item);
     itensPorOs.set(item.os_id, lista);
   }
+  const fretePagoPorOs = new Map((fretes ?? []).map((f) => [f.os_id, f.valor_custo]));
 
-  const linhas: RelatorioLinha[] = (ordens ?? []).map((os) => {
+  const linhas: RelatorioLinha[] = ordens.map((os) => {
     const itensDaOs = itensPorOs.get(os.id) ?? [];
-    const itensLoja = itensDaOs.filter((i) => i.origem === "loja_parceira");
+    const itensLoja = lojaParceiraId
+      ? itensDaOs.filter((i) => i.origem === "loja_parceira" && i.loja_parceira_id === lojaParceiraId)
+      : itensDaOs.filter((i) => i.origem === "loja_parceira");
     const itensOficina = itensDaOs.filter((i) => i.origem === "estoque" || i.origem === "compra_emergencial");
 
     const valorPecasLoja = itensLoja.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
@@ -82,7 +105,8 @@ export async function GET(request: Request) {
       valor_pecas_loja: valorPecasLoja,
       mao_obra: os.valor_mao_obra,
       valor_pecas_oficina: valorPecasOficina,
-      frete: os.valor_frete,
+      frete_pago: fretePagoPorOs.get(os.id) ?? 0,
+      frete_cobrado: os.valor_frete,
       pecas_loja_desc: itensLoja.map((i) => i.descricao).join(", ") || "—",
       pecas_oficina_desc: itensOficina.map((i) => i.descricao).join(", ") || "—",
       valor_total: valorTotal,
@@ -99,6 +123,8 @@ export async function GET(request: Request) {
       config,
       inicio,
       fim,
+      mostrarResumo,
+      lojaParceiraNome,
     })
   );
 

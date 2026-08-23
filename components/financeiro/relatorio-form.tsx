@@ -6,19 +6,24 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { RELATORIO_COLUNAS } from "@/lib/relatorio-financeiro";
+import { RELATORIO_COLUNAS, RELATORIO_OPCAO_RESUMO } from "@/lib/relatorio-financeiro";
+import type { LojaParceira } from "@/types";
 
 function primeiroDiaDoMes() {
   const hoje = new Date();
   return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
 }
 
-export function RelatorioForm() {
+const TODAS_AS_CHAVES = [...RELATORIO_COLUNAS.map((c) => c.key), RELATORIO_OPCAO_RESUMO.key];
+
+export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
   const [inicio, setInicio] = useState(primeiroDiaDoMes());
   const [fim, setFim] = useState(new Date().toISOString().slice(0, 10));
-  const [colunas, setColunas] = useState<Set<string>>(new Set(RELATORIO_COLUNAS.map((c) => c.key)));
+  const [lojaParceiraId, setLojaParceiraId] = useState<string>("todas");
+  const [colunas, setColunas] = useState<Set<string>>(new Set(TODAS_AS_CHAVES));
 
   function toggleColuna(key: string) {
     setColunas((prev) => {
@@ -30,7 +35,7 @@ export function RelatorioForm() {
   }
 
   function toggleTodas(marcar: boolean) {
-    setColunas(marcar ? new Set(RELATORIO_COLUNAS.map((c) => c.key)) : new Set());
+    setColunas(marcar ? new Set(TODAS_AS_CHAVES) : new Set());
   }
 
   function handleGerar() {
@@ -47,6 +52,7 @@ export function RelatorioForm() {
       fim,
       colunas: Array.from(colunas).join(","),
     });
+    if (lojaParceiraId !== "todas") params.set("loja", lojaParceiraId);
     window.open(`/api/financeiro/relatorio/pdf?${params.toString()}`, "_blank");
   }
 
@@ -75,6 +81,28 @@ export function RelatorioForm() {
           </div>
         </div>
 
+        <div className="sm:max-w-xs">
+          <Label className="mb-1.5 block">Loja parceira</Label>
+          <Select value={lojaParceiraId} onValueChange={setLojaParceiraId}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as lojas</SelectItem>
+              {lojas.map((loja) => (
+                <SelectItem key={loja.id} value={loja.id}>
+                  {loja.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Escolha uma loja para listar só as OS com peças dela (útil para o fechamento mensal com o parceiro) — as
+            colunas &quot;Peças Loja&quot; e &quot;Peças Utilizadas - Loja&quot; passam a considerar só as peças dessa
+            loja.
+          </p>
+        </div>
+
         <div>
           <div className="mb-2 flex items-center justify-between">
             <Label className="block">Colunas do relatório</Label>
@@ -95,6 +123,18 @@ export function RelatorioForm() {
                 <span className="text-sm text-foreground">{coluna.label}</span>
               </label>
             ))}
+          </div>
+          <div className="mt-3 border-t border-border pt-3">
+            <label className="flex items-center gap-2.5">
+              <Checkbox
+                checked={colunas.has(RELATORIO_OPCAO_RESUMO.key)}
+                onCheckedChange={() => toggleColuna(RELATORIO_OPCAO_RESUMO.key)}
+              />
+              <span className="text-sm text-foreground">{RELATORIO_OPCAO_RESUMO.label}</span>
+            </label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Mostra os cartões de total recebido e faturamento da oficina no fim do PDF.
+            </p>
           </div>
         </div>
 

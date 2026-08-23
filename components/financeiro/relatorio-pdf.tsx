@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
   tituloBloco: { alignItems: "flex-end" },
   titulo: { fontSize: 14, fontFamily: "Helvetica-Bold", color: cores.primary },
   periodo: { fontSize: 8, color: cores.muted, marginTop: 2 },
+  filtro: { fontSize: 8, color: cores.muted, marginTop: 1 },
   table: { borderWidth: 1, borderColor: cores.border, borderRadius: 3 },
   tableHeaderRow: { flexDirection: "row", backgroundColor: cores.primary },
   th: { padding: 5, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#ffffff", textTransform: "uppercase" },
@@ -76,7 +77,8 @@ export interface RelatorioLinha {
   valor_pecas_loja: number;
   mao_obra: number;
   valor_pecas_oficina: number;
-  frete: number;
+  frete_pago: number;
+  frete_cobrado: number;
   pecas_loja_desc: string;
   pecas_oficina_desc: string;
   valor_total: number;
@@ -98,31 +100,28 @@ export function RelatorioPdf({
   config,
   inicio,
   fim,
+  mostrarResumo,
+  lojaParceiraNome,
 }: {
   linhas: RelatorioLinha[];
   colunasSelecionadas: string[];
   config: Pick<Configuracao, "nome_empresa" | "logo_url">;
   inicio: string;
   fim: string;
+  mostrarResumo: boolean;
+  lojaParceiraNome?: string | null;
 }) {
   const colunas = RELATORIO_COLUNAS.filter((c) => colunasSelecionadas.includes(c.key));
 
-  const totalPecasLoja = linhas.reduce((acc, l) => acc + l.valor_pecas_loja, 0);
-  const totalMaoObra = linhas.reduce((acc, l) => acc + l.mao_obra, 0);
-  const totalPecasOficina = linhas.reduce((acc, l) => acc + l.valor_pecas_oficina, 0);
-  const totalFrete = linhas.reduce((acc, l) => acc + l.frete, 0);
-  const totalGeral = linhas.reduce((acc, l) => acc + l.valor_total, 0);
-  const totalComDesconto = linhas.reduce((acc, l) => acc + l.valor_com_desconto, 0);
-  const faturamentoOficina = totalMaoObra + totalPecasOficina + totalFrete;
+  const totais: Record<string, number> = {};
+  for (const coluna of colunas) {
+    if (coluna.tipo === "moeda") {
+      totais[coluna.key] = linhas.reduce((acc, l) => acc + (Number(l[coluna.key as keyof RelatorioLinha]) || 0), 0);
+    }
+  }
 
-  const totais: Record<string, number> = {
-    valor_pecas_loja: totalPecasLoja,
-    mao_obra: totalMaoObra,
-    valor_pecas_oficina: totalPecasOficina,
-    frete: totalFrete,
-    valor_total: totalGeral,
-    valor_com_desconto: totalComDesconto,
-  };
+  const totalComDesconto = linhas.reduce((acc, l) => acc + l.valor_com_desconto, 0);
+  const faturamentoOficina = linhas.reduce((acc, l) => acc + l.mao_obra + l.valor_pecas_oficina + l.frete_cobrado, 0);
 
   return (
     <Document title={`Relatorio-Financeiro-${inicio}-a-${fim}`}>
@@ -138,6 +137,7 @@ export function RelatorioPdf({
             <Text style={styles.periodo}>
               {formatDatePdf(inicio)} a {formatDatePdf(fim)} · {linhas.length} {linhas.length === 1 ? "OS" : "OS"}
             </Text>
+            {lojaParceiraNome && <Text style={styles.filtro}>Loja parceira: {lojaParceiraNome}</Text>}
           </View>
         </View>
 
@@ -177,16 +177,18 @@ export function RelatorioPdf({
           )}
         </View>
 
-        <View style={styles.resumoBloco}>
-          <View style={styles.resumoCard}>
-            <Text style={styles.resumoLabel}>Total Recebido (com descontos)</Text>
-            <Text style={styles.resumoValor}>{formatCurrencyPdf(totalComDesconto)}</Text>
+        {mostrarResumo && (
+          <View style={styles.resumoBloco}>
+            <View style={styles.resumoCard}>
+              <Text style={styles.resumoLabel}>Total Recebido (com descontos)</Text>
+              <Text style={styles.resumoValor}>{formatCurrencyPdf(totalComDesconto)}</Text>
+            </View>
+            <View style={styles.resumoCard}>
+              <Text style={styles.resumoLabel}>Faturamento da Oficina (M.O. + Peças Oficina + Frete Cobrado)</Text>
+              <Text style={styles.resumoValor}>{formatCurrencyPdf(faturamentoOficina)}</Text>
+            </View>
           </View>
-          <View style={styles.resumoCard}>
-            <Text style={styles.resumoLabel}>Faturamento da Oficina (M.O. + Peças Oficina + Frete)</Text>
-            <Text style={styles.resumoValor}>{formatCurrencyPdf(faturamentoOficina)}</Text>
-          </View>
-        </View>
+        )}
 
         <Text style={styles.footer} fixed render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
       </Page>

@@ -255,12 +255,16 @@ export async function addOsItem(osId: string, formData: FormData) {
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const pecaId = str(formData, "peca_id");
+  const origem = (str(formData, "origem") as ItemOrigem) ?? "estoque";
+  const lojaParceiraId = str(formData, "loja_parceira_id");
+  if (origem === "loja_parceira" && !lojaParceiraId) throw new Error("Selecione a loja parceira");
 
   const { error } = await supabase.from("os_itens").insert({
     os_id: osId,
     peca_id: pecaId,
+    loja_parceira_id: origem === "loja_parceira" ? lojaParceiraId : null,
     descricao,
-    origem: (str(formData, "origem") as ItemOrigem) ?? "estoque",
+    origem,
     quantidade: Number(str(formData, "quantidade") ?? "1"),
     valor_unitario: num(formData, "valor_unitario"),
   });
@@ -268,7 +272,6 @@ export async function addOsItem(osId: string, formData: FormData) {
 
   if (pecaId) {
     const quantidade = Number(str(formData, "quantidade") ?? "1");
-    const origem = str(formData, "origem");
     if (origem === "estoque") {
       const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
       if (peca) {
