@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, Search, Bell, HelpCircle, Plus } from "lucide-react";
+import { Menu, Bell, HelpCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "./brand";
 import { SidebarNav } from "./sidebar-nav";
+import { GlobalSearch } from "./global-search";
 
 export function AppTopbar() {
   const [open, setOpen] = useState(false);
@@ -24,14 +25,7 @@ export function AppTopbar() {
         <Menu className="size-5" />
       </Button>
 
-      <div className="relative hidden flex-1 max-w-sm sm:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="search"
-          placeholder="Buscar no sistema..."
-          className="h-10 w-full rounded-xl border border-input bg-white pl-9 pr-3 text-sm shadow-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
-        />
-      </div>
+      <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
         <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex" aria-label="Notificações">

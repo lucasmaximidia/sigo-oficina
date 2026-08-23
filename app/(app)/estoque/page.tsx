@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PecaDialog } from "@/components/estoque/peca-dialog";
 import { LojaDialog } from "@/components/estoque/loja-dialog";
+import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { formatCurrency, cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,12 @@ export default async function EstoquePage() {
       <PageHeader
         title="Controle de Estoque"
         description="Gerencie peças, ferramentas e visualize parceiros."
-        actions={<PecaDialog lojas={lojas ?? []} />}
+        actions={
+          <>
+            <ExportarCsvButton tipo="estoque" />
+            <PecaDialog lojas={lojas ?? []} />
+          </>
+        }
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

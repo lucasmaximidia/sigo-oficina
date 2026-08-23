@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmpresaForm } from "@/components/configuracoes/empresa-form";
 import { EtiquetaForm } from "@/components/configuracoes/etiqueta-form";
 import { DashboardForm } from "@/components/configuracoes/dashboard-form";
+import { BackupTotalButton } from "@/components/configuracoes/backup-total-button";
 import { ResetSistemaDialog } from "@/components/configuracoes/reset-sistema-dialog";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export default async function ConfiguracoesPage() {
             </CardContent>
           </Link>
         </Card>
+        <BackupTotalButton />
         <ResetSistemaDialog />
       </div>
     </div>
