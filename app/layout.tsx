@@ -11,11 +11,17 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SIGO Oficina",
   description: "Gestão de ordens de serviço, estoque, agenda e financeiro para oficinas de eletrodomésticos.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SIGO Oficina",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#00647c",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
