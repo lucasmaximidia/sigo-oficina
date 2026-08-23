@@ -13,6 +13,7 @@ import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { ExcluirContaButton, ExcluirDespesaButton, ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
+import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { contaStatusMap, freteStatusMap } from "@/lib/status";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
@@ -238,7 +239,8 @@ export default async function FinanceiroPage() {
         </TabsContent>
 
         <TabsContent value="contas">
-          <div className="mb-3 flex justify-end">
+          <div className="mb-3 flex justify-end gap-2">
+            <ExportarCsvButton tipo="contas" />
             <NovaContaDialog />
           </div>
           <Card className="overflow-hidden p-0">
@@ -298,6 +300,9 @@ export default async function FinanceiroPage() {
         </TabsContent>
 
         <TabsContent value="despesas">
+          <div className="mb-3 flex justify-end">
+            <ExportarCsvButton tipo="despesas" />
+          </div>
           <Card className="overflow-hidden p-0">
             <Table>
               <TableHeader>

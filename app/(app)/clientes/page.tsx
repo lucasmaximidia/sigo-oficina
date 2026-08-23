@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClienteFormDialog } from "@/components/clientes/cliente-form-dialog";
 import { EquipamentoDialog } from "@/components/clientes/equipamento-dialog";
+import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +66,16 @@ export default async function ClientesPage({
 
   return (
     <div>
-      <PageHeader title="Clientes" description="Gerencie cadastros e visualize histórico de equipamentos." actions={<ClienteFormDialog />} />
+      <PageHeader
+        title="Clientes"
+        description="Gerencie cadastros e visualize histórico de equipamentos."
+        actions={
+          <>
+            <ExportarCsvButton tipo="clientes" />
+            <ClienteFormDialog />
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
         <Card className={cn("overflow-hidden p-0", clienteId && "hidden lg:block")}>
