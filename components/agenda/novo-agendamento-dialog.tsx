@@ -17,11 +17,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NovoClienteDialog } from "@/components/clientes/novo-cliente-dialog";
 import { createAgendaEvento } from "@/lib/actions";
 import type { Cliente } from "@/types";
 
 export function NovoAgendamentoDialog({
-  clientes,
+  clientes: clientesIniciais,
   defaultDate,
 }: {
   clientes: Pick<Cliente, "id" | "nome">[];
@@ -30,6 +31,8 @@ export function NovoAgendamentoDialog({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [clientes, setClientes] = useState(clientesIniciais);
+  const [clienteId, setClienteId] = useState("");
   const [isPending, startTransition] = useTransition();
   const forcedOpen = searchParams.get("novo") === "1";
   const isOpen = open || forcedOpen;
@@ -47,6 +50,7 @@ export function NovoAgendamentoDialog({
         await createAgendaEvento(formData);
         toast.success("Agendamento criado");
         handleOpenChange(false);
+        setClienteId("");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao criar agendamento");
       }
@@ -89,7 +93,7 @@ export function NovoAgendamentoDialog({
             </div>
             <div>
               <Label className="mb-1.5 block">Cliente</Label>
-              <Select name="cliente_id">
+              <Select name="cliente_id" value={clienteId} onValueChange={setClienteId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
@@ -101,6 +105,12 @@ export function NovoAgendamentoDialog({
                   ))}
                 </SelectContent>
               </Select>
+              <NovoClienteDialog
+                onCreated={(id, nome) => {
+                  setClientes((prev) => [...prev, { id, nome }]);
+                  setClienteId(id);
+                }}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
