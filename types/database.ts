@@ -405,6 +405,8 @@ export interface Database {
           vencimento: string;
           status: ContaStatus;
           pago_em: string | null;
+          parcela_atual: number | null;
+          parcela_total: number | null;
           created_at: string;
         };
         Insert: {
@@ -417,6 +419,8 @@ export interface Database {
           vencimento: string;
           status?: ContaStatus;
           pago_em?: string | null;
+          parcela_atual?: number | null;
+          parcela_total?: number | null;
           created_at?: string;
         };
         Update: {
@@ -429,6 +433,8 @@ export interface Database {
           vencimento?: string;
           status?: ContaStatus;
           pago_em?: string | null;
+          parcela_atual?: number | null;
+          parcela_total?: number | null;
           created_at?: string;
         };
         Relationships: [];

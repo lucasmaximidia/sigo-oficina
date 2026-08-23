@@ -470,18 +470,34 @@ export async function finalizarVendaPdv(input: {
 }
 
 // ---------- Financeiro ----------
+function addMeses(dataISO: string, meses: number): string {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+  return new Date(Date.UTC(ano, mes - 1 + meses, dia)).toISOString().slice(0, 10);
+}
+
 export async function createContaPagar(formData: FormData) {
   const descricao = strUp(formData, "descricao");
   const vencimento = str(formData, "vencimento");
   if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
-  const { error } = await supabase.from("financeiro_contas").insert({
+
+  const categoria = strUp(formData, "categoria");
+  const fornecedor = strUp(formData, "fornecedor");
+  const numero_documento = strUp(formData, "numero_documento");
+  const valor = num(formData, "valor");
+  const totalParcelas = Math.max(1, Number(str(formData, "parcelas") ?? "1"));
+
+  const linhas = Array.from({ length: totalParcelas }, (_, i) => ({
     descricao,
-    categoria: strUp(formData, "categoria"),
-    fornecedor: strUp(formData, "fornecedor"),
-    numero_documento: strUp(formData, "numero_documento"),
-    valor: num(formData, "valor"),
-    vencimento,
-  });
+    categoria,
+    fornecedor,
+    numero_documento,
+    valor,
+    vencimento: addMeses(vencimento, i),
+    parcela_atual: totalParcelas > 1 ? i + 1 : null,
+    parcela_total: totalParcelas > 1 ? totalParcelas : null,
+  }));
+
+  const { error } = await supabase.from("financeiro_contas").insert(linhas);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
   revalidatePath("/dashboard");

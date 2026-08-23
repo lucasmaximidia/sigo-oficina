@@ -260,7 +260,14 @@ export default async function FinanceiroPage() {
                   return (
                     <TableRow key={conta.id}>
                       <TableCell>
-                        <p className="font-medium text-foreground">{conta.descricao}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground">{conta.descricao}</p>
+                          {conta.parcela_total && (
+                            <Badge variant="secondary">
+                              {conta.parcela_atual}/{conta.parcela_total}
+                            </Badge>
+                          )}
+                        </div>
                         {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
                       </TableCell>
                       <TableCell className="text-muted-foreground">{conta.categoria || "—"}</TableCell>
