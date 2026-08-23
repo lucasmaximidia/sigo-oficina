@@ -49,10 +49,7 @@ export function AppSidebar() {
       <div className="mb-6 flex items-center justify-between px-1">
         <Brand collapsed={collapsed} />
       </div>
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <SidebarNav collapsed={collapsed} />
-      </div>
-      <div className="mt-4 flex flex-col gap-2 px-3">
+      <div className="px-3">
         <Link
           href="/ordens-servico/nova"
           title="Nova OS"
@@ -61,6 +58,11 @@ export function AppSidebar() {
           <Plus className="size-4.5 shrink-0" />
           {!collapsed && "Nova OS"}
         </Link>
+      </div>
+      <div className="mt-4 flex-1 overflow-y-auto overflow-x-hidden">
+        <SidebarNav collapsed={collapsed} />
+      </div>
+      <div className="mt-4 flex flex-col gap-2 px-3">
         <button
           type="button"
           onClick={() => setCollapsedPreference(!collapsed)}
