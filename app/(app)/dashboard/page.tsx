@@ -85,7 +85,7 @@ export default async function DashboardPage() {
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_pagamento"),
     supabase
       .from("financeiro_contas")
-      .select("id, descricao, numero_documento, valor, vencimento, status")
+      .select("id, descricao, numero_documento, valor, vencimento, status, parcela_atual, parcela_total")
       .neq("status", "pago")
       .lte("vencimento", em3dias.toISOString().slice(0, 10))
       .order("vencimento", { ascending: true }),
@@ -237,7 +237,10 @@ export default async function DashboardPage() {
                         <Circle
                           className={`size-2 shrink-0 ${atrasado ? "fill-destructive text-destructive" : "fill-warning text-warning"}`}
                         />
-                        <p className="truncate text-sm font-semibold text-foreground">{conta.descricao}</p>
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {conta.descricao}
+                          {conta.parcela_total ? ` (${conta.parcela_atual}/${conta.parcela_total})` : ""}
+                        </p>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {atrasado ? "Venceu em" : "Vence em"} {formatDate(conta.vencimento)}

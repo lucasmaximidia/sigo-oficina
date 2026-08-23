@@ -75,16 +75,26 @@ export function NovaContaDialog() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="valor" className="mb-1.5 block">
-                Valor (R$)
+                Valor da parcela (R$)
               </Label>
               <NumericInput id="valor" name="valor" required />
             </div>
             <div>
               <Label htmlFor="vencimento" className="mb-1.5 block">
-                Vencimento
+                1º vencimento
               </Label>
               <Input id="vencimento" name="vencimento" type="date" required />
             </div>
+          </div>
+          <div>
+            <Label htmlFor="parcelas" className="mb-1.5 block">
+              Parcelas
+            </Label>
+            <NumericInput id="parcelas" name="parcelas" decimal={false} defaultValue={1} />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Se for mais de 1, cria uma conta por parcela automaticamente, mesmo valor, vencendo a cada mês a partir
+              da data acima.
+            </p>
           </div>
           <div>
             <Label htmlFor="numero_documento" className="mb-1.5 block">
