@@ -315,6 +315,7 @@ export interface Database {
           desconto: number;
           total: number;
           created_at: string;
+          deletado_em: string | null;
         };
         Insert: {
           id?: string;
@@ -326,6 +327,7 @@ export interface Database {
           desconto?: number;
           total?: number;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Update: {
           id?: string;
@@ -337,6 +339,7 @@ export interface Database {
           desconto?: number;
           total?: number;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Relationships: [];
       };
@@ -408,6 +411,7 @@ export interface Database {
           parcela_atual: number | null;
           parcela_total: number | null;
           created_at: string;
+          deletado_em: string | null;
         };
         Insert: {
           id?: string;
@@ -422,6 +426,7 @@ export interface Database {
           parcela_atual?: number | null;
           parcela_total?: number | null;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Update: {
           id?: string;
@@ -436,6 +441,7 @@ export interface Database {
           parcela_atual?: number | null;
           parcela_total?: number | null;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Relationships: [];
       };
@@ -447,6 +453,7 @@ export interface Database {
           valor: number;
           data: string;
           created_at: string;
+          deletado_em: string | null;
         };
         Insert: {
           id?: string;
@@ -455,6 +462,7 @@ export interface Database {
           valor?: number;
           data?: string;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Update: {
           id?: string;
@@ -463,6 +471,7 @@ export interface Database {
           valor?: number;
           data?: string;
           created_at?: string;
+          deletado_em?: string | null;
         };
         Relationships: [];
       };
@@ -550,8 +559,6 @@ export interface Database {
           garantia_tipo_cobertura: string;
           garantia_texto_padrao: string | null;
           garantia_alerta_dias: number;
-          garantia_notificar_tecnicos: boolean;
-          garantia_sms_cliente: boolean;
           garantia_logo_certificado_url: string | null;
           garantia_assinatura_digital: boolean;
           garantia_qrcode: boolean;
@@ -579,8 +586,6 @@ export interface Database {
           garantia_tipo_cobertura?: string;
           garantia_texto_padrao?: string | null;
           garantia_alerta_dias?: number;
-          garantia_notificar_tecnicos?: boolean;
-          garantia_sms_cliente?: boolean;
           garantia_logo_certificado_url?: string | null;
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
@@ -608,8 +613,6 @@ export interface Database {
           garantia_tipo_cobertura?: string;
           garantia_texto_padrao?: string | null;
           garantia_alerta_dias?: number;
-          garantia_notificar_tecnicos?: boolean;
-          garantia_sms_cliente?: boolean;
           garantia_logo_certificado_url?: string | null;
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;

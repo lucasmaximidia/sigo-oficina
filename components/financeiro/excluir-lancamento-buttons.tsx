@@ -7,7 +7,7 @@ export function ExcluirContaButton({ id, descricao }: { id: string; descricao: s
   return (
     <ConfirmDeleteButton
       title="Excluir conta?"
-      description={`A conta "${descricao}" será removida definitivamente do Financeiro.`}
+      description={`A conta "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
       onConfirm={() => deleteContaPagar(id)}
       successMessage="Conta excluída"
     />
@@ -18,7 +18,7 @@ export function ExcluirDespesaButton({ id, descricao }: { id: string; descricao:
   return (
     <ConfirmDeleteButton
       title="Excluir despesa?"
-      description={`A despesa "${descricao}" será removida definitivamente do Financeiro.`}
+      description={`A despesa "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
       onConfirm={() => deleteDespesa(id)}
       successMessage="Despesa excluída"
     />
@@ -38,7 +38,7 @@ export function ExcluirEntradaButton({
     return (
       <ConfirmDeleteButton
         title="Excluir venda?"
-        description={`A venda "${origemLabel}" será apagada definitivamente, junto com seus itens.`}
+        description={`A venda "${origemLabel}" sai do Financeiro e do PDV, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
         onConfirm={() => deleteVendaPdv(id)}
         successMessage="Venda excluída"
       />

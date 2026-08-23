@@ -16,6 +16,7 @@ export default async function PdvPage() {
     supabase
       .from("vendas_pdv")
       .select<string, VendaComItens>("*, venda_itens(descricao, quantidade)")
+      .is("deletado_em", null)
       .order("created_at", { ascending: false })
       .limit(6),
   ]);
