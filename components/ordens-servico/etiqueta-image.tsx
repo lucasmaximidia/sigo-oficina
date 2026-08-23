@@ -108,7 +108,7 @@ export function EtiquetaOsImage({
         <DivisorFino />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 16 }}>
           <span style={{ fontSize: 40, fontWeight: 700 }}>{clienteNome}</span>
-          {clienteTelefone && <span style={{ fontSize: 26, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
+          {clienteTelefone && <span style={{ fontSize: 32, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
         </div>
       </div>
 
