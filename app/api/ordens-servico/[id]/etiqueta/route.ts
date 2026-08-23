@@ -58,10 +58,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     ? [equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") || equipamento.tipo
     : "Equipamento não informado";
 
-  const [interRegular, interBold, interExtraBold] = await Promise.all([
-    loadGoogleFont("Inter", 400),
-    loadGoogleFont("Inter", 700),
-    loadGoogleFont("Inter", 800),
+  const [montserratRegular, montserratBold] = await Promise.all([
+    loadGoogleFont("Montserrat", 400),
+    loadGoogleFont("Montserrat", 700),
   ]);
 
   const dataHoje = new Date().toISOString().slice(0, 10);
@@ -82,9 +81,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       width: ETIQUETA_LARGURA,
       height: ETIQUETA_ALTURA,
       fonts: [
-        { name: "Inter", data: interRegular, weight: 400, style: "normal" },
-        { name: "Inter", data: interBold, weight: 700, style: "normal" },
-        { name: "Inter", data: interExtraBold, weight: 800, style: "normal" },
+        { name: "Montserrat", data: montserratRegular, weight: 400, style: "normal" },
+        { name: "Montserrat", data: montserratBold, weight: 700, style: "normal" },
       ],
       headers: {
         "Content-Disposition": `inline; filename="${nomeArquivo}"`,
