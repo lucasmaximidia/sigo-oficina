@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarGrid } from "@/components/agenda/calendar-grid";
+import { CalendarGrid, urgenciaBordaClass } from "@/components/agenda/calendar-grid";
+import { cn } from "@/lib/utils";
 import { NovoAgendamentoDialog } from "@/components/agenda/novo-agendamento-dialog";
 import { buildMonthGrid, monthLabels } from "@/lib/calendar";
 import { agendaStatusMap } from "@/lib/status";
@@ -104,7 +105,13 @@ export default async function AgendaPage({
               const cliente = Array.isArray(evento.clientes) ? evento.clientes[0] : evento.clientes;
               const status = agendaStatusMap[evento.status as AgendaStatus];
               return (
-                <div key={evento.id} className="rounded-xl border border-border p-3">
+                <div
+                  key={evento.id}
+                  className={cn(
+                    "rounded-xl border border-l-[3px] border-border p-3",
+                    urgenciaBordaClass(selectedIso, new Date().toISOString().slice(0, 10), true)
+                  )}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-primary">
                       {new Date(evento.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}

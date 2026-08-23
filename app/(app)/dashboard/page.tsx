@@ -166,11 +166,11 @@ export default async function DashboardPage() {
               <CardContent className="flex flex-col gap-4">
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
-                  <AgendaList eventos={agendaHoje ?? []} vazio="Nenhum compromisso para hoje." />
+                  <AgendaList eventos={agendaHoje ?? []} vazio="Nenhum compromisso para hoje." urgencia="hoje" />
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amanhã</p>
-                  <AgendaList eventos={agendaAmanha ?? []} vazio="Nenhum compromisso para amanhã." />
+                  <AgendaList eventos={agendaAmanha ?? []} vazio="Nenhum compromisso para amanhã." urgencia="amanha" />
                 </div>
               </CardContent>
             </Card>
@@ -293,6 +293,7 @@ export default async function DashboardPage() {
 function AgendaList({
   eventos,
   vazio,
+  urgencia,
 }: {
   eventos: {
     id: string;
@@ -304,17 +305,19 @@ function AgendaList({
     clientes: { nome: string } | { nome: string }[] | null;
   }[];
   vazio: string;
+  urgencia: "hoje" | "amanha";
 }) {
   if (eventos.length === 0) {
     return <p className="text-sm text-muted-foreground">{vazio}</p>;
   }
+  const corBorda = urgencia === "hoje" ? "border-l-destructive" : "border-l-warning";
   return (
     <div className="flex flex-col gap-2">
       {eventos.map((evento) => {
         const cliente = Array.isArray(evento.clientes) ? evento.clientes[0] : evento.clientes;
         const status = agendaStatusMap[evento.status];
         return (
-          <div key={evento.id} className="flex gap-3 rounded-lg border border-border p-3">
+          <div key={evento.id} className={`flex gap-3 rounded-lg border border-l-[3px] border-border p-3 ${corBorda}`}>
             <div className="w-14 shrink-0 text-sm font-semibold text-primary">
               {new Date(evento.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </div>

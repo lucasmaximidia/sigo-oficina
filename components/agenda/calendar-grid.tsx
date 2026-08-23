@@ -10,6 +10,16 @@ const tipoDotClass: Record<string, string> = {
   oficina: "bg-muted-foreground",
 };
 
+// Destaca visualmente os dias com agendamento conforme a proximidade: hoje em
+// vermelho, próximos 2 dias em laranja, o resto sem destaque extra.
+export function urgenciaBordaClass(iso: string, hojeIso: string, temEventos: boolean): string {
+  if (!temEventos || iso < hojeIso) return "border-l-transparent";
+  const diffDias = Math.round((new Date(`${iso}T00:00:00`).getTime() - new Date(`${hojeIso}T00:00:00`).getTime()) / 86400000);
+  if (diffDias === 0) return "border-l-destructive";
+  if (diffDias <= 2) return "border-l-warning";
+  return "border-l-transparent";
+}
+
 export function CalendarGrid({
   days,
   eventosPorDia,
@@ -21,6 +31,8 @@ export function CalendarGrid({
   selectedIso: string;
   monthParam: string;
 }) {
+  const hojeIso = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <div className="grid grid-cols-7 border-b border-border bg-secondary/50">
@@ -39,9 +51,10 @@ export function CalendarGrid({
               key={day.iso}
               href={`/agenda?month=${monthParam}&day=${day.iso}`}
               className={cn(
-                "flex min-h-20 flex-col gap-1 border-b border-r border-border p-1.5 text-left transition-colors last:border-r-0 hover:bg-secondary/40 md:min-h-24 md:p-2",
+                "flex min-h-20 flex-col gap-1 border-b border-r border-l-[3px] border-border p-1.5 text-left transition-colors last:border-r-0 hover:bg-secondary/40 md:min-h-24 md:p-2",
                 !day.inCurrentMonth && "bg-muted/40 text-muted-foreground/50",
-                isSelected && "bg-accent"
+                isSelected && "bg-accent",
+                day.inCurrentMonth && urgenciaBordaClass(day.iso, hojeIso, eventos.length > 0)
               )}
             >
               <span
