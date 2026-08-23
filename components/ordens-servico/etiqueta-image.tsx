@@ -63,7 +63,7 @@ export function EtiquetaOsImage({
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
-        fontFamily: "Inter",
+        fontFamily: "Montserrat",
         color: "#111111",
       }}
     >
@@ -107,7 +107,7 @@ export function EtiquetaOsImage({
       >
         <DivisorFino />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 16 }}>
-          <span style={{ fontSize: 34, fontWeight: 700 }}>{clienteNome}</span>
+          <span style={{ fontSize: 40, fontWeight: 700 }}>{clienteNome}</span>
           {clienteTelefone && <span style={{ fontSize: 26, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
         </div>
       </div>
@@ -125,7 +125,7 @@ export function EtiquetaOsImage({
           padding: "0 20px",
         }}
       >
-        <span style={{ fontSize: 20, color: "#333333" }}>Equipamento:</span>
+        <span style={{ fontSize: 20, color: "#333333" }}>Equipamento</span>
         <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{equipamentoDescricao}</span>
       </div>
 
@@ -152,7 +152,7 @@ export function EtiquetaOsImage({
             padding: "18px 20px",
           }}
         >
-          <span style={{ fontSize: 20, color: "#333333" }}>Defeito Relatado:</span>
+          <span style={{ fontSize: 20, color: "#333333" }}>Defeito Relatado</span>
           <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.25, marginTop: 6 }}>{problema}</span>
         </div>
       </div>
