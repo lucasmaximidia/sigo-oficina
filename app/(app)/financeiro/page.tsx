@@ -73,8 +73,8 @@ export default async function FinanceiroPage() {
   em7dias.setDate(em7dias.getDate() + 7);
 
   const [{ data: contas }, { data: despesas }, { data: fretes }, { data: osPagas }, { data: vendas }] = await Promise.all([
-    supabase.from("financeiro_contas").select("*").order("vencimento", { ascending: true }),
-    supabase.from("financeiro_despesas").select("*").order("data", { ascending: false }),
+    supabase.from("financeiro_contas").select("*").is("deletado_em", null).order("vencimento", { ascending: true }),
+    supabase.from("financeiro_despesas").select("*").is("deletado_em", null).order("data", { ascending: false }),
     supabase
       .from("fretes")
       .select<string, FreteRow>(
@@ -91,6 +91,7 @@ export default async function FinanceiroPage() {
     supabase
       .from("vendas_pdv")
       .select<string, VendaEntradaRow>("id, numero, created_at, forma_pagamento, total, cliente_nome_avulso, clientes(nome)")
+      .is("deletado_em", null)
       .order("created_at", { ascending: false }),
   ]);
 

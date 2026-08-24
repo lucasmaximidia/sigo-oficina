@@ -86,6 +86,7 @@ export default async function DashboardPage() {
     supabase
       .from("financeiro_contas")
       .select("id, descricao, numero_documento, valor, vencimento, status, parcela_atual, parcela_total")
+      .is("deletado_em", null)
       .neq("status", "pago")
       .lte("vencimento", em3dias.toISOString().slice(0, 10))
       .order("vencimento", { ascending: true }),
@@ -114,7 +115,12 @@ export default async function DashboardPage() {
   const [{ data: vendasHoje }, { data: fretesPendentes }, { data: garantiasCriticas }, { count: orcamentosPendentes }] =
     await Promise.all([
       mostrarPdvHoje
-        ? supabase.from("vendas_pdv").select("total").gte("created_at", `${hojeStr}T00:00:00`).lt("created_at", `${amanhaStr}T00:00:00`)
+        ? supabase
+            .from("vendas_pdv")
+            .select("total")
+            .is("deletado_em", null)
+            .gte("created_at", `${hojeStr}T00:00:00`)
+            .lt("created_at", `${amanhaStr}T00:00:00`)
         : Promise.resolve({ data: null }),
       mostrarFretesPendentes ? supabase.from("fretes").select("valor_custo").eq("status", "pendente") : Promise.resolve({ data: null }),
       mostrarGarantiasVencendo

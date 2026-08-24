@@ -514,10 +514,22 @@ export async function marcarContaPaga(id: string) {
 }
 
 export async function deleteContaPagar(id: string) {
-  const { error } = await supabase.from("financeiro_contas").delete().eq("id", id);
+  const { error } = await supabase
+    .from("financeiro_contas")
+    .update({ deletado_em: new Date().toISOString() })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
   revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+export async function restaurarContaPagar(id: string) {
+  const { error } = await supabase.from("financeiro_contas").update({ deletado_em: null }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
 }
 
 export async function createDespesa(formData: FormData) {
@@ -534,17 +546,41 @@ export async function createDespesa(formData: FormData) {
 }
 
 export async function deleteDespesa(id: string) {
-  const { error } = await supabase.from("financeiro_despesas").delete().eq("id", id);
+  const { error } = await supabase
+    .from("financeiro_despesas")
+    .update({ deletado_em: new Date().toISOString() })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+export async function restaurarDespesa(id: string) {
+  const { error } = await supabase.from("financeiro_despesas").update({ deletado_em: null }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/configuracoes/lixeira");
 }
 
 export async function deleteVendaPdv(id: string) {
-  const { error } = await supabase.from("vendas_pdv").delete().eq("id", id);
+  const { error } = await supabase
+    .from("vendas_pdv")
+    .update({ deletado_em: new Date().toISOString() })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
   revalidatePath("/pdv");
   revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+export async function restaurarVendaPdv(id: string) {
+  const { error } = await supabase.from("vendas_pdv").update({ deletado_em: null }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/pdv");
+  revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
 }
 
 // ---------- Agenda ----------
@@ -670,8 +706,6 @@ export async function updateConfiguracoesGarantia(formData: FormData) {
       garantia_tipo_cobertura: str(formData, "garantia_tipo_cobertura") ?? "Garantia Total (Peças e Mão de Obra)",
       garantia_texto_padrao: str(formData, "garantia_texto_padrao"),
       garantia_alerta_dias: Number(str(formData, "garantia_alerta_dias") ?? "7"),
-      garantia_notificar_tecnicos: formData.get("garantia_notificar_tecnicos") === "on",
-      garantia_sms_cliente: formData.get("garantia_sms_cliente") === "on",
       garantia_assinatura_digital: formData.get("garantia_assinatura_digital") === "on",
       garantia_qrcode: formData.get("garantia_qrcode") === "on",
     })

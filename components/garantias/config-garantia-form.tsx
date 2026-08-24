@@ -113,14 +113,6 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
                   defaultValue={config.garantia_alerta_dias}
                 />
               </div>
-              <label className="flex items-center gap-2.5">
-                <Checkbox name="garantia_notificar_tecnicos" defaultChecked={config.garantia_notificar_tecnicos} />
-                <span className="text-sm text-foreground">Notificar Técnicos</span>
-              </label>
-              <label className="flex items-center gap-2.5">
-                <Checkbox name="garantia_sms_cliente" defaultChecked={config.garantia_sms_cliente} />
-                <span className="text-sm text-foreground">Enviar SMS automático para o cliente (requer módulo SMS)</span>
-              </label>
             </CardContent>
           </Card>
 
