@@ -59,10 +59,6 @@ export function OsAcoes({
   const [isCancelando, startCancelar] = useTransition();
   const [isReabrindo, startReabrir] = useTransition();
 
-  function handlePrint() {
-    window.print();
-  }
-
   function handleWhatsapp() {
     const telefone = clienteTelefone?.replace(/\D/g, "");
     const mensagem = encodeURIComponent(
@@ -128,9 +124,11 @@ export function OsAcoes({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <Button type="button" variant="outline" onClick={handlePrint}>
-        <Printer className="size-4" />
-        Imprimir OS
+      <Button asChild variant="outline">
+        <a href={`/api/ordens-servico/${osId}/pdf`} target="_blank" rel="noopener noreferrer">
+          <Printer className="size-4" />
+          Imprimir OS
+        </a>
       </Button>
       <Button type="button" variant="secondary" onClick={handleWhatsapp}>
         <MessageCircle className="size-4" />
