@@ -1,10 +1,23 @@
 import Link from "next/link";
-import { AlertTriangle, ClipboardList, Truck, FileBarChart, TrendingUp, Wrench, ShoppingCart } from "lucide-react";
+import {
+  AlertTriangle,
+  ClipboardList,
+  Truck,
+  FileBarChart,
+  TrendingUp,
+  Wrench,
+  ShoppingCart,
+  ArrowUpRight,
+  ArrowDownRight,
+  Receipt,
+  BarChart3,
+  Wallet2,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,6 +27,8 @@ import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { ExcluirContaButton, ExcluirDespesaButton, ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
+import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
+import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { contaStatusMap, freteStatusMap } from "@/lib/status";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
@@ -50,6 +65,7 @@ interface Entrada {
   cliente: string;
   data: string;
   formaPagamento: string;
+  formaPagamentoChave: string;
   valor: number;
 }
 
@@ -117,6 +133,7 @@ export default async function FinanceiroPage() {
       cliente: os.clientes?.nome ?? "—",
       data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
       formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
+      formaPagamentoChave: os.forma_pagamento ?? "outro",
       valor,
     };
   });
@@ -128,6 +145,7 @@ export default async function FinanceiroPage() {
     cliente: venda.clientes?.nome ?? venda.cliente_nome_avulso ?? "Cliente avulso",
     data: venda.created_at.slice(0, 10),
     formaPagamento: formaPagamentoLabel[venda.forma_pagamento] ?? venda.forma_pagamento,
+    formaPagamentoChave: venda.forma_pagamento,
     valor: venda.total,
   }));
 
@@ -135,6 +153,30 @@ export default async function FinanceiroPage() {
   const totalRecebidoNoMes = entradas
     .filter((e) => e.data.startsWith(hojeStr.slice(0, 7)))
     .reduce((acc, e) => acc + e.valor, 0);
+
+  const entradasMesAtual = entradas.filter((e) => e.data.startsWith(hojeStr.slice(0, 7)));
+  const mesAnteriorData = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+  const mesAnteriorStr = mesAnteriorData.toISOString().slice(0, 7);
+  const totalMesAnterior = entradas
+    .filter((e) => e.data.startsWith(mesAnteriorStr))
+    .reduce((acc, e) => acc + e.valor, 0);
+  const ticketMedio = entradasMesAtual.length > 0 ? totalRecebidoNoMes / entradasMesAtual.length : 0;
+  const variacaoMes = totalMesAnterior > 0 ? ((totalRecebidoNoMes - totalMesAnterior) / totalMesAnterior) * 100 : null;
+
+  const mesesGrafico = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - (5 - i), 1);
+    const chave = d.toISOString().slice(0, 7);
+    const label = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(d).replace(".", "");
+    const valor = entradas.filter((e) => e.data.startsWith(chave)).reduce((acc, e) => acc + e.valor, 0);
+    return { label: label.charAt(0).toUpperCase() + label.slice(1), valor };
+  });
+
+  const formasPagamentoMes = ["pix", "cartao", "dinheiro"]
+    .map((forma) => ({
+      forma,
+      valor: entradasMesAtual.filter((e) => e.formaPagamentoChave === forma).reduce((acc, e) => acc + e.valor, 0),
+    }))
+    .filter((f) => f.valor > 0);
 
   const fretesPendentes = (fretes ?? []).filter((f) => f.status === "pendente");
   const totalFretePendente = fretesPendentes.reduce((acc, f) => acc + f.valor_custo, 0);
@@ -177,13 +219,66 @@ export default async function FinanceiroPage() {
         <StatCard icon={ClipboardList} label="Próximos 7 dias" value={formatCurrency(totalProximos)} />
       </div>
 
-      <Tabs defaultValue="entradas" className="mt-5">
+      <Tabs defaultValue="visao-geral" className="mt-5">
         <TabsList>
+          <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
           <TabsTrigger value="entradas">Entradas</TabsTrigger>
           <TabsTrigger value="contas">Contas a Pagar (Boletos)</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
           <TabsTrigger value="fretes">Fretes</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="visao-geral" className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
+            <StatCard
+              icon={TrendingUp}
+              label="Faturamento do mês"
+              value={formatCurrency(totalRecebidoNoMes)}
+              hint={new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(hoje)}
+            />
+            <StatCard
+              icon={variacaoMes !== null && variacaoMes < 0 ? ArrowDownRight : ArrowUpRight}
+              label="Vs. mês anterior"
+              value={variacaoMes !== null ? `${variacaoMes >= 0 ? "+" : ""}${variacaoMes.toFixed(1)}%` : "—"}
+              tone={variacaoMes === null ? "default" : variacaoMes >= 0 ? "success" : "danger"}
+              hint={`${formatCurrency(totalMesAnterior)} no mês anterior`}
+            />
+            <StatCard
+              icon={Receipt}
+              label="Ticket médio"
+              value={formatCurrency(ticketMedio)}
+              hint={`${entradasMesAtual.length} ${entradasMesAtual.length === 1 ? "entrada" : "entradas"} no mês`}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="size-4.5 text-primary" />
+                  Faturamento por mês
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Últimos 6 meses · valores em milhares de R$</p>
+              </CardHeader>
+              <CardContent>
+                <FaturamentoChart meses={mesesGrafico} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet2 className="size-4.5 text-primary" />
+                  Formas de Pagamento
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Este mês</p>
+              </CardHeader>
+              <CardContent>
+                <FormasPagamentoCard dados={formasPagamentoMes} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         <TabsContent value="entradas">
           <Card className="overflow-hidden p-0">
