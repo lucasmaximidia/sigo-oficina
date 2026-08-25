@@ -167,19 +167,17 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
             </CardContent>
           </Card>
 
-          {os.origem === "frete" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Truck className="size-4.5 text-primary" />
-                  Custo do Frete
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="size-4.5 text-primary" />
+                Custo do Frete
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
+            </CardContent>
+          </Card>
 
           {os.status === "finalizado" && (
             <OsRetiradaCard osId={os.id} garantiaDias={os.garantia_dias} dataRetirada={os.data_retirada} />
