@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, ChevronRight, List, LayoutGrid } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
 import { OsTableRow } from "@/components/os/os-table-row";
+import { OsKanbanBoard, type OsKanbanItem } from "@/components/os/os-kanban-board";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
 import type { OsStatus, OsUrgencia } from "@/types";
 
@@ -26,16 +27,115 @@ interface OsListRow {
   equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
 }
 
+interface OsKanbanRow {
+  id: string;
+  numero: number;
+  status: OsStatus;
+  urgencia: OsUrgencia;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+  data_entrada: string;
+  data_finalizacao: string | null;
+  data_retirada: string | null;
+  clientes: { nome: string } | null;
+  equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+  os_itens: { quantidade: number; valor_unitario: number }[];
+}
+
 export default async function OrdensServicoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; page?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; view?: string }>;
 }) {
   const params = await searchParams;
   const status = params.status as OsStatus | undefined;
   const page = Math.max(1, Number(params.page ?? "1"));
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
+  const view = params.view === "kanban" ? "kanban" : "lista";
+
+  const viewToggle = (
+    <div className="flex shrink-0 rounded-xl bg-muted p-1">
+      <Link
+        href="/ordens-servico"
+        className={cn(
+          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+          view === "lista" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <List className="size-4" />
+        Lista
+      </Link>
+      <Link
+        href="/ordens-servico?view=kanban"
+        className={cn(
+          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+          view === "kanban" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <LayoutGrid className="size-4" />
+        Kanban
+      </Link>
+    </div>
+  );
+
+  if (view === "kanban") {
+    const { data: ordensKanban } = await supabase
+      .from("ordens_servico")
+      .select<string, OsKanbanRow>(
+        "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, clientes(nome), equipamentos(tipo, marca, modelo), os_itens(quantidade, valor_unitario)"
+      )
+      .neq("status", "cancelado")
+      .order("data_entrada", { ascending: false })
+      .limit(200);
+
+    const itensKanban: OsKanbanItem[] = (ordensKanban ?? []).map((os) => {
+      const totalItens = (os.os_itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+      const total = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
+      const equipamento = os.equipamentos;
+      const dataLabel =
+        os.status === "finalizado"
+          ? `Finalizado ${formatDate(os.data_retirada ?? os.data_finalizacao ?? os.data_entrada)}`
+          : `Entrada ${formatDate(os.data_entrada)}`;
+      return {
+        id: os.id,
+        numero: os.numero,
+        status: os.status,
+        urgencia: os.urgencia,
+        total,
+        clienteNome: os.clientes?.nome ?? "—",
+        equipamentoDescricao: equipamento
+          ? [equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") || equipamento.tipo
+          : "—",
+        dataLabel,
+      };
+    });
+
+    return (
+      <div>
+        <PageHeader
+          title="Ordens de Serviço"
+          description="Arraste os cards entre as colunas para mudar o status."
+          actions={
+            <>
+              {viewToggle}
+              <Button asChild variant="secondary">
+                <Link href="/agenda?novo=1">Novo Agendamento</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/ordens-servico/nova">
+                  <Plus className="size-4" />
+                  Nova OS
+                </Link>
+              </Button>
+            </>
+          }
+        />
+        <OsKanbanBoard ordens={itensKanban} />
+      </div>
+    );
+  }
 
   let query = supabase
     .from("ordens_servico")
@@ -59,6 +159,7 @@ export default async function OrdensServicoPage({
         description="Gerencie e acompanhe o status de todas as manutenções."
         actions={
           <>
+            {viewToggle}
             <Button asChild variant="secondary">
               <Link href="/agenda?novo=1">Novo Agendamento</Link>
             </Button>
