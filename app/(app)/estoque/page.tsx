@@ -1,4 +1,4 @@
-import { AlertTriangle, Store } from "lucide-react";
+import { AlertTriangle, Store, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PecaDialog } from "@/components/estoque/peca-dialog";
 import { LojaDialog } from "@/components/estoque/loja-dialog";
+import { EntradaEstoqueDialog } from "@/components/estoque/entrada-estoque-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+interface EntradaRecenteRow {
+  id: string;
+  numero_nf: string | null;
+  data_nf: string;
+  valor_total: number;
+  lojas_parceiras: { nome: string } | null;
+}
+
 export default async function EstoquePage() {
-  const [{ data: pecas }, { data: lojas }] = await Promise.all([
+  const [{ data: pecas }, { data: lojas }, { data: entradas }] = await Promise.all([
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
     supabase.from("lojas_parceiras").select("*").order("principal", { ascending: false }),
+    supabase
+      .from("entradas_estoque")
+      .select<string, EntradaRecenteRow>("id, numero_nf, data_nf, valor_total, lojas_parceiras(nome)")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
   const criticas = (pecas ?? []).filter((p) => p.quantidade === 0);
@@ -35,6 +49,7 @@ export default async function EstoquePage() {
         actions={
           <>
             <ExportarCsvButton tipo="estoque" />
+            <EntradaEstoqueDialog lojas={lojas ?? []} pecas={pecas ?? []} />
             <PecaDialog lojas={lojas ?? []} />
           </>
         }
@@ -140,6 +155,33 @@ export default async function EstoquePage() {
               ))}
               {(lojas ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma loja cadastrada.</p>}
               <LojaDialog />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="size-4.5 text-primary" />
+                Últimas Entradas (NF)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {(entradas ?? []).map((entrada) => (
+                <div key={entrada.id} className="rounded-xl border border-border p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">
+                      NF {entrada.numero_nf ?? "s/ nº"}
+                    </p>
+                    <p className="text-sm font-medium text-foreground">{formatCurrency(entrada.valor_total)}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {entrada.lojas_parceiras?.nome ?? "Sem loja"} · {formatDate(entrada.data_nf)}
+                  </p>
+                </div>
+              ))}
+              {(entradas ?? []).length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhuma entrada de mercadoria registrada ainda.</p>
+              )}
             </CardContent>
           </Card>
         </div>

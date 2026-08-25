@@ -19,6 +19,8 @@ export type Orcamento = Database["public"]["Tables"]["orcamentos"]["Row"];
 export type OrcamentoItem = Database["public"]["Tables"]["orcamento_itens"]["Row"];
 export type PrestadorFrete = Database["public"]["Tables"]["prestadores_frete"]["Row"];
 export type Frete = Database["public"]["Tables"]["fretes"]["Row"];
+export type EntradaEstoque = Database["public"]["Tables"]["entradas_estoque"]["Row"];
+export type EntradaEstoqueItem = Database["public"]["Tables"]["entrada_estoque_itens"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
