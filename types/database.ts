@@ -410,6 +410,7 @@ export interface Database {
           pago_em: string | null;
           parcela_atual: number | null;
           parcela_total: number | null;
+          entrada_estoque_id: string | null;
           created_at: string;
           deletado_em: string | null;
         };
@@ -425,6 +426,7 @@ export interface Database {
           pago_em?: string | null;
           parcela_atual?: number | null;
           parcela_total?: number | null;
+          entrada_estoque_id?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
@@ -440,8 +442,69 @@ export interface Database {
           pago_em?: string | null;
           parcela_atual?: number | null;
           parcela_total?: number | null;
+          entrada_estoque_id?: string | null;
           created_at?: string;
           deletado_em?: string | null;
+        };
+        Relationships: [];
+      };
+      entradas_estoque: {
+        Row: {
+          id: string;
+          loja_id: string | null;
+          numero_nf: string | null;
+          data_nf: string;
+          data_chegada: string | null;
+          valor_total: number;
+          observacoes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          loja_id?: string | null;
+          numero_nf?: string | null;
+          data_nf: string;
+          data_chegada?: string | null;
+          valor_total?: number;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          loja_id?: string | null;
+          numero_nf?: string | null;
+          data_nf?: string;
+          data_chegada?: string | null;
+          valor_total?: number;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      entrada_estoque_itens: {
+        Row: {
+          id: string;
+          entrada_id: string;
+          peca_id: string | null;
+          quantidade: number;
+          valor_unitario: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entrada_id: string;
+          peca_id?: string | null;
+          quantidade?: number;
+          valor_unitario?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entrada_id?: string;
+          peca_id?: string | null;
+          quantidade?: number;
+          valor_unitario?: number;
+          created_at?: string;
         };
         Relationships: [];
       };

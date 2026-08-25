@@ -371,6 +371,107 @@ export async function updatePeca(id: string, formData: FormData) {
   revalidatePath("/estoque");
 }
 
+export interface EntradaEstoqueItemInput {
+  peca_id: string | null;
+  novaPeca?: { nome: string; codigo: string | null; categoria: string | null };
+  quantidade: number;
+  valor_unitario: number;
+}
+
+export interface EntradaEstoqueParcelaInput {
+  vencimento: string;
+  valor: number;
+}
+
+export async function createEntradaEstoque(input: {
+  lojaId: string | null;
+  lojaNome: string | null;
+  numeroNf: string | null;
+  dataNf: string;
+  dataChegada: string | null;
+  valorTotal: number;
+  observacoes: string | null;
+  itens: EntradaEstoqueItemInput[];
+  parcelas: EntradaEstoqueParcelaInput[];
+}) {
+  if (!input.dataNf) throw new Error("Data da NF é obrigatória");
+  if (input.itens.length === 0) throw new Error("Adicione ao menos um item recebido");
+
+  const { data: entrada, error } = await supabase
+    .from("entradas_estoque")
+    .insert({
+      loja_id: input.lojaId,
+      numero_nf: input.numeroNf,
+      data_nf: input.dataNf,
+      data_chegada: input.dataChegada,
+      valor_total: input.valorTotal,
+      observacoes: input.observacoes,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+
+  for (const item of input.itens) {
+    let pecaId = item.peca_id;
+    if (!pecaId && item.novaPeca?.nome) {
+      const { data: novaPeca, error: pecaError } = await supabase
+        .from("pecas")
+        .insert({
+          nome: item.novaPeca.nome,
+          codigo: item.novaPeca.codigo,
+          categoria: item.novaPeca.categoria,
+          preco_custo: item.valor_unitario,
+          fornecedor_id: input.lojaId,
+          quantidade: 0,
+        })
+        .select("id")
+        .single();
+      if (pecaError) throw new Error(pecaError.message);
+      pecaId = novaPeca.id as string;
+    }
+    if (!pecaId) continue;
+
+    const { error: itemError } = await supabase.from("entrada_estoque_itens").insert({
+      entrada_id: entrada.id,
+      peca_id: pecaId,
+      quantidade: item.quantidade,
+      valor_unitario: item.valor_unitario,
+    });
+    if (itemError) throw new Error(itemError.message);
+
+    const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
+    if (peca) {
+      await supabase
+        .from("pecas")
+        .update({ quantidade: peca.quantidade + item.quantidade })
+        .eq("id", pecaId);
+    }
+  }
+
+  if (input.parcelas.length > 0) {
+    const totalParcelas = input.parcelas.length;
+    const descricao = `NF ${input.numeroNf ?? "s/ nº"}${input.lojaNome ? ` - ${input.lojaNome}` : ""}`.toUpperCase();
+    const linhas = input.parcelas.map((p, i) => ({
+      descricao,
+      categoria: "PEÇAS",
+      fornecedor: input.lojaNome,
+      numero_documento: input.numeroNf,
+      valor: p.valor,
+      vencimento: p.vencimento,
+      parcela_atual: totalParcelas > 1 ? i + 1 : null,
+      parcela_total: totalParcelas > 1 ? totalParcelas : null,
+      entrada_estoque_id: entrada.id,
+    }));
+    const { error: contasError } = await supabase.from("financeiro_contas").insert(linhas);
+    if (contasError) throw new Error(contasError.message);
+  }
+
+  revalidatePath("/estoque");
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+  return entrada.id as string;
+}
+
 export async function createLojaParceira(formData: FormData) {
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
