@@ -4,14 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, Bell, HelpCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "./brand";
 import { SidebarNav } from "./sidebar-nav";
 import { GlobalSearch } from "./global-search";
 import { ThemeToggle } from "./theme-toggle";
 
-export function AppTopbar() {
+export function AppTopbar({ logoUrl }: { logoUrl: string | null }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -44,6 +44,7 @@ export function AppTopbar() {
           </Link>
         </Button>
         <Avatar className="ml-1">
+          {logoUrl && <AvatarImage src={logoUrl} alt="Logo da empresa" className="object-cover" />}
           <AvatarFallback>SO</AvatarFallback>
         </Avatar>
       </div>
