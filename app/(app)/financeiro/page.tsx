@@ -29,7 +29,7 @@ import { ExcluirContaButton, ExcluirDespesaButton, ExcluirEntradaButton } from "
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
 import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { contaStatusMap, freteStatusMap } from "@/lib/status";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import type { ContaStatus } from "@/types";
@@ -282,55 +282,92 @@ export default async function FinanceiroPage() {
 
         <TabsContent value="entradas">
           <Card className="overflow-hidden p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Origem</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Forma de Pagamento</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="w-10">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entradas.map((entrada) => (
-                  <TableRow key={`${entrada.tipo}-${entrada.id}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        {entrada.tipo === "os" ? (
-                          <Wrench className="size-3.5 text-muted-foreground" />
-                        ) : (
-                          <ShoppingCart className="size-3.5 text-muted-foreground" />
-                        )}
-                        {entrada.origemHref ? (
-                          <Link href={entrada.origemHref} className="font-medium text-primary">
-                            {entrada.origemLabel}
-                          </Link>
-                        ) : (
-                          <span className="font-medium text-foreground">{entrada.origemLabel}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground">{entrada.cliente}</TableCell>
-                    <TableCell className="text-muted-foreground">{entrada.data ? formatDate(entrada.data) : "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
-                    <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
-                    <TableCell>
-                      <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {entradas.length === 0 && (
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou
-                      uma venda é feita no PDV.
-                    </TableCell>
+                    <TableHead>Origem</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Forma de Pagamento</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {entradas.map((entrada) => (
+                    <TableRow key={`${entrada.tipo}-${entrada.id}`}>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          {entrada.tipo === "os" ? (
+                            <Wrench className="size-3.5 text-muted-foreground" />
+                          ) : (
+                            <ShoppingCart className="size-3.5 text-muted-foreground" />
+                          )}
+                          {entrada.origemHref ? (
+                            <Link href={entrada.origemHref} className="font-medium text-primary">
+                              {entrada.origemLabel}
+                            </Link>
+                          ) : (
+                            <span className="font-medium text-foreground">{entrada.origemLabel}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-foreground">{entrada.cliente}</TableCell>
+                      <TableCell className="text-muted-foreground">{entrada.data ? formatDate(entrada.data) : "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
+                      <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
+                      <TableCell>
+                        <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {entradas.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                        Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou
+                        uma venda é feita no PDV.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex flex-col divide-y divide-border md:hidden">
+              {entradas.map((entrada) => (
+                <div key={`${entrada.tipo}-${entrada.id}`} className="flex items-start justify-between gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      {entrada.tipo === "os" ? (
+                        <Wrench className="size-3.5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ShoppingCart className="size-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      {entrada.origemHref ? (
+                        <Link href={entrada.origemHref} className="truncate font-medium text-primary">
+                          {entrada.origemLabel}
+                        </Link>
+                      ) : (
+                        <span className="truncate font-medium text-foreground">{entrada.origemLabel}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-sm text-foreground">{entrada.cliente}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {entrada.data ? formatDate(entrada.data) : "—"} · {entrada.formaPagamento}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-success">{formatCurrency(entrada.valor)}</p>
+                  </div>
+                  <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+                </div>
+              ))}
+              {entradas.length === 0 && (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma
+                  venda é feita no PDV.
+                </p>
+              )}
+            </div>
           </Card>
         </TabsContent>
 
@@ -340,58 +377,96 @@ export default async function FinanceiroPage() {
             <NovaContaDialog />
           </div>
           <Card className="overflow-hidden p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-20">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(contas ?? []).map((conta) => {
-                  const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
-                  const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
-                  return (
-                    <TableRow key={conta.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground">{conta.descricao}</p>
-                          {conta.parcela_total && (
-                            <Badge variant="secondary">
-                              {conta.parcela_atual}/{conta.parcela_total}
-                            </Badge>
-                          )}
-                        </div>
-                        {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{conta.categoria || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(conta.vencimento)}</TableCell>
-                      <TableCell className="font-medium text-foreground">{formatCurrency(conta.valor)}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
-                          <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
-                        </div>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-20">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(contas ?? []).map((conta) => {
+                    const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
+                    const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
+                    return (
+                      <TableRow key={conta.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground">{conta.descricao}</p>
+                            {conta.parcela_total && (
+                              <Badge variant="secondary">
+                                {conta.parcela_atual}/{conta.parcela_total}
+                              </Badge>
+                            )}
+                          </div>
+                          {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{conta.categoria || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{formatDate(conta.vencimento)}</TableCell>
+                        <TableCell className="font-medium text-foreground">{formatCurrency(conta.valor)}</TableCell>
+                        <TableCell>
+                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                            <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {(contas ?? []).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                        Nenhuma conta cadastrada.
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-                {(contas ?? []).length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Nenhuma conta cadastrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex flex-col divide-y divide-border md:hidden">
+              {(contas ?? []).map((conta) => {
+                const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
+                const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
+                return (
+                  <div key={conta.id} className="flex items-start justify-between gap-3 p-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-medium text-foreground">{conta.descricao}</p>
+                        {conta.parcela_total && (
+                          <Badge variant="secondary" className="shrink-0">
+                            {conta.parcela_atual}/{conta.parcela_total}
+                          </Badge>
+                        )}
+                      </div>
+                      {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {conta.categoria || "—"} · Vence {formatDate(conta.vencimento)}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        <span className="text-sm font-semibold text-foreground">{formatCurrency(conta.valor)}</span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                      <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
+                    </div>
+                  </div>
+                );
+              })}
+              {(contas ?? []).length === 0 && (
+                <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma conta cadastrada.</p>
+              )}
+            </div>
           </Card>
         </TabsContent>
 
@@ -400,37 +475,57 @@ export default async function FinanceiroPage() {
             <ExportarCsvButton tipo="despesas" />
           </div>
           <Card className="overflow-hidden p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="w-10">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(despesas ?? []).map((despesa) => (
-                  <TableRow key={despesa.id}>
-                    <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
-                    <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
-                    <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
-                    <TableCell>
-                      <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(despesas ?? []).length === 0 && (
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                      Nenhuma despesa lançada.
-                    </TableCell>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {(despesas ?? []).map((despesa) => (
+                    <TableRow key={despesa.id}>
+                      <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
+                      <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
+                      <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
+                      <TableCell>
+                        <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(despesas ?? []).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        Nenhuma despesa lançada.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex flex-col divide-y divide-border md:hidden">
+              {(despesas ?? []).map((despesa) => (
+                <div key={despesa.id} className="flex items-start justify-between gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-foreground">{despesa.descricao}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {despesa.categoria || "—"} · {formatDate(despesa.data)}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{formatCurrency(despesa.valor)}</p>
+                  </div>
+                  <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
+                </div>
+              ))}
+              {(despesas ?? []).length === 0 && (
+                <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma despesa lançada.</p>
+              )}
+            </div>
           </Card>
         </TabsContent>
 
@@ -440,57 +535,95 @@ export default async function FinanceiroPage() {
             <StatCard icon={Truck} label="Pago este mês" value={formatCurrency(totalFretePagoNoMes)} />
           </div>
           <Card className="overflow-hidden p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>OS</TableHead>
-                  <TableHead>Prestador</TableHead>
-                  <TableHead>Cobrado do cliente</TableHead>
-                  <TableHead>Pago ao prestador</TableHead>
-                  <TableHead>Margem</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(fretes ?? []).map((frete) => {
-                  const statusInfo = freteStatusMap[frete.status];
-                  const cobrado = frete.ordens_servico?.valor_frete ?? 0;
-                  const margem = cobrado - frete.valor_custo;
-                  return (
-                    <TableRow key={frete.id}>
-                      <TableCell className="font-semibold text-primary">
-                        {frete.ordens_servico && (
-                          <Link href={`/ordens-servico/${frete.os_id}`}>
-                            #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
-                          </Link>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
-                      <TableCell className="font-medium text-foreground">{formatCurrency(frete.valor_custo)}</TableCell>
-                      <TableCell className={margem >= 0 ? "text-success" : "text-destructive"}>
-                        {formatCurrency(margem)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>OS</TableHead>
+                    <TableHead>Prestador</TableHead>
+                    <TableHead>Cobrado do cliente</TableHead>
+                    <TableHead>Pago ao prestador</TableHead>
+                    <TableHead>Margem</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(fretes ?? []).map((frete) => {
+                    const statusInfo = freteStatusMap[frete.status];
+                    const cobrado = frete.ordens_servico?.valor_frete ?? 0;
+                    const margem = cobrado - frete.valor_custo;
+                    return (
+                      <TableRow key={frete.id}>
+                        <TableCell className="font-semibold text-primary">
+                          {frete.ordens_servico && (
+                            <Link href={`/ordens-servico/${frete.os_id}`}>
+                              #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
+                            </Link>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
+                        <TableCell className="font-medium text-foreground">{formatCurrency(frete.valor_custo)}</TableCell>
+                        <TableCell className={margem >= 0 ? "text-success" : "text-destructive"}>
+                          {formatCurrency(margem)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {(fretes ?? []).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                        Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem &quot;Frete&quot;
+                        numa OS.
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-                {(fretes ?? []).length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                      Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem &quot;Frete&quot;
-                      numa OS.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex flex-col divide-y divide-border md:hidden">
+              {(fretes ?? []).map((frete) => {
+                const statusInfo = freteStatusMap[frete.status];
+                const cobrado = frete.ordens_servico?.valor_frete ?? 0;
+                const margem = cobrado - frete.valor_custo;
+                return (
+                  <div key={frete.id} className="flex items-start justify-between gap-3 p-4">
+                    <div className="min-w-0 flex-1">
+                      {frete.ordens_servico && (
+                        <Link href={`/ordens-servico/${frete.os_id}`} className="font-semibold text-primary">
+                          #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
+                        </Link>
+                      )}
+                      <p className="mt-0.5 text-sm text-foreground">{frete.prestadores_frete?.nome ?? "—"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Cobrado {formatCurrency(cobrado)} · Pago {formatCurrency(frete.valor_custo)}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        <span className={cn("text-sm font-semibold", margem >= 0 ? "text-success" : "text-destructive")}>
+                          Margem {formatCurrency(margem)}
+                        </span>
+                      </div>
+                    </div>
+                    {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
+                  </div>
+                );
+              })}
+              {(fretes ?? []).length === 0 && (
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem &quot;Frete&quot; numa
+                  OS.
+                </p>
+              )}
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
