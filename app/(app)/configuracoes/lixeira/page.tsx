@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Wallet2, Receipt, ShoppingCart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RestaurarButton } from "@/components/configuracoes/restaurar-button";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 
@@ -30,7 +31,7 @@ export default async function LixeiraPage() {
   const vazia = (contas ?? []).length === 0 && (despesas ?? []).length === 0 && (vendas ?? []).length === 0;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <Link href="/configuracoes" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" />
         Voltar para Configurações
@@ -49,68 +50,106 @@ export default async function LixeiraPage() {
         </Card>
       )}
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         {(contas ?? []).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Contas a Pagar</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {(contas ?? []).map((conta) => (
-                <div key={conta.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{conta.descricao}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCurrency(conta.valor)} · Excluído em {formatDateTime(conta.deletado_em!)}
-                    </p>
-                  </div>
-                  <RestaurarButton id={conta.id} tipo="conta" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <div>
+            <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Wallet2 className="size-4 text-primary" />
+              Contas a Pagar
+            </p>
+            <Card className="overflow-hidden p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Excluído em</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(contas ?? []).map((conta) => (
+                    <TableRow key={conta.id}>
+                      <TableCell className="font-medium text-foreground">{conta.descricao}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatCurrency(conta.valor)}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDateTime(conta.deletado_em!)}</TableCell>
+                      <TableCell>
+                        <RestaurarButton id={conta.id} tipo="conta" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         )}
 
         {(despesas ?? []).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Despesas</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {(despesas ?? []).map((despesa) => (
-                <div key={despesa.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{despesa.descricao}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCurrency(despesa.valor)} · Excluído em {formatDateTime(despesa.deletado_em!)}
-                    </p>
-                  </div>
-                  <RestaurarButton id={despesa.id} tipo="despesa" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <div>
+            <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Receipt className="size-4 text-primary" />
+              Despesas
+            </p>
+            <Card className="overflow-hidden p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Excluído em</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(despesas ?? []).map((despesa) => (
+                    <TableRow key={despesa.id}>
+                      <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatCurrency(despesa.valor)}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDateTime(despesa.deletado_em!)}</TableCell>
+                      <TableCell>
+                        <RestaurarButton id={despesa.id} tipo="despesa" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         )}
 
         {(vendas ?? []).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Vendas do PDV</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {(vendas ?? []).map((venda) => (
-                <div key={venda.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">Venda #{String(venda.numero).padStart(5, "0")}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatCurrency(venda.total)} · Excluído em {formatDateTime(venda.deletado_em!)}
-                    </p>
-                  </div>
-                  <RestaurarButton id={venda.id} tipo="venda" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <div>
+            <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ShoppingCart className="size-4 text-primary" />
+              Vendas do PDV
+            </p>
+            <Card className="overflow-hidden p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Venda</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Excluído em</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(vendas ?? []).map((venda) => (
+                    <TableRow key={venda.id}>
+                      <TableCell className="font-medium text-foreground">
+                        Venda #{String(venda.numero).padStart(5, "0")}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{formatCurrency(venda.total)}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDateTime(venda.deletado_em!)}</TableCell>
+                      <TableCell>
+                        <RestaurarButton id={venda.id} tipo="venda" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         )}
       </div>
     </div>

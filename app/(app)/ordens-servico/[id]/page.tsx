@@ -180,7 +180,12 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
           </Card>
 
           {os.status === "finalizado" && (
-            <OsRetiradaCard osId={os.id} garantiaDias={os.garantia_dias} dataRetirada={os.data_retirada} />
+            <OsRetiradaCard
+              key={os.data_retirada ?? "sem-retirada"}
+              osId={os.id}
+              garantiaDias={os.garantia_dias}
+              dataRetirada={os.data_retirada}
+            />
           )}
         </div>
       </div>
