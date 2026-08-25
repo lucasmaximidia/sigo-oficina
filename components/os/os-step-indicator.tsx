@@ -14,6 +14,10 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
   const currentIndex = osStatusSteps.findIndex((s) => s.value === status);
 
   function handleChange(next: OsStatus) {
+    if (next === "finalizado") {
+      toast.error('Para finalizar, use o botão "Finalizar Ordem" — é preciso informar a forma de pagamento.');
+      return;
+    }
     startTransition(async () => {
       try {
         await updateOrdemServicoStatus(osId, next);
