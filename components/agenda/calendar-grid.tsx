@@ -69,7 +69,7 @@ export function CalendarGrid({
               </span>
               <div className="flex flex-col gap-0.5">
                 {eventos.slice(0, 2).map((ev) => (
-                  <span key={ev.id} className="hidden truncate rounded bg-white px-1 py-0.5 text-[10px] font-medium text-foreground shadow-sm md:block">
+                  <span key={ev.id} className="hidden truncate rounded bg-card px-1 py-0.5 text-[10px] font-medium text-foreground shadow-sm md:block">
                     <span className={cn("mr-1 inline-block size-1.5 rounded-full", tipoDotClass[ev.tipo])} />
                     {new Date(ev.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>

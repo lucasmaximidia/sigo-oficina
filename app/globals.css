@@ -51,6 +51,52 @@
   --sidebar-active-foreground: #00647c;
 }
 
+.dark {
+  --background: #10161a;
+  --foreground: #e7ebed;
+
+  --card: #182027;
+  --card-foreground: #e7ebed;
+
+  --popover: #182027;
+  --popover-foreground: #e7ebed;
+
+  --primary: #22a6c4;
+  --primary-hover: #3bb8d4;
+  --primary-foreground: #06161a;
+
+  --secondary: #202a30;
+  --secondary-foreground: #c3ced2;
+
+  --muted: #1c252b;
+  --muted-foreground: #8b9a9f;
+
+  --accent: #13333c;
+  --accent-foreground: #5fd2ec;
+
+  --destructive: #f0605c;
+  --destructive-foreground: #200404;
+
+  --success: #34d399;
+  --success-foreground: #04241a;
+
+  --warning: #fbbf24;
+  --warning-foreground: #2b1a02;
+
+  --info: #60a5fa;
+  --info-foreground: #051329;
+
+  --border: #29343b;
+  --input: #37444c;
+  --ring: #22a6c4;
+
+  --sidebar: #0d1216;
+  --sidebar-foreground: #e7ebed;
+  --sidebar-border: #212b31;
+  --sidebar-active: #143039;
+  --sidebar-active-foreground: #5fd2ec;
+}
+
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
@@ -108,4 +154,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #37444c;
 }

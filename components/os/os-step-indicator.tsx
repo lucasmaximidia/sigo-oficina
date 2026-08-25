@@ -64,8 +64,8 @@ export function OsStepIndicator({ osId, status }: { osId: string; status: OsStat
                   className={cn(
                     "flex size-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors",
                     done && "border-primary bg-primary text-primary-foreground",
-                    active && "border-primary bg-white text-primary",
-                    !done && !active && "border-border bg-white text-muted-foreground"
+                    active && "border-primary bg-card text-primary",
+                    !done && !active && "border-border bg-card text-muted-foreground"
                   )}
                 >
                   {done ? <Check className="size-4" /> : index + 1}

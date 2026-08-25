@@ -304,7 +304,7 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
                 autoComplete="off"
               />
               {pecaResultados.length > 0 && (
-                <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+                <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-card shadow-lg">
                   {pecaResultados.map((p) => (
                     <button
                       key={p.id}

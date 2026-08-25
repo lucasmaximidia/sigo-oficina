@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { User, Wrench, MessageSquareText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +45,10 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
     <form action={handleSubmit} className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>Dados do Cliente</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <User className="size-4.5 text-primary" />
+            Dados do Cliente
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ClientePicker clientes={clientes} />
@@ -53,7 +57,10 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
 
       <Card>
         <CardHeader>
-          <CardTitle>Dados do Equipamento</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Wrench className="size-4.5 text-primary" />
+            Dados do Equipamento
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
@@ -94,7 +101,10 @@ export function NovaOsForm({ clientes }: { clientes: Pick<Cliente, "id" | "nome"
 
       <Card>
         <CardHeader>
-          <CardTitle>Relato do Problema</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquareText className="size-4.5 text-primary" />
+            Relato do Problema
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div>

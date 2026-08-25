@@ -1,9 +1,9 @@
 import { formatCurrency } from "@/lib/utils";
 
 const CORES: Record<string, string> = {
-  pix: "#00647c",
-  cartao: "#2563eb",
-  dinheiro: "#f59e0b",
+  pix: "var(--color-primary)",
+  cartao: "var(--color-info)",
+  dinheiro: "var(--color-warning)",
 };
 
 const LABELS: Record<string, string> = {
@@ -21,7 +21,7 @@ export function FormasPagamentoCard({ dados }: { dados: { forma: string; valor: 
       {total > 0 ? (
         <div className="mb-4 flex h-3.5 w-full overflow-hidden rounded-full">
           {ordenado.map((d) => (
-            <div key={d.forma} style={{ width: `${(d.valor / total) * 100}%`, background: CORES[d.forma] ?? "#8b979b" }} />
+            <div key={d.forma} style={{ width: `${(d.valor / total) * 100}%`, background: CORES[d.forma] ?? "var(--color-muted-foreground)" }} />
           ))}
         </div>
       ) : (
@@ -31,7 +31,7 @@ export function FormasPagamentoCard({ dados }: { dados: { forma: string; valor: 
       <div className="flex flex-col gap-3">
         {ordenado.map((d) => (
           <div key={d.forma} className="flex items-center gap-2">
-            <span className="size-2.5 shrink-0 rounded-full" style={{ background: CORES[d.forma] ?? "#8b979b" }} />
+            <span className="size-2.5 shrink-0 rounded-full" style={{ background: CORES[d.forma] ?? "var(--color-muted-foreground)" }} />
             <span className="flex-1 text-sm font-medium text-foreground">{LABELS[d.forma] ?? d.forma}</span>
             <span className="text-sm font-bold text-foreground">
               {total > 0 ? Math.round((d.valor / total) * 100) : 0}%

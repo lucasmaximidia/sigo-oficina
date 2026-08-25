@@ -64,7 +64,7 @@ export default async function GarantiasPage({
             className={`shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
               filtro === tab.value
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-white text-muted-foreground hover:bg-secondary"
+                : "border-border bg-card text-muted-foreground hover:bg-secondary"
             }`}
           >
             {tab.label}

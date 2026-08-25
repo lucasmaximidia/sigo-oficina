@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
@@ -133,7 +133,10 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
 
           <Card>
             <CardHeader>
-              <CardTitle>Peças e Serviços</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="size-4.5 text-primary" />
+                Peças e Serviços
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OsItensList osId={os.id} itens={itens ?? []} pecas={pecas ?? []} lojas={lojas ?? []} />
@@ -144,7 +147,10 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
         <div className="flex flex-col gap-5">
           <Card>
             <CardHeader>
-              <CardTitle>Ações</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="size-4.5 text-primary" />
+                Ações
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OsAcoes
@@ -160,7 +166,10 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
 
           <Card>
             <CardHeader>
-              <CardTitle>Resumo de Valores</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="size-4.5 text-primary" />
+                Resumo de Valores
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OsResumoValores os={os} totalPecas={totalPecas} />

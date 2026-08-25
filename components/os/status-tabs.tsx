@@ -24,7 +24,7 @@ export function OsStatusTabs({ active }: { active: string }) {
               "shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors",
               isActive
                 ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                : "border-border bg-white text-muted-foreground hover:bg-secondary"
+                : "border-border bg-card text-muted-foreground hover:bg-secondary"
             )}
           >
             {tab.label}

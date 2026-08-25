@@ -36,7 +36,7 @@ export function ClientePicker({ clientes }: { clientes: Pick<Cliente, "id" | "no
               setSelecionado(null);
               setNome("");
             }}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-white"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-foreground/10"
           >
             <X className="size-4" />
           </button>
@@ -69,7 +69,7 @@ export function ClientePicker({ clientes }: { clientes: Pick<Cliente, "id" | "no
           />
         </div>
         {open && resultados.length > 0 && (
-          <div className="mt-1.5 flex flex-col overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+          <div className="mt-1.5 flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg">
             {resultados.map((c) => (
               <button
                 key={c.id}
