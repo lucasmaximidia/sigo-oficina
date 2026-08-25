@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Sistema de gestão para oficina de conserto de eletrodomésticos",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f9fb",
-    theme_color: "#00647c",
+    background_color: "#f8f6f2",
+    theme_color: "#045d72",
     icons: [
       { src: "/icon-192", sizes: "192x192", type: "image/png" },
       { src: "/icon-512", sizes: "512x512", type: "image/png" },

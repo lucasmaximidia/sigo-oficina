@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Hourglass,
   Wrench,
+  Package,
   PackageCheck,
   ReceiptText,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   Truck,
   ShieldAlert,
   FileText,
+  LayoutGrid,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
@@ -18,9 +20,10 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { TarefasCard } from "@/components/dashboard/tarefas-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaStatus } from "@/types";
+import type { LucideIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +77,7 @@ export default async function DashboardPage() {
 
   const [
     { count: aguardandoOrcamento },
+    { count: aguardandoPecas },
     { count: emExecucao },
     { count: aguardandoPagamento },
     { data: boletosVencendo },
@@ -83,6 +87,7 @@ export default async function DashboardPage() {
     { data: tarefas },
   ] = await Promise.all([
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_orcamento"),
+    supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_pecas"),
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "em_execucao"),
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_pagamento"),
     supabase
@@ -154,11 +159,25 @@ export default async function DashboardPage() {
       />
 
       {mostrarStats && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
-          <StatCard icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} hint="OS para análise" />
-          <StatCard icon={Wrench} label="OS em Aberto" value={emExecucao ?? 0} hint="Em execução/fila" />
-          <StatCard icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} hint="Prontas para retirada" />
-        </div>
+        <Card className="bg-gradient-to-br from-card to-accent/25">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <LayoutGrid className="size-4.5 text-primary" />
+              Acompanhamento de OS
+            </CardTitle>
+            <Link href="/ordens-servico?view=kanban" className="text-sm font-medium text-primary hover:underline">
+              Ver Kanban
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <MiniStat icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} />
+              <MiniStat icon={Package} label="Aguardando Peças" value={aguardandoPecas ?? 0} />
+              <MiniStat icon={Wrench} label="Em Execução" value={emExecucao ?? 0} />
+              <MiniStat icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} tone="warning" />
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {(mostrarAgenda || mostrarOsParadas) && (
@@ -300,6 +319,33 @@ export default async function DashboardPage() {
           <TarefasCard tarefas={tarefas ?? []} />
         </div>
       )}
+    </div>
+  );
+}
+
+function MiniStat({
+  icon: Icon,
+  label,
+  value,
+  tone = "default",
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  tone?: "default" | "warning";
+}) {
+  return (
+    <div className="rounded-xl bg-card/70 p-3.5">
+      <div
+        className={cn(
+          "flex size-8 items-center justify-center rounded-lg",
+          tone === "warning" ? "bg-warning/15 text-warning" : "bg-accent text-primary"
+        )}
+      >
+        <Icon className="size-4" strokeWidth={2} />
+      </div>
+      <p className="font-display mt-2.5 text-2xl font-bold text-foreground">{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }

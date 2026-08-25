@@ -62,7 +62,7 @@ export function AppTopbar({ logoUrl }: { logoUrl: string | null }) {
             <Link
               href="/ordens-servico/nova"
               onClick={() => setOpen(false)}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary-hover"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-action px-4 text-sm font-semibold text-action-foreground shadow-sm hover:bg-action-hover"
             >
               <Plus className="size-4.5" />
               Novo OS
