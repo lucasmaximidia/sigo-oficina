@@ -46,6 +46,10 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
     if (!id) return;
     const atual = ordens.find((o) => o.id === id);
     if (!atual || atual.status === status) return;
+    if (status === "finalizado") {
+      toast.error('Para finalizar, abra a OS e use "Finalizar Ordem" — é preciso informar a forma de pagamento.');
+      return;
+    }
     startTransition(async () => {
       try {
         await updateOrdemServicoStatus(id, status);
@@ -56,12 +60,12 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
+    <div className="flex gap-3 overflow-x-auto pb-2">
       {osStatusSteps.map((step) => {
         const itens = ordens.filter((o) => o.status === step.value);
         const emDrag = dragOverStatus === step.value;
         return (
-          <div key={step.value} className="w-[248px] shrink-0">
+          <div key={step.value} className="min-w-[190px] flex-1 lg:min-w-[210px]">
             <div className="mb-2.5 flex items-center gap-2 px-0.5">
               <span className={cn("size-2 rounded-full", COLUNA_DOT[step.value])} />
               <p className="text-xs font-bold text-foreground">{step.label}</p>

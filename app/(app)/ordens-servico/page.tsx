@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { Plus, ChevronRight, List, LayoutGrid } from "lucide-react";
+import { cookies } from "next/headers";
+import { Plus, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
 import { OsTableRow } from "@/components/os/os-table-row";
 import { OsKanbanBoard, type OsKanbanItem } from "@/components/os/os-kanban-board";
+import { OsViewToggle } from "@/components/os/os-view-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
 import type { OsStatus, OsUrgencia } from "@/types";
 
@@ -53,32 +55,12 @@ export default async function OrdensServicoPage({
   const page = Math.max(1, Number(params.page ?? "1"));
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
-  const view = params.view === "kanban" ? "kanban" : "lista";
 
-  const viewToggle = (
-    <div className="flex shrink-0 rounded-xl bg-muted p-1">
-      <Link
-        href="/ordens-servico"
-        className={cn(
-          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-          view === "lista" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <List className="size-4" />
-        Lista
-      </Link>
-      <Link
-        href="/ordens-servico?view=kanban"
-        className={cn(
-          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-          view === "kanban" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <LayoutGrid className="size-4" />
-        Kanban
-      </Link>
-    </div>
-  );
+  const cookieStore = await cookies();
+  const viewPreferida = cookieStore.get("sigo-os-view")?.value;
+  const view = params.view === "kanban" || (!params.view && viewPreferida === "kanban") ? "kanban" : "lista";
+
+  const viewToggle = <OsViewToggle view={view} />;
 
   if (view === "kanban") {
     const { data: ordensKanban } = await supabase
