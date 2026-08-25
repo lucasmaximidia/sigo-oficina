@@ -33,16 +33,17 @@ function hoje() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function addMeses(dataISO: string, meses: number): string {
+function addDias(dataISO: string, dias: number): string {
   const [ano, mes, dia] = dataISO.split("-").map(Number);
-  return new Date(Date.UTC(ano, mes - 1 + meses, dia)).toISOString().slice(0, 10);
+  return new Date(Date.UTC(ano, mes - 1, dia + dias)).toISOString().slice(0, 10);
 }
 
+// 1ª parcela vence 30 dias após a NF, 2ª 60 dias, 3ª 90 dias, e assim sucessivamente.
 function gerarParcelas(dataNf: string, valorTotal: number, quantidade: number): EntradaEstoqueParcelaInput[] {
   if (!dataNf || quantidade < 1) return [];
   const base = Math.floor((valorTotal / quantidade) * 100) / 100;
   const parcelas = Array.from({ length: quantidade }, (_, i) => ({
-    vencimento: addMeses(dataNf, i),
+    vencimento: addDias(dataNf, (i + 1) * 30),
     valor: base,
   }));
   const resto = Math.round((valorTotal - base * quantidade) * 100) / 100;
@@ -452,8 +453,8 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground">
-                  Vencimentos sugeridos a partir de {formatDate(dataNf)}, um por mês. Você pode ajustar datas e valores
-                  de cada parcela individualmente.
+                  Vencimentos sugeridos a cada 30 dias a partir de {formatDate(dataNf)} (30, 60, 90...). Você pode
+                  ajustar datas e valores de cada parcela individualmente.
                 </p>
               </div>
             )}
