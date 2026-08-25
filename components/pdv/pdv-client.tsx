@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle } from "lucide-react";
+import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle, ShoppingCart, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
@@ -178,7 +178,7 @@ export function PdvClient({
             onChange={(e) => setQuery(e.target.value)}
           />
           {resultados.length > 0 && (
-            <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+            <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-card shadow-lg">
               {resultados.map((p) => (
                 <button
                   key={p.id}
@@ -202,7 +202,10 @@ export function PdvClient({
 
         <Card>
           <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Itens da Venda</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="size-4.5 text-primary" />
+              Itens da Venda
+            </CardTitle>
             <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-primary">
               {cart.length} {cart.length === 1 ? "item" : "itens"}
             </span>
@@ -265,7 +268,10 @@ export function PdvClient({
       <div className="flex flex-col gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Forma de Pagamento</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="size-4.5 text-primary" />
+              Forma de Pagamento
+            </CardTitle>
             <p className="text-xs text-muted-foreground">Selecione uma ou mais formas para dividir o pagamento.</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -357,7 +363,10 @@ export function PdvClient({
 
         <Card>
           <CardHeader>
-            <CardTitle>Vendas Recentes</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <History className="size-4.5 text-primary" />
+              Vendas Recentes
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col divide-y divide-border">
             {vendasRecentes.length === 0 && <p className="py-4 text-sm text-muted-foreground">Nenhuma venda ainda.</p>}

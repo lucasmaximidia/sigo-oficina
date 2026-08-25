@@ -160,7 +160,7 @@ export function OsItensList({
                           setPecaId("");
                           setPecaQuery("");
                         }}
-                        className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-white"
+                        className="shrink-0 rounded-md p-1.5 text-muted-foreground hover:bg-foreground/10"
                       >
                         <X className="size-4" />
                       </button>
@@ -176,7 +176,7 @@ export function OsItensList({
                         autoComplete="off"
                       />
                       {pecaResultados.length > 0 && (
-                        <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+                        <div className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-card shadow-lg">
                           {pecaResultados.map((p) => (
                             <button
                               key={p.id}

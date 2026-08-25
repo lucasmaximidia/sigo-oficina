@@ -9,12 +9,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Brand } from "./brand";
 import { SidebarNav } from "./sidebar-nav";
 import { GlobalSearch } from "./global-search";
+import { ThemeToggle } from "./theme-toggle";
 
 export function AppTopbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-white/95 px-4 backdrop-blur supports-backdrop-filter:bg-white/80 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-card/95 px-4 backdrop-blur supports-backdrop-filter:bg-card/80 md:px-6">
       <Button
         variant="ghost"
         size="icon"
@@ -28,6 +29,7 @@ export function AppTopbar() {
       <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+        <ThemeToggle />
         <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex" aria-label="Notificações">
           <Bell className="size-5" />
           <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive" />

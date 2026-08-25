@@ -99,7 +99,7 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="relative hidden h-10 max-w-sm flex-1 items-center gap-2 rounded-xl border border-input bg-white px-3 text-left text-sm text-muted-foreground/70 shadow-sm hover:border-primary/40 sm:flex"
+        className="relative hidden h-10 max-w-sm flex-1 items-center gap-2 rounded-xl border border-input bg-card px-3 text-left text-sm text-muted-foreground/70 shadow-sm hover:border-primary/40 sm:flex"
       >
         <Search className="size-4 shrink-0" />
         <span className="flex-1">Buscar cliente, OS, peça...</span>

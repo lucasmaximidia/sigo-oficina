@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown } from "lucide-react";
+import { FileDown, FileBarChart } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,10 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Relatório de Serviços Realizados</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <FileBarChart className="size-4.5 text-primary" />
+          Relatório de Serviços Realizados
+        </CardTitle>
         <p className="text-xs text-muted-foreground">
           Escolha o período e quais colunas entram no PDF antes de gerar. O relatório considera as OS finalizadas com
           data de pagamento dentro do período escolhido.

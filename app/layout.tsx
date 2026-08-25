@@ -24,10 +24,21 @@ export const viewport: Viewport = {
   themeColor: "#00647c",
 };
 
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var stored = localStorage.getItem("sigo-theme");
+    var dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (dark) document.documentElement.classList.add("dark");
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}
         <Toaster richColors position="top-right" />
       </body>

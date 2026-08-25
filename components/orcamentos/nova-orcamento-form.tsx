@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { User, FileText } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,10 @@ export function NovaOrcamentoForm({ clientes }: { clientes: Pick<Cliente, "id" |
     <form action={handleSubmit} className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>Dados do Cliente</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <User className="size-4.5 text-primary" />
+            Dados do Cliente
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ClientePicker clientes={clientes} />
@@ -41,7 +45,10 @@ export function NovaOrcamentoForm({ clientes }: { clientes: Pick<Cliente, "id" |
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes do Orçamento</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="size-4.5 text-primary" />
+            Detalhes do Orçamento
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div>

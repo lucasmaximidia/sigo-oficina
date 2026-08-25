@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
+import { Plus, CheckSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,10 @@ export function TarefasCard({ tarefas }: { tarefas: Tarefa[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>O que fazer hoje</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <CheckSquare className="size-4.5 text-primary" />
+          O que fazer hoje
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
         {tarefas.length === 0 && (

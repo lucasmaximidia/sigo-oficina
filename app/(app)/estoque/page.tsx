@@ -1,4 +1,4 @@
-import { AlertTriangle, Store, FileText } from "lucide-react";
+import { AlertTriangle, Store, FileText, Boxes } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +58,10 @@ export default async function EstoquePage() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="overflow-hidden p-0 lg:col-span-2">
           <CardHeader>
-            <CardTitle>Inventário Atual</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Boxes className="size-4.5 text-primary" />
+              Inventário Atual
+            </CardTitle>
           </CardHeader>
           <Table>
             <TableHeader>

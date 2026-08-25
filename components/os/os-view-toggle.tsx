@@ -18,7 +18,7 @@ export function OsViewToggle({ view }: { view: "lista" | "kanban" }) {
         onClick={() => salvarPreferencia("lista")}
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-          view === "lista" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+          view === "lista" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
         )}
       >
         <List className="size-4" />
@@ -29,7 +29,7 @@ export function OsViewToggle({ view }: { view: "lista" | "kanban" }) {
         onClick={() => salvarPreferencia("kanban")}
         className={cn(
           "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-          view === "kanban" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+          view === "kanban" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
         )}
       >
         <LayoutGrid className="size-4" />

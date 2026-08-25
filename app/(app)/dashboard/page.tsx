@@ -166,7 +166,10 @@ export default async function DashboardPage() {
           {mostrarAgenda && (
             <Card className={mostrarOsParadas ? "lg:col-span-2" : "lg:col-span-3"}>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Agenda</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="size-4.5 text-primary" />
+                  Agenda
+                </CardTitle>
                 <Link href="/agenda" className="text-sm font-medium text-primary hover:underline">
                   Ver calendário
                 </Link>

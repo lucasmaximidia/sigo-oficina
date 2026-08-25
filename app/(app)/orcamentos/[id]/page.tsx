@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, FileText } from "lucide-react";
+import { ArrowLeft, User, FileText, Package, Zap, Calculator } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrcamentoStatusMenu } from "@/components/orcamentos/orcamento-status-menu";
@@ -80,7 +80,10 @@ export default async function OrcamentoDetalhePage({ params }: { params: Promise
 
           <Card>
             <CardHeader>
-              <CardTitle>Itens do Orçamento</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="size-4.5 text-primary" />
+                Itens do Orçamento
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OrcamentoItensList orcamentoId={orcamento.id} itens={itens ?? []} pecas={pecas ?? []} readOnly={readOnly} />
@@ -91,7 +94,10 @@ export default async function OrcamentoDetalhePage({ params }: { params: Promise
         <div className="flex flex-col gap-5">
           <Card>
             <CardHeader>
-              <CardTitle>Ações</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="size-4.5 text-primary" />
+                Ações
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OrcamentoAcoes
@@ -106,7 +112,10 @@ export default async function OrcamentoDetalhePage({ params }: { params: Promise
 
           <Card>
             <CardHeader>
-              <CardTitle>Resumo</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="size-4.5 text-primary" />
+                Resumo
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <OrcamentoResumoForm orcamento={orcamento} totalItens={totalItens} />

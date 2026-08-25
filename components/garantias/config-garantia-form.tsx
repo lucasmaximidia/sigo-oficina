@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, ShieldCheck, FileText, Bell, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
@@ -46,7 +46,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
         <div className="flex flex-col gap-5">
           <Card>
             <CardHeader>
-              <CardTitle>Prazo Padrão de Garantia</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="size-4.5 text-primary" />
+                Prazo Padrão de Garantia
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -78,7 +81,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Texto Padrão de Garantia</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="size-4.5 text-primary" />
+                Texto Padrão de Garantia
+              </CardTitle>
               <p className="text-xs text-muted-foreground">Termos legais que constarão no certificado gerado para o cliente.</p>
             </CardHeader>
             <CardContent>
@@ -98,7 +104,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
         <div className="flex flex-col gap-5">
           <Card>
             <CardHeader>
-              <CardTitle>Alertas de Vencimento</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="size-4.5 text-primary" />
+                Alertas de Vencimento
+              </CardTitle>
               <p className="text-xs text-muted-foreground">Configure quando o sistema deve avisar sobre garantias próximas do fim.</p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -118,7 +127,10 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Certificado</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="size-4.5 text-primary" />
+                Certificado
+              </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <label className="flex items-center gap-2.5">

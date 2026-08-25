@@ -16,7 +16,7 @@ export function FaturamentoChart({ meses }: { meses: { label: string; valor: num
 
   return (
     <svg width="100%" height={ALTURA} viewBox={`0 0 ${LARGURA} ${ALTURA}`}>
-      <line x1={PADDING_ESQUERDA - 10} y1={BASELINE} x2={LARGURA - 30} y2={BASELINE} stroke="#e2e6ea" strokeWidth={1} />
+      <line x1={PADDING_ESQUERDA - 10} y1={BASELINE} x2={LARGURA - 30} y2={BASELINE} stroke="var(--color-border)" strokeWidth={1} />
       {meses.map((mes, i) => {
         const altura = Math.max(2, (mes.valor / max) * alturaUtil);
         const x = PADDING_ESQUERDA + i * (BAR_WIDTH + GAP);
@@ -24,14 +24,21 @@ export function FaturamentoChart({ meses }: { meses: { label: string; valor: num
         const atual = i === meses.length - 1;
         return (
           <g key={mes.label + i}>
-            <rect x={x} y={y} width={BAR_WIDTH} height={altura} rx={4} fill={atual ? "#00647c" : "#cfe8ee"} />
+            <rect
+              x={x}
+              y={y}
+              width={BAR_WIDTH}
+              height={altura}
+              rx={4}
+              fill={atual ? "var(--color-primary)" : "var(--color-accent)"}
+            />
             <text
               x={x + BAR_WIDTH / 2}
               y={y - 8}
               textAnchor="middle"
               fontSize={atual ? 12 : 11}
               fontWeight={atual ? 700 : 400}
-              fill={atual ? "#00647c" : "#5b6b70"}
+              fill={atual ? "var(--color-primary)" : "var(--color-muted-foreground)"}
               fontFamily="Inter, sans-serif"
             >
               {formatMil(mes.valor)}
@@ -42,7 +49,7 @@ export function FaturamentoChart({ meses }: { meses: { label: string; valor: num
               textAnchor="middle"
               fontSize={12}
               fontWeight={atual ? 700 : 400}
-              fill={atual ? "#00647c" : "#5b6b70"}
+              fill={atual ? "var(--color-primary)" : "var(--color-muted-foreground)"}
               fontFamily="Inter, sans-serif"
             >
               {mes.label}

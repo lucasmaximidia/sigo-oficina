@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, MapPin, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, User, CalendarDays } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,7 +94,10 @@ export default async function AgendaPage({
 
         <Card className="h-fit">
           <CardHeader>
-            <CardTitle className="capitalize">{selectedDateLabel}</CardTitle>
+            <CardTitle className="flex items-center gap-2 capitalize">
+              <CalendarDays className="size-4.5 shrink-0 text-primary" />
+              {selectedDateLabel}
+            </CardTitle>
             <p className="text-xs text-muted-foreground">
               {eventosDoDia.length} {eventosDoDia.length === 1 ? "agendamento" : "agendamentos"}
             </p>
