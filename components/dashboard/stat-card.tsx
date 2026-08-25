@@ -47,7 +47,7 @@ export function StatCard({
       </div>
       <p
         className={cn(
-          "mt-3 text-3xl font-bold",
+          "mt-3 font-display text-3xl font-bold",
           tone === "danger" && "text-destructive",
           tone === "success" && "text-success",
           tone === "default" && "text-foreground"

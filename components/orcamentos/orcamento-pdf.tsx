@@ -2,7 +2,7 @@ import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/render
 import type { Orcamento, OrcamentoItem, Configuracao } from "@/types";
 
 const cores = {
-  primary: "#00647c",
+  primary: "#045d72",
   text: "#191c1e",
   muted: "#5b6b70",
   border: "#e2e6ea",

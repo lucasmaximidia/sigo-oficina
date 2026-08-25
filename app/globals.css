@@ -6,27 +6,31 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f7f9fb;
-  --foreground: #191c1e;
+  --background: #f8f6f2;
+  --foreground: #22201c;
 
   --card: #ffffff;
-  --card-foreground: #191c1e;
+  --card-foreground: #22201c;
 
   --popover: #ffffff;
-  --popover-foreground: #191c1e;
+  --popover-foreground: #22201c;
 
-  --primary: #00647c;
-  --primary-hover: #004e61;
+  --primary: #045d72;
+  --primary-hover: #034a5c;
   --primary-foreground: #ffffff;
 
-  --secondary: #eef2f6;
-  --secondary-foreground: #3e484d;
+  --action: #e2793d;
+  --action-hover: #c96a30;
+  --action-foreground: #ffffff;
 
-  --muted: #eceef0;
-  --muted-foreground: #5b6b70;
+  --secondary: #f1ede4;
+  --secondary-foreground: #55504a;
 
-  --accent: #e6f4f7;
-  --accent-foreground: #00647c;
+  --muted: #efece5;
+  --muted-foreground: #6f6a60;
+
+  --accent: #dcebee;
+  --accent-foreground: #045d72;
 
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
@@ -40,15 +44,15 @@
   --info: #2563eb;
   --info-foreground: #ffffff;
 
-  --border: #e2e6ea;
-  --input: #cbd5e1;
-  --ring: #00647c;
+  --border: #e6e0d6;
+  --input: #d8d0c2;
+  --ring: #045d72;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #191c1e;
-  --sidebar-border: #eceef0;
-  --sidebar-active: #e6f4f7;
-  --sidebar-active-foreground: #00647c;
+  --sidebar-foreground: #22201c;
+  --sidebar-border: #efece5;
+  --sidebar-active: #dcebee;
+  --sidebar-active-foreground: #045d72;
 }
 
 .dark {
@@ -64,6 +68,10 @@
   --primary: #22a6c4;
   --primary-hover: #3bb8d4;
   --primary-foreground: #06161a;
+
+  --action: #e2793d;
+  --action-hover: #ef8a52;
+  --action-foreground: #1f0f04;
 
   --secondary: #202a30;
   --secondary-foreground: #c3ced2;
@@ -99,6 +107,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -109,6 +118,9 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-foreground: var(--action-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
