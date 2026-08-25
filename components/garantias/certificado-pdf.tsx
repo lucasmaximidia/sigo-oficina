@@ -25,13 +25,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: cores.primary,
   },
-  empresaBloco: { flexDirection: "row", alignItems: "center", gap: 10 },
+  empresaBloco: { flexDirection: "row", alignItems: "center", gap: 10, width: 300 },
   logo: { width: 48, height: 48, objectFit: "contain" },
+  empresaTextos: { width: 230 },
   empresaNome: { fontSize: 14, fontFamily: "Helvetica-Bold", color: cores.text },
   empresaInfo: { fontSize: 8, color: cores.muted, marginTop: 2 },
-  tituloBloco: { alignItems: "flex-end", flexDirection: "row", gap: 10 },
+  tituloBloco: { alignItems: "flex-end", width: 200 },
+  tituloRodape: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 },
   tituloTexto: { alignItems: "flex-end" },
-  titulo: { fontSize: 18, fontFamily: "Helvetica-Bold", color: cores.primary },
+  titulo: { fontSize: 16, fontFamily: "Helvetica-Bold", color: cores.primary, textAlign: "right" },
   numero: { fontSize: 9, color: cores.muted, marginTop: 2 },
   section: { marginBottom: 18 },
   sectionTitle: {
@@ -162,7 +164,7 @@ export function CertificadoPdf({
           <View style={styles.empresaBloco}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
             {config.logo_url && <Image src={config.logo_url} style={styles.logo} />}
-            <View>
+            <View style={styles.empresaTextos}>
               <Text style={styles.empresaNome}>{config.nome_empresa}</Text>
               {config.cnpj && <Text style={styles.empresaInfo}>CNPJ: {config.cnpj}</Text>}
               {config.telefone && <Text style={styles.empresaInfo}>{config.telefone}</Text>}
@@ -170,12 +172,14 @@ export function CertificadoPdf({
             </View>
           </View>
           <View style={styles.tituloBloco}>
-            <View style={styles.tituloTexto}>
-              <Text style={styles.titulo}>CERTIFICADO DE GARANTIA</Text>
-              <Text style={styles.numero}>OS #OS-{String(numero).padStart(4, "0")}</Text>
-              <Text style={styles.numero}>Emitido em {formatDatePdf(dataInicio)}</Text>
+            <Text style={styles.titulo}>CERTIFICADO DE GARANTIA</Text>
+            <View style={styles.tituloRodape}>
+              <View style={styles.tituloTexto}>
+                <Text style={styles.numero}>OS #OS-{String(numero).padStart(4, "0")}</Text>
+                <Text style={styles.numero}>Emitido em {formatDatePdf(dataInicio)}</Text>
+              </View>
+              <SeloGarantia />
             </View>
-            <SeloGarantia />
           </View>
         </View>
 

@@ -85,7 +85,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         { name: "Montserrat", data: montserratBold, weight: 700, style: "normal" },
       ],
       headers: {
-        "Content-Disposition": `inline; filename="${nomeArquivo}"`,
+        "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
       },
     }
   );
