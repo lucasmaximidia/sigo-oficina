@@ -636,6 +636,7 @@ export interface Database {
           dashboard_mostrar_garantias_vencendo: boolean;
           dashboard_mostrar_orcamentos_pendentes: boolean;
           dashboard_mostrar_boletos_pendentes: boolean;
+          dashboard_boletos_dias: number;
           updated_at: string;
         };
         Insert: {
@@ -663,6 +664,7 @@ export interface Database {
           dashboard_mostrar_garantias_vencendo?: boolean;
           dashboard_mostrar_orcamentos_pendentes?: boolean;
           dashboard_mostrar_boletos_pendentes?: boolean;
+          dashboard_boletos_dias?: number;
           updated_at?: string;
         };
         Update: {
@@ -690,6 +692,7 @@ export interface Database {
           dashboard_mostrar_garantias_vencendo?: boolean;
           dashboard_mostrar_orcamentos_pendentes?: boolean;
           dashboard_mostrar_boletos_pendentes?: boolean;
+          dashboard_boletos_dias?: number;
           updated_at?: string;
         };
         Relationships: [];

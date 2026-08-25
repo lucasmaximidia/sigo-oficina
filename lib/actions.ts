@@ -830,6 +830,7 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
       dashboard_mostrar_garantias_vencendo: formData.get("dashboard_mostrar_garantias_vencendo") === "on",
       dashboard_mostrar_orcamentos_pendentes: formData.get("dashboard_mostrar_orcamentos_pendentes") === "on",
       dashboard_mostrar_boletos_pendentes: formData.get("dashboard_mostrar_boletos_pendentes") === "on",
+      dashboard_boletos_dias: Number(str(formData, "dashboard_boletos_dias") ?? "3"),
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);

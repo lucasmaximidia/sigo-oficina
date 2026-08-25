@@ -50,10 +50,12 @@ export default async function DashboardPage() {
   const amanha = new Date(hoje);
   amanha.setDate(amanha.getDate() + 1);
   const amanhaStr = amanha.toISOString().slice(0, 10);
-  const em3dias = new Date(hoje);
-  em3dias.setDate(em3dias.getDate() + 3);
 
   const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
+
+  const boletosDias = config?.dashboard_boletos_dias ?? 3;
+  const emBoletosDias = new Date(hoje);
+  emBoletosDias.setDate(emBoletosDias.getDate() + boletosDias);
 
   const mostrarStats = config?.dashboard_mostrar_stats ?? true;
   const mostrarAgenda = config?.dashboard_mostrar_agenda ?? true;
@@ -88,7 +90,7 @@ export default async function DashboardPage() {
       .select("id, descricao, numero_documento, valor, vencimento, status, parcela_atual, parcela_total")
       .is("deletado_em", null)
       .neq("status", "pago")
-      .lte("vencimento", em3dias.toISOString().slice(0, 10))
+      .lte("vencimento", emBoletosDias.toISOString().slice(0, 10))
       .order("vencimento", { ascending: true }),
     supabase
       .from("ordens_servico")
@@ -225,10 +227,13 @@ export default async function DashboardPage() {
                 <ReceiptText className="size-4.5" />
                 Boletos Pendentes
               </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Atrasados e vencendo nos próximos {boletosDias} {boletosDias === 1 ? "dia" : "dias"}.
+              </p>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {(boletosVencendo ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum boleto vencendo nos próximos dias.</p>
+                <p className="text-sm text-muted-foreground">Nenhum boleto vencendo nos próximos {boletosDias} dias.</p>
               )}
               {(boletosVencendo ?? []).map((conta) => {
                 const atrasado = conta.vencimento < hojeStr;

@@ -94,6 +94,21 @@ export function DashboardForm({ config }: { config: Configuracao }) {
             </p>
           </div>
 
+          <div className="max-w-xs">
+            <Label htmlFor="dashboard_boletos_dias" className="mb-1.5 block">
+              Avisar boletos que vencem em até quantos dias
+            </Label>
+            <NumericInput
+              id="dashboard_boletos_dias"
+              name="dashboard_boletos_dias"
+              decimal={false}
+              defaultValue={config.dashboard_boletos_dias}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              O lembrete de boletos pendentes mostra os já atrasados mais os que vencem dentro desse número de dias.
+            </p>
+          </div>
+
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Salvar Alterações"}
