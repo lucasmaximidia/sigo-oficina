@@ -285,29 +285,27 @@ export default async function FinanceiroPage() {
         }
       />
 
-      <Card className="mt-4 bg-gradient-to-br from-card to-accent/25">
-        <CardContent className="flex flex-col gap-4 py-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
-              <PiggyBank className="size-5.5" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Saldo em Caixa</p>
-              <p className="font-display text-3xl font-bold text-foreground">{formatCurrency(saldoCaixa)}</p>
-            </div>
+      <div className="mt-4 flex flex-col gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-accent/25 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between md:p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+            <PiggyBank className="size-5.5" />
           </div>
-          <div className="flex gap-6 sm:border-l sm:border-border sm:pl-6">
-            <div>
-              <p className="text-xs text-muted-foreground">Entradas (total)</p>
-              <p className="text-sm font-semibold text-success">{formatCurrency(totalEntradasGeral)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Saídas (total)</p>
-              <p className="text-sm font-semibold text-destructive">{formatCurrency(totalSaidasGeral)}</p>
-            </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Saldo em Caixa</p>
+            <p className="font-display text-3xl font-bold text-foreground">{formatCurrency(saldoCaixa)}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex gap-6 sm:border-l sm:border-border sm:pl-6">
+          <div>
+            <p className="text-xs text-muted-foreground">Entradas (total)</p>
+            <p className="text-sm font-semibold text-success">{formatCurrency(totalEntradasGeral)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Saídas (total)</p>
+            <p className="text-sm font-semibold text-destructive">{formatCurrency(totalSaidasGeral)}</p>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
         <StatCard icon={TrendingUp} label="Recebido este mês" value={formatCurrency(totalRecebidoNoMes)} tone="success" />
