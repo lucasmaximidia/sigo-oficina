@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Trash2, Wallet2, Receipt, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Trash2, Wallet2, Receipt, ShoppingCart, HandCoins } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { formatCurrency, formatDateTime } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function LixeiraPage() {
-  const [{ data: contas }, { data: despesas }, { data: vendas }] = await Promise.all([
+  const [{ data: contas }, { data: despesas }, { data: vendas }, { data: retiradas }] = await Promise.all([
     supabase
       .from("financeiro_contas")
       .select("id, descricao, valor, deletado_em")
@@ -26,9 +26,18 @@ export default async function LixeiraPage() {
       .select("id, numero, total, deletado_em")
       .not("deletado_em", "is", null)
       .order("deletado_em", { ascending: false }),
+    supabase
+      .from("financeiro_retiradas")
+      .select("id, descricao, valor, deletado_em")
+      .not("deletado_em", "is", null)
+      .order("deletado_em", { ascending: false }),
   ]);
 
-  const vazia = (contas ?? []).length === 0 && (despesas ?? []).length === 0 && (vendas ?? []).length === 0;
+  const vazia =
+    (contas ?? []).length === 0 &&
+    (despesas ?? []).length === 0 &&
+    (vendas ?? []).length === 0 &&
+    (retiradas ?? []).length === 0;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -38,7 +47,7 @@ export default async function LixeiraPage() {
       </Link>
       <PageHeader
         title="Lixeira"
-        description="Contas, despesas e vendas excluídas ficam aqui e podem ser restauradas."
+        description="Contas, despesas, vendas e retiradas excluídas ficam aqui e podem ser restauradas."
       />
 
       {vazia && (
@@ -108,6 +117,39 @@ export default async function LixeiraPage() {
                       <TableCell className="text-muted-foreground">{formatDateTime(despesa.deletado_em!)}</TableCell>
                       <TableCell>
                         <RestaurarButton id={despesa.id} tipo="despesa" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
+        )}
+
+        {(retiradas ?? []).length > 0 && (
+          <div>
+            <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <HandCoins className="size-4 text-primary" />
+              Retiradas
+            </p>
+            <Card className="overflow-hidden p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Excluído em</TableHead>
+                    <TableHead className="w-10">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(retiradas ?? []).map((retirada) => (
+                    <TableRow key={retirada.id}>
+                      <TableCell className="font-medium text-foreground">{retirada.descricao}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatCurrency(retirada.valor)}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDateTime(retirada.deletado_em!)}</TableCell>
+                      <TableCell>
+                        <RestaurarButton id={retirada.id} tipo="retirada" />
                       </TableCell>
                     </TableRow>
                   ))}

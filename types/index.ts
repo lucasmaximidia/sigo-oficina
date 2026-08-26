@@ -11,6 +11,7 @@ export type VendaItem = Database["public"]["Tables"]["venda_itens"]["Row"];
 export type VendaPagamento = Database["public"]["Tables"]["venda_pagamentos"]["Row"];
 export type FinanceiroConta = Database["public"]["Tables"]["financeiro_contas"]["Row"];
 export type FinanceiroDespesa = Database["public"]["Tables"]["financeiro_despesas"]["Row"];
+export type FinanceiroRetirada = Database["public"]["Tables"]["financeiro_retiradas"]["Row"];
 export type AgendaEvento = Database["public"]["Tables"]["agenda_eventos"]["Row"];
 export type Tarefa = Database["public"]["Tables"]["tarefas"]["Row"];
 export type Configuracao = Database["public"]["Tables"]["configuracoes"]["Row"];
