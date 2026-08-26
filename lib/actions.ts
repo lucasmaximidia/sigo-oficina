@@ -731,13 +731,23 @@ export async function createDespesa(formData: FormData) {
 }
 
 export async function deleteDespesa(id: string) {
+  const { data: despesa } = await supabase.from("financeiro_despesas").select("os_item_id").eq("id", id).single();
   const { error } = await supabase
     .from("financeiro_despesas")
     .update({ deletado_em: new Date().toISOString() })
     .eq("id", id);
   if (error) throw new Error(error.message);
+
+  // Se essa despesa foi gerada automaticamente por uma compra emergencial,
+  // exclui também o item correspondente na OS — senão o item continua lá,
+  // cobrado do cliente, sem mais nenhum registro do custo que ele teve.
+  if (despesa?.os_item_id) {
+    await supabase.from("os_itens").delete().eq("id", despesa.os_item_id);
+  }
+
   revalidatePath("/financeiro");
   revalidatePath("/configuracoes/lixeira");
+  revalidatePath("/ordens-servico");
 }
 
 export async function restaurarDespesa(id: string) {

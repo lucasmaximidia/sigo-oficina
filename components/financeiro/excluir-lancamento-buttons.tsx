@@ -14,11 +14,23 @@ export function ExcluirContaButton({ id, descricao }: { id: string; descricao: s
   );
 }
 
-export function ExcluirDespesaButton({ id, descricao }: { id: string; descricao: string }) {
+export function ExcluirDespesaButton({
+  id,
+  descricao,
+  osItemId,
+}: {
+  id: string;
+  descricao: string;
+  osItemId?: string | null;
+}) {
   return (
     <ConfirmDeleteButton
       title="Excluir despesa?"
-      description={`A despesa "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
+      description={
+        osItemId
+          ? `A despesa "${descricao}" sai do Financeiro (fica na Lixeira, dá pra restaurar) e o item correspondente também é removido da OS — essa despesa foi gerada automaticamente por uma compra emergencial.`
+          : `A despesa "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`
+      }
       onConfirm={() => deleteDespesa(id)}
       successMessage="Despesa excluída"
     />
