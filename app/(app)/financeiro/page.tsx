@@ -589,7 +589,7 @@ export default async function FinanceiroPage() {
                       <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
                       <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
                       <TableCell>
-                        <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
+                        <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -614,7 +614,7 @@ export default async function FinanceiroPage() {
                     </p>
                     <p className="mt-1 text-sm font-semibold text-foreground">{formatCurrency(despesa.valor)}</p>
                   </div>
-                  <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} />
+                  <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
                 </div>
               ))}
               {(despesas ?? []).length === 0 && (
