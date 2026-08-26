@@ -179,12 +179,16 @@ export default async function EstoquePage() {
             <CardContent className="flex flex-col gap-3">
               {(lojas ?? []).map((loja) => (
                 <div key={loja.id} className="rounded-xl border border-border p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">{loja.nome}</p>
-                    {loja.principal && <Badge variant="success">Principal</Badge>}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{loja.nome}</p>
+                      {loja.principal && <Badge variant="success">Principal</Badge>}
+                    </div>
+                    <LojaDialog loja={loja} />
                   </div>
                   {loja.especialidade && <p className="text-xs text-muted-foreground">{loja.especialidade}</p>}
                   {loja.tempo_entrega && <p className="mt-1 text-xs text-muted-foreground">{loja.tempo_entrega}</p>}
+                  {loja.cnpj && <p className="mt-1 text-xs text-muted-foreground">CNPJ: {loja.cnpj}</p>}
                 </div>
               ))}
               {(lojas ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma loja cadastrada.</p>}

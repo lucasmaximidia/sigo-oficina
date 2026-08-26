@@ -13,7 +13,6 @@ import {
   BarChart3,
   Wallet2,
   PiggyBank,
-  Store,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
@@ -25,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LancarDespesaDialog } from "@/components/financeiro/lancar-despesa-dialog";
 import { LancarRetiradaDialog } from "@/components/financeiro/lancar-retirada-dialog";
-import { FecharContaParceiroButton } from "@/components/financeiro/fechar-conta-parceiro-button";
+import { AcertoParceiros } from "@/components/financeiro/acerto-parceiros";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
@@ -41,7 +40,7 @@ import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-ca
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { contaStatusMap, freteStatusMap, retiradaTipoMap } from "@/lib/status";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
-import type { ContaStatus, RetiradaTipo } from "@/types";
+import type { ContaStatus, RetiradaTipo, ParceiroPendente } from "@/types";
 
 interface OsEntradaRow {
   id: string;
@@ -97,13 +96,6 @@ interface ItemParceiroPendenteRow {
   valor_unitario: number;
   ordens_servico: { numero: number; forma_pagamento: string | null } | null;
   lojas_parceiras: { nome: string } | null;
-}
-
-interface ParceiroPendente {
-  lojaId: string;
-  lojaNome: string;
-  total: number;
-  itens: { id: string; descricao: string; valor: number; osNumero: number | null }[];
 }
 
 export const dynamic = "force-dynamic";
@@ -240,31 +232,33 @@ export default async function FinanceiroPage() {
   const totalSaidasGeral = totalDespesasGeral + totalContasPagasGeral + totalFretesPagosGeral + totalRetiradasGeral;
   const saldoCaixa = totalEntradasGeral - totalSaidasGeral;
 
-  // Só entra no acerto com o parceiro o item cuja OS o cliente já pagou —
-  // itens de OS ainda em andamento ficam de fora até lá.
+  // O acerto só pode ser fechado com itens de OS que o cliente já pagou,
+  // mas a lista mostra todos os itens pendentes com o parceiro (o toggle
+  // decide o que aparece) — daí o total geral e o total fechável.
   const parceirosPendentes = Array.from(
-    (itensParceiroPendentes ?? [])
-      .filter((item) => item.ordens_servico?.forma_pagamento != null)
-      .reduce((acc, item) => {
-        if (!item.loja_parceira_id) return acc;
-        const atual = acc.get(item.loja_parceira_id) ?? {
-          lojaId: item.loja_parceira_id,
-          lojaNome: item.lojas_parceiras?.nome ?? "Loja parceira",
-          total: 0,
-          itens: [],
-        };
-        const valorItem = item.quantidade * item.valor_unitario;
-        atual.total += valorItem;
-        atual.itens.push({
-          id: item.id,
-          descricao: item.descricao,
-          valor: valorItem,
-          osNumero: item.ordens_servico?.numero ?? null,
-        });
-        acc.set(item.loja_parceira_id, atual);
-        return acc;
-      }, new Map<string, ParceiroPendente>())
-      .values()
+    (itensParceiroPendentes ?? []).reduce((acc, item) => {
+      if (!item.loja_parceira_id) return acc;
+      const atual = acc.get(item.loja_parceira_id) ?? {
+        lojaId: item.loja_parceira_id,
+        lojaNome: item.lojas_parceiras?.nome ?? "Loja parceira",
+        totalFechavel: 0,
+        totalGeral: 0,
+        itens: [],
+      };
+      const valorItem = item.quantidade * item.valor_unitario;
+      const clientePagou = item.ordens_servico?.forma_pagamento != null;
+      atual.totalGeral += valorItem;
+      if (clientePagou) atual.totalFechavel += valorItem;
+      atual.itens.push({
+        id: item.id,
+        descricao: item.descricao,
+        valor: valorItem,
+        osNumero: item.ordens_servico?.numero ?? null,
+        clientePagou,
+      });
+      acc.set(item.loja_parceira_id, atual);
+      return acc;
+    }, new Map<string, ParceiroPendente>()).values()
   );
 
   return (
@@ -625,47 +619,7 @@ export default async function FinanceiroPage() {
         </TabsContent>
 
         <TabsContent value="retiradas" className="flex flex-col gap-4">
-          {parceirosPendentes.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {parceirosPendentes.map((parceiro) => (
-                <Card key={parceiro.lojaId}>
-                  <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Store className="size-4.5 text-primary" />
-                        {parceiro.lojaNome}
-                      </CardTitle>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {parceiro.itens.length} {parceiro.itens.length === 1 ? "item pago pelo cliente" : "itens pagos pelo cliente"},
-                        aguardando acerto
-                      </p>
-                    </div>
-                    <FecharContaParceiroButton
-                      lojaParceiraId={parceiro.lojaId}
-                      lojaNome={parceiro.lojaNome}
-                      total={parceiro.total}
-                    />
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-2">
-                    {parceiro.itens.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm"
-                      >
-                        <span className="min-w-0 truncate text-foreground">
-                          {item.descricao}
-                          {item.osNumero && (
-                            <span className="text-muted-foreground"> · OS #OS-{String(item.osNumero).padStart(4, "0")}</span>
-                          )}
-                        </span>
-                        <span className="shrink-0 font-medium text-foreground">{formatCurrency(item.valor)}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <AcertoParceiros parceiros={parceirosPendentes} />
 
           <div>
             <div className="mb-3 flex items-center justify-between">

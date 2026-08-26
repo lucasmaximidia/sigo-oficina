@@ -30,4 +30,20 @@ export type OrdemServicoComRelacoes = OrdemServico & {
   os_itens?: OsItem[];
 };
 
+export interface ItemParceiroPendente {
+  id: string;
+  descricao: string;
+  valor: number;
+  osNumero: number | null;
+  clientePagou: boolean;
+}
+
+export interface ParceiroPendente {
+  lojaId: string;
+  lojaNome: string;
+  totalFechavel: number;
+  totalGeral: number;
+  itens: ItemParceiroPendente[];
+}
+
 export * from "./database";
