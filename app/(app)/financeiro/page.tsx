@@ -95,7 +95,7 @@ interface ItemParceiroPendenteRow {
   descricao: string;
   quantidade: number;
   valor_unitario: number;
-  ordens_servico: { numero: number } | null;
+  ordens_servico: { numero: number; forma_pagamento: string | null } | null;
   lojas_parceiras: { nome: string } | null;
 }
 
@@ -140,7 +140,7 @@ export default async function FinanceiroPage() {
       supabase
         .from("os_itens")
         .select<string, ItemParceiroPendenteRow>(
-          "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero), lojas_parceiras(nome)"
+          "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero, forma_pagamento), lojas_parceiras(nome)"
         )
         .eq("origem", "loja_parceira")
         .is("pago_em", null),
@@ -240,26 +240,31 @@ export default async function FinanceiroPage() {
   const totalSaidasGeral = totalDespesasGeral + totalContasPagasGeral + totalFretesPagosGeral + totalRetiradasGeral;
   const saldoCaixa = totalEntradasGeral - totalSaidasGeral;
 
+  // Só entra no acerto com o parceiro o item cuja OS o cliente já pagou —
+  // itens de OS ainda em andamento ficam de fora até lá.
   const parceirosPendentes = Array.from(
-    (itensParceiroPendentes ?? []).reduce((acc, item) => {
-      if (!item.loja_parceira_id) return acc;
-      const atual = acc.get(item.loja_parceira_id) ?? {
-        lojaId: item.loja_parceira_id,
-        lojaNome: item.lojas_parceiras?.nome ?? "Loja parceira",
-        total: 0,
-        itens: [],
-      };
-      const valorItem = item.quantidade * item.valor_unitario;
-      atual.total += valorItem;
-      atual.itens.push({
-        id: item.id,
-        descricao: item.descricao,
-        valor: valorItem,
-        osNumero: item.ordens_servico?.numero ?? null,
-      });
-      acc.set(item.loja_parceira_id, atual);
-      return acc;
-    }, new Map<string, ParceiroPendente>()).values()
+    (itensParceiroPendentes ?? [])
+      .filter((item) => item.ordens_servico?.forma_pagamento != null)
+      .reduce((acc, item) => {
+        if (!item.loja_parceira_id) return acc;
+        const atual = acc.get(item.loja_parceira_id) ?? {
+          lojaId: item.loja_parceira_id,
+          lojaNome: item.lojas_parceiras?.nome ?? "Loja parceira",
+          total: 0,
+          itens: [],
+        };
+        const valorItem = item.quantidade * item.valor_unitario;
+        atual.total += valorItem;
+        atual.itens.push({
+          id: item.id,
+          descricao: item.descricao,
+          valor: valorItem,
+          osNumero: item.ordens_servico?.numero ?? null,
+        });
+        acc.set(item.loja_parceira_id, atual);
+        return acc;
+      }, new Map<string, ParceiroPendente>())
+      .values()
   );
 
   return (
@@ -623,45 +628,44 @@ export default async function FinanceiroPage() {
 
         <TabsContent value="retiradas" className="flex flex-col gap-4">
           {parceirosPendentes.length > 0 && (
-            <div>
-              <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Store className="size-4 text-primary" />
-                Acerto com Parceiros
-              </p>
-              <div className="flex flex-col gap-3">
-                {parceirosPendentes.map((parceiro) => (
-                  <Card key={parceiro.lojaId}>
-                    <CardContent className="flex flex-col gap-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="font-medium text-foreground">{parceiro.lojaNome}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {parceiro.itens.length} {parceiro.itens.length === 1 ? "item pendente" : "itens pendentes"}
-                          </p>
-                        </div>
-                        <FecharContaParceiroButton
-                          lojaParceiraId={parceiro.lojaId}
-                          lojaNome={parceiro.lojaNome}
-                          total={parceiro.total}
-                        />
+            <div className="flex flex-col gap-3">
+              {parceirosPendentes.map((parceiro) => (
+                <Card key={parceiro.lojaId}>
+                  <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Store className="size-4.5 text-primary" />
+                        {parceiro.lojaNome}
+                      </CardTitle>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {parceiro.itens.length} {parceiro.itens.length === 1 ? "item pago pelo cliente" : "itens pagos pelo cliente"},
+                        aguardando acerto
+                      </p>
+                    </div>
+                    <FecharContaParceiroButton
+                      lojaParceiraId={parceiro.lojaId}
+                      lojaNome={parceiro.lojaNome}
+                      total={parceiro.total}
+                    />
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-2">
+                    {parceiro.itens.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm"
+                      >
+                        <span className="min-w-0 truncate text-foreground">
+                          {item.descricao}
+                          {item.osNumero && (
+                            <span className="text-muted-foreground"> · OS #OS-{String(item.osNumero).padStart(4, "0")}</span>
+                          )}
+                        </span>
+                        <span className="shrink-0 font-medium text-foreground">{formatCurrency(item.valor)}</span>
                       </div>
-                      <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
-                        {parceiro.itens.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                            <span className="truncate text-foreground">
-                              {item.descricao}
-                              {item.osNumero && (
-                                <span className="text-muted-foreground"> · OS #OS-{String(item.osNumero).padStart(4, "0")}</span>
-                              )}
-                            </span>
-                            <span className="shrink-0 font-medium text-foreground">{formatCurrency(item.valor)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
 

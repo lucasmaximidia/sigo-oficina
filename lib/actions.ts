@@ -260,28 +260,46 @@ export async function addOsItem(osId: string, formData: FormData) {
   const lojaParceiraId = str(formData, "loja_parceira_id");
   if (origem === "loja_parceira" && !lojaParceiraId) throw new Error("Selecione a loja parceira");
 
-  const { error } = await supabase.from("os_itens").insert({
-    os_id: osId,
-    peca_id: pecaId,
-    loja_parceira_id: origem === "loja_parceira" ? lojaParceiraId : null,
-    descricao,
-    origem,
-    quantidade: Number(str(formData, "quantidade") ?? "1"),
-    valor_unitario: num(formData, "valor_unitario"),
-  });
+  const quantidade = Number(str(formData, "quantidade") ?? "1");
+  const valorUnitario = num(formData, "valor_unitario");
+
+  const { data: item, error } = await supabase
+    .from("os_itens")
+    .insert({
+      os_id: osId,
+      peca_id: pecaId,
+      loja_parceira_id: origem === "loja_parceira" ? lojaParceiraId : null,
+      descricao,
+      origem,
+      quantidade,
+      valor_unitario: valorUnitario,
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
 
-  if (pecaId) {
-    const quantidade = Number(str(formData, "quantidade") ?? "1");
-    if (origem === "estoque") {
-      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
-      if (peca) {
-        await supabase
-          .from("pecas")
-          .update({ quantidade: Math.max(0, peca.quantidade - quantidade) })
-          .eq("id", pecaId);
-      }
+  if (pecaId && origem === "estoque") {
+    const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
+    if (peca) {
+      await supabase
+        .from("pecas")
+        .update({ quantidade: Math.max(0, peca.quantidade - quantidade) })
+        .eq("id", pecaId);
     }
+  }
+
+  // Compra emergencial: o dinheiro já sai do caixa na hora da compra, antes
+  // do cliente pagar a OS — então gera a despesa automaticamente aqui.
+  if (origem === "compra_emergencial") {
+    const { data: os } = await supabase.from("ordens_servico").select("numero").eq("id", osId).single();
+    const numeroOs = os ? `OS #OS-${String(os.numero).padStart(4, "0")}` : "OS";
+    await supabase.from("financeiro_despesas").insert({
+      descricao: `COMPRA EMERGENCIAL - ${descricao} (${numeroOs})`,
+      categoria: "Compra Emergencial",
+      valor: quantidade * valorUnitario,
+      os_item_id: item.id,
+    });
+    revalidatePath("/financeiro");
   }
 
   revalidatePath(`/ordens-servico/${osId}`);
@@ -697,18 +715,28 @@ export async function restaurarRetirada(id: string) {
 // Fecha a conta corrente com um parceiro que não emite boleto/NF: soma
 // todos os itens de OS ainda pendentes dessa loja, lança a retirada
 // correspondente e marca os itens como pagos.
+interface ItemParceiroCandidato {
+  id: string;
+  quantidade: number;
+  valor_unitario: number;
+  ordens_servico: { forma_pagamento: string | null } | null;
+}
+
 export async function fecharContaParceiro(lojaParceiraId: string) {
-  const [{ data: loja }, { data: itensPendentes }] = await Promise.all([
+  const [{ data: loja }, { data: itensCandidatos }] = await Promise.all([
     supabase.from("lojas_parceiras").select("nome").eq("id", lojaParceiraId).single(),
     supabase
       .from("os_itens")
-      .select("id, quantidade, valor_unitario")
+      .select<string, ItemParceiroCandidato>("id, quantidade, valor_unitario, ordens_servico(forma_pagamento)")
       .eq("origem", "loja_parceira")
       .eq("loja_parceira_id", lojaParceiraId)
       .is("pago_em", null),
   ]);
   if (!loja) throw new Error("Loja parceira não encontrada");
-  if (!itensPendentes || itensPendentes.length === 0) throw new Error("Nada pendente com essa loja");
+
+  // Só fecha itens de OS que o cliente já pagou — o resto continua pendente.
+  const itensPendentes = (itensCandidatos ?? []).filter((item) => item.ordens_servico?.forma_pagamento != null);
+  if (itensPendentes.length === 0) throw new Error("Nada pendente com essa loja (em OS já pagas pelo cliente)");
 
   const total = itensPendentes.reduce((acc, item) => acc + item.quantidade * item.valor_unitario, 0);
   const agora = new Date().toISOString();

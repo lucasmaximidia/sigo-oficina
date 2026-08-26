@@ -519,6 +519,7 @@ export interface Database {
           categoria: string | null;
           valor: number;
           data: string;
+          os_item_id: string | null;
           created_at: string;
           deletado_em: string | null;
         };
@@ -528,6 +529,7 @@ export interface Database {
           categoria?: string | null;
           valor?: number;
           data?: string;
+          os_item_id?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
@@ -537,6 +539,7 @@ export interface Database {
           categoria?: string | null;
           valor?: number;
           data?: string;
+          os_item_id?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
