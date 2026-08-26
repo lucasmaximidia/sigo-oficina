@@ -119,6 +119,7 @@ export interface Database {
           tempo_entrega: string | null;
           desconto_percentual: number | null;
           principal: boolean;
+          cnpj: string | null;
           created_at: string;
         };
         Insert: {
@@ -129,6 +130,7 @@ export interface Database {
           tempo_entrega?: string | null;
           desconto_percentual?: number | null;
           principal?: boolean;
+          cnpj?: string | null;
           created_at?: string;
         };
         Update: {
@@ -139,6 +141,7 @@ export interface Database {
           tempo_entrega?: string | null;
           desconto_percentual?: number | null;
           principal?: boolean;
+          cnpj?: string | null;
           created_at?: string;
         };
         Relationships: [];

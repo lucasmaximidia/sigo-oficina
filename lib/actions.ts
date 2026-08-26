@@ -565,9 +565,29 @@ export async function createLojaParceira(formData: FormData) {
     telefone: str(formData, "telefone"),
     tempo_entrega: strUp(formData, "tempo_entrega"),
     desconto_percentual: num(formData, "desconto_percentual"),
+    cnpj: str(formData, "cnpj"),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/estoque");
+}
+
+export async function updateLojaParceira(id: string, formData: FormData) {
+  const nome = strUp(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { error } = await supabase
+    .from("lojas_parceiras")
+    .update({
+      nome,
+      especialidade: strUp(formData, "especialidade"),
+      telefone: str(formData, "telefone"),
+      tempo_entrega: strUp(formData, "tempo_entrega"),
+      desconto_percentual: num(formData, "desconto_percentual"),
+      cnpj: str(formData, "cnpj"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/estoque");
+  revalidatePath("/financeiro");
 }
 
 // ---------- PDV ----------
