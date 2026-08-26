@@ -6,6 +6,7 @@ import type {
   GarantiaStatus,
   OrcamentoStatus,
   FreteStatus,
+  RetiradaTipo,
 } from "@/types";
 
 export const osStatusMap: Record<OsStatus, { label: string; variant: "secondary" | "info" | "warning" | "success" | "destructive" }> = {
@@ -63,4 +64,10 @@ export const orcamentoStatusMap: Record<OrcamentoStatus, { label: string; varian
 export const freteStatusMap: Record<FreteStatus, { label: string; variant: "warning" | "success" }> = {
   pendente: { label: "Pendente", variant: "warning" },
   pago: { label: "Pago", variant: "success" },
+};
+
+export const retiradaTipoMap: Record<RetiradaTipo, { label: string; variant: "secondary" | "info" | "warning" }> = {
+  mao_de_obra: { label: "Mão de Obra", variant: "info" },
+  pagamento_parceiro: { label: "Pagamento a Parceiro", variant: "warning" },
+  outro: { label: "Outro", variant: "secondary" },
 };

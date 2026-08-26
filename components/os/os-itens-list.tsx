@@ -258,6 +258,11 @@ export function OsItensList({
                     <Icon className="size-3" />
                     {item.loja_parceira_id ? (lojasPorId.get(item.loja_parceira_id) ?? info.label) : info.label}
                   </Badge>
+                  {item.origem === "loja_parceira" && (
+                    <Badge variant={item.pago_em ? "success" : "secondary"} className="shrink-0">
+                      {item.pago_em ? "Pago ao parceiro" : "Pendente"}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {item.quantidade}x {formatCurrency(item.valor_unitario)}

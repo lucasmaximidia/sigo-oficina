@@ -4,12 +4,13 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { restaurarContaPagar, restaurarDespesa, restaurarVendaPdv } from "@/lib/actions";
+import { restaurarContaPagar, restaurarDespesa, restaurarRetirada, restaurarVendaPdv } from "@/lib/actions";
 
 const restaurarPorTipo = {
   conta: restaurarContaPagar,
   despesa: restaurarDespesa,
   venda: restaurarVendaPdv,
+  retirada: restaurarRetirada,
 } as const;
 
 export function RestaurarButton({ id, tipo }: { id: string; tipo: keyof typeof restaurarPorTipo }) {

@@ -24,6 +24,7 @@ export type GarantiaStatus = "ativa" | "critica" | "expirada" | "sem_garantia";
 export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "expirado";
 export type OrcamentoItemTipo = "peca" | "mao_obra";
 export type FreteStatus = "pendente" | "pago";
+export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 
 // Observação: os campos Row/Insert/Update abaixo são escritos como literais de
 // objeto inline (não interfaces nomeadas) de propósito — é o mesmo formato que
@@ -278,6 +279,7 @@ export interface Database {
           origem: ItemOrigem;
           quantidade: number;
           valor_unitario: number;
+          pago_em: string | null;
           created_at: string;
         };
         Insert: {
@@ -289,6 +291,7 @@ export interface Database {
           origem?: ItemOrigem;
           quantidade?: number;
           valor_unitario?: number;
+          pago_em?: string | null;
           created_at?: string;
         };
         Update: {
@@ -300,6 +303,7 @@ export interface Database {
           origem?: ItemOrigem;
           quantidade?: number;
           valor_unitario?: number;
+          pago_em?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -531,6 +535,39 @@ export interface Database {
           id?: string;
           descricao?: string;
           categoria?: string | null;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Relationships: [];
+      };
+      financeiro_retiradas: {
+        Row: {
+          id: string;
+          tipo: RetiradaTipo;
+          descricao: string;
+          loja_parceira_id: string | null;
+          valor: number;
+          data: string;
+          created_at: string;
+          deletado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          tipo?: RetiradaTipo;
+          descricao: string;
+          loja_parceira_id?: string | null;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          tipo?: RetiradaTipo;
+          descricao?: string;
+          loja_parceira_id?: string | null;
           valor?: number;
           data?: string;
           created_at?: string;

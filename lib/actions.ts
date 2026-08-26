@@ -15,6 +15,7 @@ import type {
   OrcamentoStatus,
   OrcamentoItemTipo,
   FreteStatus,
+  RetiradaTipo,
 } from "@/types";
 
 function str(fd: FormData, key: string) {
@@ -661,6 +662,73 @@ export async function restaurarDespesa(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
   revalidatePath("/configuracoes/lixeira");
+}
+
+export async function createRetirada(formData: FormData) {
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const { error } = await supabase.from("financeiro_retiradas").insert({
+    tipo: (str(formData, "tipo") as RetiradaTipo) ?? "outro",
+    descricao,
+    valor: num(formData, "valor"),
+    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+}
+
+export async function deleteRetirada(id: string) {
+  const { error } = await supabase
+    .from("financeiro_retiradas")
+    .update({ deletado_em: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+export async function restaurarRetirada(id: string) {
+  const { error } = await supabase.from("financeiro_retiradas").update({ deletado_em: null }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+// Fecha a conta corrente com um parceiro que não emite boleto/NF: soma
+// todos os itens de OS ainda pendentes dessa loja, lança a retirada
+// correspondente e marca os itens como pagos.
+export async function fecharContaParceiro(lojaParceiraId: string) {
+  const [{ data: loja }, { data: itensPendentes }] = await Promise.all([
+    supabase.from("lojas_parceiras").select("nome").eq("id", lojaParceiraId).single(),
+    supabase
+      .from("os_itens")
+      .select("id, quantidade, valor_unitario")
+      .eq("origem", "loja_parceira")
+      .eq("loja_parceira_id", lojaParceiraId)
+      .is("pago_em", null),
+  ]);
+  if (!loja) throw new Error("Loja parceira não encontrada");
+  if (!itensPendentes || itensPendentes.length === 0) throw new Error("Nada pendente com essa loja");
+
+  const total = itensPendentes.reduce((acc, item) => acc + item.quantidade * item.valor_unitario, 0);
+  const agora = new Date().toISOString();
+
+  const { error: retiradaError } = await supabase.from("financeiro_retiradas").insert({
+    tipo: "pagamento_parceiro",
+    descricao: `Pagamento de peças - ${loja.nome}`,
+    loja_parceira_id: lojaParceiraId,
+    valor: total,
+    data: agora.slice(0, 10),
+  });
+  if (retiradaError) throw new Error(retiradaError.message);
+
+  const { error: itensError } = await supabase
+    .from("os_itens")
+    .update({ pago_em: agora })
+    .in("id", itensPendentes.map((item) => item.id));
+  if (itensError) throw new Error(itensError.message);
+
+  revalidatePath("/financeiro");
 }
 
 export async function deleteVendaPdv(id: string) {
