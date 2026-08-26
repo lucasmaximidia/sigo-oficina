@@ -357,12 +357,13 @@ export async function addOsItem(osId: string, formData: FormData) {
   if (origem === "compra_emergencial") {
     const { data: os } = await supabase.from("ordens_servico").select("numero").eq("id", osId).single();
     const numeroOs = os ? `OS #OS-${String(os.numero).padStart(4, "0")}` : "OS";
-    await supabase.from("financeiro_despesas").insert({
+    const { error: despesaError } = await supabase.from("financeiro_despesas").insert({
       descricao: `COMPRA EMERGENCIAL - ${descricao} (${numeroOs})`,
       categoria: "Compra Emergencial",
       valor: quantidade * valorUnitario,
       os_item_id: item.id,
     });
+    if (despesaError) throw new Error(`Item adicionado, mas a despesa não foi lançada: ${despesaError.message}`);
     revalidatePath("/financeiro");
   }
 
