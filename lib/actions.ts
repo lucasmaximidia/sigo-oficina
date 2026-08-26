@@ -195,30 +195,93 @@ export async function deleteOrdemServico(id: string) {
   revalidatePath("/garantias");
 }
 
-export async function setOrdemServicoPagamento(
-  id: string,
+// Soma tudo que compõe o valor de uma OS (peças + mão de obra + frete -
+// desconto) e quanto já foi pago até agora nos pagamentos registrados.
+async function getOsTotais(osId: string) {
+  const [{ data: os }, { data: itens }, { data: pagamentos }] = await Promise.all([
+    supabase.from("ordens_servico").select("valor_mao_obra, valor_frete, desconto").eq("id", osId).single(),
+    supabase.from("os_itens").select("quantidade, valor_unitario").eq("os_id", osId),
+    supabase.from("os_pagamentos").select("valor").eq("os_id", osId),
+  ]);
+  const totalItens = (itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+  const total = os ? totalItens + os.valor_mao_obra + os.valor_frete - os.desconto : 0;
+  const totalPago = (pagamentos ?? []).reduce((acc, p) => acc + p.valor, 0);
+  return { total, totalPago };
+}
+
+// Registra um pagamento (total ou parcial/adiantado) numa OS, em qualquer
+// status — o cliente pode pagar um sinal antes da OS ficar pronta. Quando a
+// soma dos pagamentos quita o valor total, os campos legados de pagamento
+// em ordens_servico são preenchidos com os dados desse pagamento: é esse
+// sinal que o Financeiro (entradas, acerto com parceiros) e os relatórios
+// usam pra saber que a OS está paga, então isso continua funcionando sem
+// precisar mexer nessas telas.
+export async function registrarPagamentoOs(
+  osId: string,
   input: {
     formaPagamento: FormaPagamento;
-    dataPagamento: string;
+    valor: number;
+    data: string;
     tipoCartao?: TipoCartao | null;
-    valorPagoBruto?: number | null;
     valorRecebidoLiquido?: number | null;
   }
 ) {
+  if (input.valor <= 0) throw new Error("Informe um valor válido");
   const isCartao = input.formaPagamento === "cartao";
-  const { error } = await supabase
-    .from("ordens_servico")
-    .update({
-      forma_pagamento: input.formaPagamento,
-      data_pagamento: input.dataPagamento,
-      tipo_cartao: isCartao ? input.tipoCartao ?? null : null,
-      valor_pago_bruto: isCartao ? input.valorPagoBruto ?? null : null,
-      valor_recebido_liquido: isCartao ? input.valorRecebidoLiquido ?? null : null,
-    })
-    .eq("id", id);
+  const { error } = await supabase.from("os_pagamentos").insert({
+    os_id: osId,
+    forma_pagamento: input.formaPagamento,
+    tipo_cartao: isCartao ? input.tipoCartao ?? null : null,
+    valor: input.valor,
+    valor_recebido_liquido: isCartao ? input.valorRecebidoLiquido ?? null : null,
+    data: input.data,
+  });
   if (error) throw new Error(error.message);
-  revalidatePath(`/ordens-servico/${id}`);
+
+  const { total, totalPago } = await getOsTotais(osId);
+  if (totalPago >= total - 0.001) {
+    await supabase
+      .from("ordens_servico")
+      .update({
+        forma_pagamento: input.formaPagamento,
+        data_pagamento: input.data,
+        tipo_cartao: isCartao ? input.tipoCartao ?? null : null,
+        valor_pago_bruto: isCartao ? input.valor : null,
+        valor_recebido_liquido: isCartao ? input.valorRecebidoLiquido ?? null : null,
+      })
+      .eq("id", osId);
+  }
+
+  revalidatePath(`/ordens-servico/${osId}`);
   revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
+// Remove um pagamento lançado errado. Se isso derrubar o total pago abaixo
+// do valor da OS, os campos legados de pagamento são limpos — a OS volta a
+// aparecer como não quitada no Financeiro até um novo pagamento fechar a
+// conta.
+export async function deleteOsPagamento(id: string, osId: string) {
+  const { error } = await supabase.from("os_pagamentos").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  const { total, totalPago } = await getOsTotais(osId);
+  if (totalPago < total - 0.001) {
+    await supabase
+      .from("ordens_servico")
+      .update({
+        forma_pagamento: null,
+        data_pagamento: null,
+        tipo_cartao: null,
+        valor_pago_bruto: null,
+        valor_recebido_liquido: null,
+      })
+      .eq("id", osId);
+  }
+
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
 }
 
 export async function setOrdemServicoRetirada(id: string, dataRetirada: string) {
@@ -229,9 +292,9 @@ export async function setOrdemServicoRetirada(id: string, dataRetirada: string) 
 }
 
 // Reabre uma OS finalizada ou cancelada: volta para "aguardando pagamento" e
-// limpa os dados do pagamento (para corrigir um lançamento e registrar de
-// novo). data_finalizacao é mantida de propósito — é o sinal de que essa OS
-// já foi finalizada antes e precisa ser avisado na tela.
+// limpa os pagamentos registrados (para corrigir um lançamento e registrar
+// de novo). data_finalizacao é mantida de propósito — é o sinal de que essa
+// OS já foi finalizada antes e precisa ser avisado na tela.
 export async function reabrirOrdemServico(id: string) {
   const { error } = await supabase
     .from("ordens_servico")
@@ -245,6 +308,7 @@ export async function reabrirOrdemServico(id: string) {
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  await supabase.from("os_pagamentos").delete().eq("os_id", id);
   revalidatePath("/financeiro");
   revalidatePath("/ordens-servico");
   revalidatePath(`/ordens-servico/${id}`);

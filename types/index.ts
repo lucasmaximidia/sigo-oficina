@@ -6,6 +6,7 @@ export type LojaParceira = Database["public"]["Tables"]["lojas_parceiras"]["Row"
 export type Peca = Database["public"]["Tables"]["pecas"]["Row"];
 export type OrdemServico = Database["public"]["Tables"]["ordens_servico"]["Row"];
 export type OsItem = Database["public"]["Tables"]["os_itens"]["Row"];
+export type OsPagamento = Database["public"]["Tables"]["os_pagamentos"]["Row"];
 export type VendaPdv = Database["public"]["Tables"]["vendas_pdv"]["Row"];
 export type VendaItem = Database["public"]["Tables"]["venda_itens"]["Row"];
 export type VendaPagamento = Database["public"]["Tables"]["venda_pagamentos"]["Row"];

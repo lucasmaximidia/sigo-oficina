@@ -10,6 +10,7 @@ const TABELAS = [
   "pecas",
   "ordens_servico",
   "os_itens",
+  "os_pagamentos",
   "fretes",
   "prestadores_frete",
   "vendas_pdv",

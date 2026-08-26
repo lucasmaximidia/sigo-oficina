@@ -13,22 +13,9 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { NumericInput } from "@/components/ui/numeric-input";
 import { formatCurrency } from "@/lib/utils";
-import {
-  setOrdemServicoPagamento,
-  updateOrdemServicoStatus,
-  deleteOrdemServico,
-  reabrirOrdemServico,
-} from "@/lib/actions";
-import type { FormaPagamento, OsStatus, TipoCartao } from "@/types";
-
-function hoje() {
-  return new Date().toISOString().slice(0, 10);
-}
+import { updateOrdemServicoStatus, deleteOrdemServico, reabrirOrdemServico } from "@/lib/actions";
+import type { OsStatus } from "@/types";
 
 export function OsAcoes({
   osId,
@@ -37,6 +24,7 @@ export function OsAcoes({
   clienteNome,
   clienteTelefone,
   total,
+  saldoDevedor,
 }: {
   osId: string;
   status: OsStatus;
@@ -44,16 +32,12 @@ export function OsAcoes({
   clienteNome: string;
   clienteTelefone: string | null;
   total: number;
+  saldoDevedor: number;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [confirmarFinalizar, setConfirmarFinalizar] = useState(false);
   const [confirmarExcluir, setConfirmarExcluir] = useState(false);
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
-  const [dataPagamento, setDataPagamento] = useState(hoje());
-  const [tipoCartao, setTipoCartao] = useState<TipoCartao>("debito");
-  const [valorPagoBruto, setValorPagoBruto] = useState(total);
-  const [valorRecebidoLiquido, setValorRecebidoLiquido] = useState(total);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDelete] = useTransition();
   const [isCancelando, startCancelar] = useTransition();
@@ -71,16 +55,9 @@ export function OsAcoes({
   function handleFinalizar() {
     startTransition(async () => {
       try {
-        await setOrdemServicoPagamento(osId, {
-          formaPagamento,
-          dataPagamento,
-          tipoCartao: formaPagamento === "cartao" ? tipoCartao : null,
-          valorPagoBruto: formaPagamento === "cartao" ? valorPagoBruto : null,
-          valorRecebidoLiquido: formaPagamento === "cartao" ? valorRecebidoLiquido : null,
-        });
         await updateOrdemServicoStatus(osId, "finalizado");
         toast.success("Ordem finalizada! A garantia começa a contar a partir da retirada do equipamento.");
-        setOpen(false);
+        setConfirmarFinalizar(false);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao finalizar OS");
       }
@@ -151,7 +128,7 @@ export function OsAcoes({
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={confirmarFinalizar} onOpenChange={setConfirmarFinalizar}>
         <DialogTrigger asChild>
           <Button type="button" disabled={status === "finalizado" || status === "cancelado"}>
             <CheckCircle2 className="size-4" />
@@ -160,70 +137,19 @@ export function OsAcoes({
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Finalizar ordem de serviço</DialogTitle>
+            <DialogTitle>Finalizar ordem de serviço?</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div>
-              <Label className="mb-1.5 block">Forma de pagamento</Label>
-              <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v as FormaPagamento)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="cartao">Cartão</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="data_pagamento" className="mb-1.5 block">
-                Data do pagamento
-              </Label>
-              <Input
-                id="data_pagamento"
-                type="date"
-                value={dataPagamento}
-                max={hoje()}
-                onChange={(e) => setDataPagamento(e.target.value)}
-              />
-            </div>
-
-            {formaPagamento === "cartao" && (
-              <div className="flex flex-col gap-4 rounded-xl border border-border bg-secondary/50 p-3.5">
-                <div>
-                  <Label className="mb-1.5 block">Tipo de cartão</Label>
-                  <Select value={tipoCartao} onValueChange={(v) => setTipoCartao(v as TipoCartao)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="debito">Débito</SelectItem>
-                      <SelectItem value="credito">Crédito</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="mb-1.5 block">Valor passado (R$)</Label>
-                    <NumericInput defaultValue={valorPagoBruto} onValueChange={setValorPagoBruto} />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block">Valor que entrou (R$)</Label>
-                    <NumericInput defaultValue={valorRecebidoLiquido} onValueChange={setValorRecebidoLiquido} />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  A diferença entre os dois valores é a taxa da maquininha — o valor que entrou é o que efetivamente
-                  cai no caixa.
-                </p>
-              </div>
+          <div className="flex flex-col gap-3">
+            {saldoDevedor > 0.01 ? (
+              <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
+                Ainda falta receber {formatCurrency(saldoDevedor)} dessa OS. Você pode finalizar mesmo assim e
+                registrar o pagamento depois, na seção Pagamentos.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Total: <span className="font-semibold text-foreground">{formatCurrency(total)}</span> — já quitado.
+              </p>
             )}
-
-            <p className="text-sm text-muted-foreground">
-              Total a receber: <span className="font-semibold text-foreground">{formatCurrency(total)}</span>
-            </p>
             <p className="text-xs text-muted-foreground">
               Ao confirmar, a OS é finalizada. A garantia passa a contar a partir da data de retirada do equipamento
               (informe-a depois, quando o cliente buscar).
@@ -231,7 +157,7 @@ export function OsAcoes({
           </div>
           <DialogFooter>
             <Button type="button" onClick={handleFinalizar} disabled={isPending}>
-              {isPending ? "Finalizando..." : "Confirmar pagamento e finalizar"}
+              {isPending ? "Finalizando..." : "Confirmar e finalizar"}
             </Button>
           </DialogFooter>
         </DialogContent>
