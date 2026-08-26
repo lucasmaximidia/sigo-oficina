@@ -46,4 +46,27 @@ export interface ParceiroPendente {
   itens: ItemParceiroPendente[];
 }
 
+export interface Entrada {
+  id: string;
+  tipo: "os" | "pdv";
+  origemLabel: string;
+  origemHref?: string;
+  cliente: string;
+  data: string;
+  formaPagamento: string;
+  formaPagamentoChave: string;
+  valor: number;
+}
+
+export interface FreteComRelacoes {
+  id: string;
+  os_id: string;
+  valor_custo: number;
+  status: "pendente" | "pago";
+  data_pagamento: string | null;
+  created_at: string;
+  ordens_servico: { numero: number; valor_frete: number } | null;
+  prestadores_frete: { nome: string } | null;
+}
+
 export * from "./database";

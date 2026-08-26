@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, ChevronRight, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
@@ -48,10 +48,11 @@ interface OsKanbanRow {
 export default async function OrdensServicoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; page?: string; view?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; view?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const status = params.status as OsStatus | undefined;
+  const busca = params.q?.trim();
   const page = Math.max(1, Number(params.page ?? "1"));
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -130,6 +131,18 @@ export default async function OrdensServicoPage({
 
   if (status) query = query.eq("status", status);
 
+  if (busca) {
+    const numeroBusca = Number(busca.replace(/\D/g, ""));
+    const { data: clientesEncontrados } = await supabase.from("clientes").select("id").ilike("nome", `%${busca}%`);
+    const clienteIds = (clientesEncontrados ?? []).map((c) => c.id);
+
+    const condicoes: string[] = [];
+    if (clienteIds.length > 0) condicoes.push(`cliente_id.in.(${clienteIds.join(",")})`);
+    if (Number.isFinite(numeroBusca) && numeroBusca > 0) condicoes.push(`numero.eq.${numeroBusca}`);
+
+    query = condicoes.length > 0 ? query.or(condicoes.join(",")) : query.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
   const { data: ordens, count } = await query;
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -155,8 +168,19 @@ export default async function OrdensServicoPage({
         }
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <OsStatusTabs active={status ?? "todos"} />
+        <form action="/ordens-servico" className="relative w-full sm:w-64">
+          {status && <input type="hidden" name="status" value={status} />}
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            name="q"
+            defaultValue={busca}
+            placeholder="Buscar por cliente ou nº da OS..."
+            className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm shadow-sm focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+          />
+        </form>
       </div>
 
       <Card className="overflow-hidden p-0">
@@ -259,13 +283,13 @@ export default async function OrdensServicoPage({
                 disabled={page <= 1}
                 className={page <= 1 ? "pointer-events-none opacity-50" : ""}
               >
-                <Link href={buildPageHref(status, page - 1)}>Anterior</Link>
+                <Link href={buildPageHref(status, busca, page - 1)}>Anterior</Link>
               </Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .slice(0, 5)
                 .map((p) => (
                   <Button key={p} asChild variant={p === page ? "default" : "outline"} size="sm">
-                    <Link href={buildPageHref(status, p)}>{p}</Link>
+                    <Link href={buildPageHref(status, busca, p)}>{p}</Link>
                   </Button>
                 ))}
               <Button
@@ -275,7 +299,7 @@ export default async function OrdensServicoPage({
                 disabled={page >= totalPages}
                 className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
               >
-                <Link href={buildPageHref(status, page + 1)}>Próxima</Link>
+                <Link href={buildPageHref(status, busca, page + 1)}>Próxima</Link>
               </Button>
             </div>
           </div>
@@ -285,9 +309,10 @@ export default async function OrdensServicoPage({
   );
 }
 
-function buildPageHref(status: string | undefined, page: number) {
+function buildPageHref(status: string | undefined, busca: string | undefined, page: number) {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
+  if (busca) params.set("q", busca);
   params.set("page", String(page));
   return `/ordens-servico?${params.toString()}`;
 }

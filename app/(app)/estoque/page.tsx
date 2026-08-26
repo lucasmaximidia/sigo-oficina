@@ -4,8 +4,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PecaDialog } from "@/components/estoque/peca-dialog";
+import { PecasInventario } from "@/components/estoque/pecas-inventario";
 import { LojaDialog } from "@/components/estoque/loja-dialog";
 import { EntradaEstoqueDialog } from "@/components/estoque/entrada-estoque-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
@@ -35,12 +35,6 @@ export default async function EstoquePage() {
   const criticas = (pecas ?? []).filter((p) => p.quantidade === 0);
   const baixas = (pecas ?? []).filter((p) => p.quantidade > 0 && p.quantidade <= p.quantidade_minima);
 
-  function statusPeca(quantidade: number, minimo: number) {
-    if (quantidade === 0) return { label: "Crítico", variant: "destructive" as const };
-    if (quantidade <= minimo) return { label: "Baixo", variant: "warning" as const };
-    return { label: "Adequado", variant: "success" as const };
-  }
-
   return (
     <div>
       <PageHeader
@@ -63,89 +57,7 @@ export default async function EstoquePage() {
               Inventário Atual
             </CardTitle>
           </CardHeader>
-          <div className="hidden md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item / Código</TableHead>
-                  <TableHead>Estoque</TableHead>
-                  <TableHead>Custo / Venda</TableHead>
-                  <TableHead>Lucro Unitário</TableHead>
-                  <TableHead className="w-10">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(pecas ?? []).map((peca) => {
-                  const status = statusPeca(peca.quantidade, peca.quantidade_minima);
-                  const lucroUnitario = peca.preco_venda - peca.preco_custo;
-                  const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
-                  return (
-                    <TableRow key={peca.id}>
-                      <TableCell>
-                        <p className="font-medium text-foreground">{peca.nome}</p>
-                        {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-foreground">{peca.quantidade} unid.</p>
-                        <Badge variant={status.variant} className="mt-1">
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-xs text-muted-foreground">Custo: {formatCurrency(peca.preco_custo)}</p>
-                        <p className="text-foreground">Venda: {formatCurrency(peca.preco_venda)}</p>
-                      </TableCell>
-                      <TableCell>
-                        <p className={cn("font-medium", lucroUnitario >= 0 ? "text-success" : "text-destructive")}>
-                          {formatCurrency(lucroUnitario)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
-                      </TableCell>
-                      <TableCell>
-                        <PecaDialog peca={peca} lojas={lojas ?? []} />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {(pecas ?? []).length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                      Nenhuma peça cadastrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex flex-col divide-y divide-border md:hidden">
-            {(pecas ?? []).map((peca) => {
-              const status = statusPeca(peca.quantidade, peca.quantidade_minima);
-              const lucroUnitario = peca.preco_venda - peca.preco_custo;
-              return (
-                <div key={peca.id} className="flex items-start justify-between gap-3 p-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-foreground">{peca.nome}</p>
-                    {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                      <span className="text-xs text-muted-foreground">{peca.quantidade} unid.</span>
-                    </div>
-                    <p className="mt-1.5 text-xs text-muted-foreground">
-                      Custo {formatCurrency(peca.preco_custo)} · Venda {formatCurrency(peca.preco_venda)}
-                    </p>
-                    <p className={cn("mt-0.5 text-xs font-medium", lucroUnitario >= 0 ? "text-success" : "text-destructive")}>
-                      Lucro {formatCurrency(lucroUnitario)}
-                    </p>
-                  </div>
-                  <PecaDialog peca={peca} lojas={lojas ?? []} />
-                </div>
-              );
-            })}
-            {(pecas ?? []).length === 0 && (
-              <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma peça cadastrada.</p>
-            )}
-          </div>
+          <PecasInventario pecas={pecas ?? []} lojas={lojas ?? []} />
         </Card>
 
         <div className="flex flex-col gap-5">
