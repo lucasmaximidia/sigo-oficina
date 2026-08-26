@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, Bell, HelpCircle, Plus } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -30,13 +30,6 @@ export function AppTopbar({ logoUrl }: { logoUrl: string | null }) {
 
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
         <ThemeToggle />
-        <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex" aria-label="Notificações">
-          <Bell className="size-5" />
-          <span className="absolute right-2 top-2 size-2 rounded-full bg-destructive" />
-        </Button>
-        <Button variant="ghost" size="icon" className="hidden sm:inline-flex" aria-label="Ajuda">
-          <HelpCircle className="size-5" />
-        </Button>
         <Button asChild size="sm" variant="secondary" className="hidden md:inline-flex">
           <Link href="/agenda?novo=1">
             <Plus className="size-4" />
