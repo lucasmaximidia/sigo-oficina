@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator, Wallet2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
 import { OsItensList } from "@/components/os/os-itens-list";
 import { OsResumoValores } from "@/components/os/os-resumo-valores";
+import { OsPagamentos } from "@/components/os/os-pagamentos";
 import { OsAcoes } from "@/components/os/os-acoes";
 import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
@@ -24,7 +25,7 @@ interface OsDetalheRow extends OrdemServico {
 export default async function OrdemServicoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }, { data: lojas }] =
+  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }, { data: lojas }, { data: pagamentos }] =
     await Promise.all([
       supabase
         .from("ordens_servico")
@@ -38,6 +39,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
       supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
       supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
       supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
+      supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
     ]);
 
   if (!os) notFound();
@@ -46,6 +48,8 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
   const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
   const totalPecas = (itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
   const total = totalPecas + os.valor_mao_obra + os.valor_frete - os.desconto;
+  const totalPago = (pagamentos ?? []).reduce((acc, p) => acc + p.valor, 0);
+  const saldoDevedor = Math.max(0, total - totalPago);
   const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
 
   return (
@@ -71,8 +75,8 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
         <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-warning/30 bg-warning/5 p-4">
           <RotateCcw className="size-4.5 shrink-0 text-warning" />
           <p className="text-sm text-warning">
-            Esta OS foi reaberta — o pagamento anterior foi removido. Finalize novamente quando o pagamento for
-            confirmado.
+            Esta OS foi reaberta — os pagamentos anteriores foram removidos. Registre os pagamentos e finalize
+            novamente quando quiser.
           </p>
         </div>
       )}
@@ -160,7 +164,20 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                 clienteNome={cliente?.nome ?? "cliente"}
                 clienteTelefone={cliente?.telefone ?? null}
                 total={total}
+                saldoDevedor={saldoDevedor}
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet2 className="size-4.5 text-primary" />
+                Pagamentos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OsPagamentos osId={os.id} total={total} pagamentos={pagamentos ?? []} />
             </CardContent>
           </Card>
 

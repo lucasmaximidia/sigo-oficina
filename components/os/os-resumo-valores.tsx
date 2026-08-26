@@ -5,12 +5,9 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
+import { formatCurrency } from "@/lib/utils";
 import { updateOrdemServicoValores } from "@/lib/actions";
 import type { OrdemServico } from "@/types";
-
-const tipoCartaoLabel: Record<string, string> = { debito: "Débito", credito: "Crédito" };
 
 export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPecas: number }) {
   const [maoObra, setMaoObra] = useState(os.valor_mao_obra);
@@ -81,39 +78,6 @@ export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPec
       <Button type="submit" disabled={isPending} className="mt-1">
         {isPending ? "Salvando..." : "Salvar Alterações"}
       </Button>
-
-      {os.forma_pagamento && (
-        <div className="flex flex-col gap-1 border-t border-border pt-3 text-xs text-muted-foreground">
-          <div className="flex items-center justify-between">
-            <span>Forma de pagamento</span>
-            <span className="font-medium text-foreground">{formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento}</span>
-          </div>
-          {os.data_pagamento && (
-            <div className="flex items-center justify-between">
-              <span>Data do pagamento</span>
-              <span className="font-medium text-foreground">{formatDate(os.data_pagamento)}</span>
-            </div>
-          )}
-          {os.forma_pagamento === "cartao" && os.tipo_cartao && (
-            <div className="flex items-center justify-between">
-              <span>Tipo de cartão</span>
-              <span className="font-medium text-foreground">{tipoCartaoLabel[os.tipo_cartao] ?? os.tipo_cartao}</span>
-            </div>
-          )}
-          {os.forma_pagamento === "cartao" && os.valor_pago_bruto != null && (
-            <div className="flex items-center justify-between">
-              <span>Valor passado</span>
-              <span className="font-medium text-foreground">{formatCurrency(os.valor_pago_bruto)}</span>
-            </div>
-          )}
-          {os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null && (
-            <div className="flex items-center justify-between">
-              <span>Valor que entrou no caixa</span>
-              <span className="font-medium text-success">{formatCurrency(os.valor_recebido_liquido)}</span>
-            </div>
-          )}
-        </div>
-      )}
     </form>
   );
 }

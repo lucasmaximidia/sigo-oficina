@@ -308,6 +308,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      os_pagamentos: {
+        Row: {
+          id: string;
+          os_id: string;
+          forma_pagamento: FormaPagamento;
+          tipo_cartao: TipoCartao | null;
+          valor: number;
+          valor_recebido_liquido: number | null;
+          data: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          os_id: string;
+          forma_pagamento: FormaPagamento;
+          tipo_cartao?: TipoCartao | null;
+          valor?: number;
+          valor_recebido_liquido?: number | null;
+          data?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          os_id?: string;
+          forma_pagamento?: FormaPagamento;
+          tipo_cartao?: TipoCartao | null;
+          valor?: number;
+          valor_recebido_liquido?: number | null;
+          data?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       vendas_pdv: {
         Row: {
           id: string;
