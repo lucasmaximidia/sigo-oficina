@@ -10,8 +10,17 @@ import { Brand } from "./brand";
 import { SidebarNav } from "./sidebar-nav";
 import { GlobalSearch } from "./global-search";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificacoesBell, type NotificacaoConta, type NotificacaoPeca } from "./notificacoes-bell";
 
-export function AppTopbar({ logoUrl }: { logoUrl: string | null }) {
+export function AppTopbar({
+  logoUrl,
+  notificacoesContas,
+  notificacoesPecas,
+}: {
+  logoUrl: string | null;
+  notificacoesContas: NotificacaoConta[];
+  notificacoesPecas: NotificacaoPeca[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -29,6 +38,7 @@ export function AppTopbar({ logoUrl }: { logoUrl: string | null }) {
       <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+        <NotificacoesBell contas={notificacoesContas} pecas={notificacoesPecas} />
         <ThemeToggle />
         <Button asChild size="sm" variant="secondary" className="hidden md:inline-flex">
           <Link href="/agenda?novo=1">
