@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Mail, MapPin, Phone, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardList, Mail, MapPin, Phone, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
@@ -8,9 +8,31 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClienteFormDialog } from "@/components/clientes/cliente-form-dialog";
 import { EquipamentoDialog } from "@/components/clientes/equipamento-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
-import { cn } from "@/lib/utils";
+import { osStatusMap } from "@/lib/status";
+import { formatDate, cn } from "@/lib/utils";
+import type { OsStatus } from "@/types";
 
 export const dynamic = "force-dynamic";
+
+interface HistoricoOsRow {
+  id: string;
+  numero: number;
+  status: OsStatus;
+  data_entrada: string;
+  problema_relatado: string | null;
+  diagnostico: string | null;
+  equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+}
+
+interface HistoricoOsItem {
+  id: string;
+  numero: number;
+  status: OsStatus;
+  data: string;
+  problemaRelatado: string | null;
+  diagnostico: string | null;
+  equipamentoDescricao: string;
+}
 
 function iniciais(nome: string) {
   return nome
@@ -37,6 +59,7 @@ export default async function ClientesPage({
 
   let clienteDetalhe = null;
   let equipamentos: { id: string; tipo: string; marca: string | null; modelo: string | null; numero_serie: string | null; ultimaOs: number | null }[] = [];
+  let historicoOs: HistoricoOsItem[] = [];
 
   if (clienteId) {
     const { data: cliente } = await supabase.from("clientes").select("*").eq("id", clienteId).maybeSingle();
@@ -61,6 +84,26 @@ export default async function ClientesPage({
           return { ...equip, ultimaOs: os?.numero ?? null };
         })
       );
+
+      const { data: historico } = await supabase
+        .from("ordens_servico")
+        .select<string, HistoricoOsRow>(
+          "id, numero, status, data_entrada, problema_relatado, diagnostico, equipamentos(tipo, marca, modelo)"
+        )
+        .eq("cliente_id", cliente.id)
+        .order("data_entrada", { ascending: false });
+
+      historicoOs = (historico ?? []).map((os) => ({
+        id: os.id,
+        numero: os.numero,
+        status: os.status,
+        data: os.data_entrada,
+        problemaRelatado: os.problema_relatado,
+        diagnostico: os.diagnostico,
+        equipamentoDescricao: os.equipamentos
+          ? [os.equipamentos.marca, os.equipamentos.modelo].filter(Boolean).join(" ") || os.equipamentos.tipo
+          : "Equipamento não informado",
+      }));
     }
   }
 
@@ -190,6 +233,46 @@ export default async function ClientesPage({
                       </p>
                     </div>
                   ))}
+                </div>
+              </Card>
+
+              <Card className="p-4 md:p-5">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="size-4.5 text-primary" />
+                  <p className="text-base font-semibold text-foreground">Histórico de Manutenções</p>
+                </div>
+                <div className="mt-3 flex flex-col divide-y divide-border">
+                  {historicoOs.length === 0 && (
+                    <p className="py-2 text-sm text-muted-foreground">Nenhuma OS registrada para este cliente ainda.</p>
+                  )}
+                  {historicoOs.map((os) => {
+                    const statusInfo = osStatusMap[os.status];
+                    return (
+                      <Link
+                        key={os.id}
+                        href={`/ordens-servico/${os.id}`}
+                        className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 hover:bg-secondary/40"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-medium text-primary">
+                              #OS-{String(os.numero).padStart(4, "0")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{os.equipamentoDescricao}</span>
+                            <span className="text-xs text-muted-foreground">· {formatDate(os.data)}</span>
+                            <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                          </div>
+                          <p className="mt-1 truncate text-sm text-foreground">
+                            {os.problemaRelatado || "Sem descrição do problema"}
+                          </p>
+                          {os.diagnostico && (
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">Diagnóstico: {os.diagnostico}</p>
+                          )}
+                        </div>
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
+                    );
+                  })}
                 </div>
               </Card>
             </div>
