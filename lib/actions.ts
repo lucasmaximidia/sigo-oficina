@@ -904,6 +904,73 @@ export async function getVendaDetalhes(id: string): Promise<VendaDetalhes> {
   };
 }
 
+export interface OsDetalhes {
+  numero: number;
+  status: OsStatus;
+  cliente: string;
+  equipamentoDescricao: string;
+  problemaRelatado: string;
+  data: string;
+  formaPagamento: string | null;
+  itens: { descricao: string; quantidade: number; valorUnitario: number }[];
+  valorMaoObra: number;
+  valorFrete: number;
+  desconto: number;
+  total: number;
+}
+
+interface OsDetalhesRow {
+  numero: number;
+  status: OsStatus;
+  data_entrada: string;
+  data_finalizacao: string | null;
+  data_pagamento: string | null;
+  problema_relatado: string | null;
+  forma_pagamento: FormaPagamento | null;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+  clientes: { nome: string } | null;
+  equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+}
+
+export async function getOsDetalhes(id: string): Promise<OsDetalhes> {
+  const [{ data: os, error }, { data: itens }] = await Promise.all([
+    supabase
+      .from("ordens_servico")
+      .select<string, OsDetalhesRow>(
+        "numero, status, data_entrada, data_finalizacao, data_pagamento, problema_relatado, forma_pagamento, valor_mao_obra, valor_frete, desconto, clientes(nome), equipamentos(tipo, marca, modelo)"
+      )
+      .eq("id", id)
+      .single(),
+    supabase.from("os_itens").select("descricao, quantidade, valor_unitario").eq("os_id", id),
+  ]);
+  if (error || !os) throw new Error("Ordem de serviço não encontrada");
+
+  const totalItens = (itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+
+  return {
+    numero: os.numero,
+    status: os.status,
+    cliente: os.clientes?.nome ?? "Cliente não informado",
+    equipamentoDescricao: os.equipamentos
+      ? [os.equipamentos.marca, os.equipamentos.modelo].filter(Boolean).join(" ") || os.equipamentos.tipo
+      : "Equipamento não informado",
+    problemaRelatado: os.problema_relatado || "Sem descrição do problema",
+    data: os.data_pagamento ?? os.data_finalizacao ?? os.data_entrada,
+    formaPagamento: os.forma_pagamento,
+    itens: (itens ?? []).map((i) => ({
+      descricao: i.descricao,
+      quantidade: i.quantidade,
+      valorUnitario: i.valor_unitario,
+    })),
+    valorMaoObra: os.valor_mao_obra,
+    valorFrete: os.valor_frete,
+    desconto: os.desconto,
+    total: Math.max(0, totalItens + os.valor_mao_obra + os.valor_frete - os.desconto),
+  };
+}
+
 export async function deleteVendaPdv(id: string) {
   const { error } = await supabase
     .from("vendas_pdv")

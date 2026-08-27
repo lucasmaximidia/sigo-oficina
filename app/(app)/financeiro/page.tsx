@@ -122,7 +122,6 @@ export default async function FinanceiroPage() {
       id: os.id,
       tipo: "os",
       origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
-      origemHref: `/ordens-servico/${os.id}`,
       cliente: os.clientes?.nome ?? "—",
       data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
       formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
