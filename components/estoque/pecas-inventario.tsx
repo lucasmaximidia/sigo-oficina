@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -89,7 +90,14 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
                     <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
                   </TableCell>
                   <TableCell>
-                    <PecaDialog peca={peca} lojas={lojas} />
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" aria-label="Baixar etiqueta" asChild>
+                        <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
+                          <Tag className="size-4" />
+                        </a>
+                      </Button>
+                      <PecaDialog peca={peca} lojas={lojas} />
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -125,7 +133,14 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
                   Lucro {formatCurrency(lucroUnitario)}
                 </p>
               </div>
-              <PecaDialog peca={peca} lojas={lojas} />
+              <div className="flex shrink-0 items-center gap-1">
+                <Button size="icon" variant="ghost" aria-label="Baixar etiqueta" asChild>
+                  <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
+                    <Tag className="size-4" />
+                  </a>
+                </Button>
+                <PecaDialog peca={peca} lojas={lojas} />
+              </div>
             </div>
           );
         })}
