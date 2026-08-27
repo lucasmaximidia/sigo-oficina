@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
@@ -18,11 +20,19 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("data_asc");
   const [periodoInicio, setPeriodoInicio] = useState("");
   const [periodoFim, setPeriodoFim] = useState("");
+  const [soNaoPagas, setSoNaoPagas] = useState(false);
 
-  const contasFiltradas = useMemo(
-    () => filtrarEOrdenar(contas, (c) => c.vencimento, (c) => c.valor, ordenacao, periodoInicio, periodoFim),
-    [contas, ordenacao, periodoInicio, periodoFim]
-  );
+  const contasFiltradas = useMemo(() => {
+    const base = soNaoPagas ? contas.filter((c) => c.status !== "pago") : contas;
+    return filtrarEOrdenar(base, (c) => c.vencimento, (c) => c.valor, ordenacao, periodoInicio, periodoFim);
+  }, [contas, soNaoPagas, ordenacao, periodoInicio, periodoFim]);
+
+  const mensagemVazia =
+    contas.length === 0
+      ? "Nenhuma conta cadastrada."
+      : soNaoPagas
+        ? "Nenhuma conta não paga no período selecionado."
+        : "Nenhuma conta no período selecionado.";
 
   return (
     <>
@@ -44,6 +54,14 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
           <NovaContaDialog />
         </div>
       </div>
+      {contas.length > 0 && (
+        <div className="mb-3 flex items-center gap-2.5">
+          <Switch id="so-nao-pagas" checked={soNaoPagas} onCheckedChange={setSoNaoPagas} />
+          <Label htmlFor="so-nao-pagas" className="text-sm text-muted-foreground">
+            Mostrar só não pagas
+          </Label>
+        </div>
+      )}
       <Card className="overflow-hidden p-0">
         <div className="hidden md:block">
           <Table>
@@ -92,7 +110,7 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
               {contasFiltradas.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    {contas.length === 0 ? "Nenhuma conta cadastrada." : "Nenhuma conta no período selecionado."}
+                    {mensagemVazia}
                   </TableCell>
                 </TableRow>
               )}
@@ -133,7 +151,7 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
           })}
           {contasFiltradas.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              {contas.length === 0 ? "Nenhuma conta cadastrada." : "Nenhuma conta no período selecionado."}
+              {mensagemVazia}
             </p>
           )}
         </div>
