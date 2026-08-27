@@ -854,6 +854,56 @@ export async function fecharContaParceiro(lojaParceiraId: string) {
   revalidatePath("/financeiro");
 }
 
+export interface VendaDetalhes {
+  numero: number;
+  createdAt: string;
+  cliente: string;
+  subtotal: number;
+  desconto: number;
+  total: number;
+  itens: { descricao: string; tipo: "peca" | "servico"; quantidade: number; valorUnitario: number }[];
+  pagamentos: { formaPagamento: FormaPagamento; valor: number }[];
+}
+
+interface VendaRow {
+  numero: number;
+  created_at: string;
+  subtotal: number;
+  desconto: number;
+  total: number;
+  cliente_nome_avulso: string | null;
+  clientes: { nome: string } | null;
+}
+
+export async function getVendaDetalhes(id: string): Promise<VendaDetalhes> {
+  const [{ data: venda, error }, { data: itens }, { data: pagamentos }] = await Promise.all([
+    supabase
+      .from("vendas_pdv")
+      .select<string, VendaRow>("numero, created_at, subtotal, desconto, total, cliente_nome_avulso, clientes(nome)")
+      .eq("id", id)
+      .single(),
+    supabase.from("venda_itens").select("descricao, tipo, quantidade, valor_unitario").eq("venda_id", id),
+    supabase.from("venda_pagamentos").select("forma_pagamento, valor").eq("venda_id", id),
+  ]);
+  if (error || !venda) throw new Error("Venda não encontrada");
+
+  return {
+    numero: venda.numero,
+    createdAt: venda.created_at,
+    cliente: venda.clientes?.nome ?? venda.cliente_nome_avulso ?? "Cliente avulso",
+    subtotal: venda.subtotal,
+    desconto: venda.desconto,
+    total: venda.total,
+    itens: (itens ?? []).map((i) => ({
+      descricao: i.descricao,
+      tipo: i.tipo,
+      quantidade: i.quantidade,
+      valorUnitario: i.valor_unitario,
+    })),
+    pagamentos: (pagamentos ?? []).map((p) => ({ formaPagamento: p.forma_pagamento, valor: p.valor })),
+  };
+}
+
 export async function deleteVendaPdv(id: string) {
   const { error } = await supabase
     .from("vendas_pdv")

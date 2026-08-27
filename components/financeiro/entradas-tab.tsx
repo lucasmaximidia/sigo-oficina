@@ -6,6 +6,7 @@ import { Wrench, ShoppingCart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
+import { VendaDetalhesDialog } from "@/components/financeiro/venda-detalhes-dialog";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
@@ -61,7 +62,7 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
                           {entrada.origemLabel}
                         </Link>
                       ) : (
-                        <span className="font-medium text-foreground">{entrada.origemLabel}</span>
+                        <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
                       )}
                     </div>
                   </TableCell>
@@ -102,7 +103,7 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
                       {entrada.origemLabel}
                     </Link>
                   ) : (
-                    <span className="truncate font-medium text-foreground">{entrada.origemLabel}</span>
+                    <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
                   )}
                 </div>
                 <p className="mt-1 truncate text-sm text-foreground">{entrada.cliente}</p>
