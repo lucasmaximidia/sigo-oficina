@@ -50,7 +50,6 @@ export interface Entrada {
   id: string;
   tipo: "os" | "pdv";
   origemLabel: string;
-  origemHref?: string;
   cliente: string;
   data: string;
   formaPagamento: string;

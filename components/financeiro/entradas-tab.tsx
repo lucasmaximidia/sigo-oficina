@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Wrench, ShoppingCart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { VendaDetalhesDialog } from "@/components/financeiro/venda-detalhes-dialog";
+import { OsDetalhesDialog } from "@/components/financeiro/os-detalhes-dialog";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
@@ -57,10 +57,8 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
                       ) : (
                         <ShoppingCart className="size-3.5 text-muted-foreground" />
                       )}
-                      {entrada.origemHref ? (
-                        <Link href={entrada.origemHref} className="font-medium text-primary">
-                          {entrada.origemLabel}
-                        </Link>
+                      {entrada.tipo === "os" ? (
+                        <OsDetalhesDialog osId={entrada.id} label={entrada.origemLabel} />
                       ) : (
                         <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
                       )}
@@ -98,10 +96,8 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
                   ) : (
                     <ShoppingCart className="size-3.5 shrink-0 text-muted-foreground" />
                   )}
-                  {entrada.origemHref ? (
-                    <Link href={entrada.origemHref} className="truncate font-medium text-primary">
-                      {entrada.origemLabel}
-                    </Link>
+                  {entrada.tipo === "os" ? (
+                    <OsDetalhesDialog osId={entrada.id} label={entrada.origemLabel} />
                   ) : (
                     <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
                   )}
