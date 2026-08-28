@@ -11,7 +11,7 @@ const cores = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 34,
     fontSize: 10,
     color: cores.text,
     fontFamily: "Helvetica",
@@ -20,8 +20,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 24,
-    paddingBottom: 20,
+    marginBottom: 14,
+    paddingBottom: 12,
     borderBottomWidth: 2,
     borderBottomColor: cores.primary,
   },
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   tituloTexto: { alignItems: "flex-end" },
   titulo: { fontSize: 16, fontFamily: "Helvetica-Bold", color: cores.primary, textAlign: "right" },
   numero: { fontSize: 9, color: cores.muted, marginTop: 2 },
-  section: { marginBottom: 18 },
+  section: { marginBottom: 10 },
   sectionTitle: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 7,
+    paddingVertical: 5,
     paddingHorizontal: 8,
     borderTopWidth: 1,
     borderTopColor: cores.border,
@@ -71,21 +71,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     backgroundColor: cores.bgMuted,
     borderRadius: 4,
-    padding: 14,
-    marginBottom: 18,
+    padding: 8,
+    marginBottom: 12,
   },
   destaqueItem: { alignItems: "center" },
-  destaqueValor: { fontSize: 13, fontFamily: "Helvetica-Bold", color: cores.primary },
-  destaqueLabel: { fontSize: 7.5, color: cores.muted, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.5 },
+  destaqueValor: { fontSize: 11, fontFamily: "Helvetica-Bold", color: cores.primary },
+  destaqueLabel: { fontSize: 7, color: cores.muted, marginTop: 1, textTransform: "uppercase", letterSpacing: 0.5 },
   aviso: {
-    padding: 10,
+    padding: 8,
     backgroundColor: cores.bgMuted,
     borderRadius: 4,
-    fontSize: 8.5,
+    fontSize: 8,
     color: cores.muted,
-    lineHeight: 1.5,
+    lineHeight: 1.35,
   },
-  rodapeAcoes: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: 24 },
+  rodapeAcoes: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginTop: 14 },
   assinaturaLinha: { width: 200, borderTopWidth: 1, borderTopColor: cores.border, paddingTop: 4 },
   assinaturaLabel: { fontSize: 8, color: cores.muted, textAlign: "center" },
   qrWrap: { alignItems: "center" },
@@ -126,6 +126,7 @@ export function CertificadoPdf({
   clienteTelefone,
   equipamentoDescricao,
   numeroSerie,
+  problemaRelatado,
   itens,
   dataInicio,
   dataExpiracao,
@@ -138,6 +139,7 @@ export function CertificadoPdf({
   clienteTelefone: string | null;
   equipamentoDescricao: string;
   numeroSerie: string | null;
+  problemaRelatado: string | null;
   itens: { id: string; descricao: string; quantidade: number }[];
   dataInicio: string;
   dataExpiracao: string;
@@ -199,6 +201,12 @@ export function CertificadoPdf({
               </View>
             )}
           </View>
+          {problemaRelatado && (
+            <View style={{ marginTop: 10 }}>
+              <Text style={styles.infoLabel}>Defeito relatado</Text>
+              <Text style={[styles.infoValue, { marginTop: 1 }]}>{problemaRelatado}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
