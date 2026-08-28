@@ -176,6 +176,45 @@ export async function updateOrdemServicoStatus(id: string, status: OsStatus) {
   revalidatePath("/garantias");
 }
 
+export async function createEmpresaAutorizada(formData: FormData) {
+  const nome = strUp(formData, "nome");
+  if (!nome) throw new Error("Nome é obrigatório");
+  const { data, error } = await supabase
+    .from("empresas_autorizadas")
+    .insert({ nome, telefone: str(formData, "telefone") })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/financeiro");
+  return data.id as string;
+}
+
+export async function updateOrdemServicoAutorizada(
+  id: string,
+  input: {
+    empresaAutorizadaId: string | null;
+    numeroOsAutorizada: string | null;
+    referenciaAutorizada: string | null;
+    produtoAutorizada: string | null;
+    numeroSerieAutorizada: string | null;
+  }
+) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({
+      empresa_autorizada_id: input.empresaAutorizadaId,
+      numero_os_autorizada: input.numeroOsAutorizada,
+      referencia_autorizada: input.referenciaAutorizada,
+      produto_autorizada: input.produtoAutorizada,
+      numero_serie_autorizada: input.numeroSerieAutorizada,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+  revalidatePath("/ordens-servico");
+}
+
 export async function setOrdemServicoParada(id: string, parada: boolean, motivo?: string) {
   const { error } = await supabase
     .from("ordens_servico")
@@ -852,6 +891,62 @@ export async function fecharContaParceiro(lojaParceiraId: string) {
   if (itensError) throw new Error(itensError.message);
 
   revalidatePath("/financeiro");
+}
+
+// Fecha a conta com uma empresa autorizada (PRAXIS, IPC, ...): lança um
+// pagamento de mão de obra em cada OS finalizada e ainda não paga dessa
+// autorizada, do mesmo jeito que um pagamento normal (ver
+// registrarPagamentoOs) — assim elas passam a aparecer como entrada no
+// Financeiro sem precisar registrar OS por OS.
+interface OsAutorizadaCandidata {
+  id: string;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+}
+
+export async function fecharContaAutorizada(empresaAutorizadaId: string) {
+  const [{ data: empresa }, { data: osCandidatas }] = await Promise.all([
+    supabase.from("empresas_autorizadas").select("nome").eq("id", empresaAutorizadaId).single(),
+    supabase
+      .from("ordens_servico")
+      .select<string, OsAutorizadaCandidata>("id, valor_mao_obra, valor_frete, desconto")
+      .eq("empresa_autorizada_id", empresaAutorizadaId)
+      .eq("status", "finalizado")
+      .is("forma_pagamento", null),
+  ]);
+  if (!empresa) throw new Error("Empresa autorizada não encontrada");
+  if (!osCandidatas || osCandidatas.length === 0) throw new Error("Nada pendente com essa autorizada");
+
+  const agora = new Date().toISOString().slice(0, 10);
+  let algumaFechada = false;
+
+  for (const os of osCandidatas) {
+    const { total, totalPago } = await getOsTotais(os.id);
+    const saldoDevedor = total - totalPago;
+    if (saldoDevedor <= 0.001) continue;
+    algumaFechada = true;
+
+    const { error: pagamentoError } = await supabase.from("os_pagamentos").insert({
+      os_id: os.id,
+      forma_pagamento: "autorizada",
+      valor: saldoDevedor,
+      data: agora,
+    });
+    if (pagamentoError) throw new Error(pagamentoError.message);
+
+    const { error: osError } = await supabase
+      .from("ordens_servico")
+      .update({ forma_pagamento: "autorizada", data_pagamento: agora })
+      .eq("id", os.id);
+    if (osError) throw new Error(osError.message);
+  }
+
+  if (!algumaFechada) throw new Error("Nada pendente com essa autorizada");
+
+  revalidatePath("/financeiro");
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
 }
 
 export interface VendaDetalhes {

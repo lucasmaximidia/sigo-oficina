@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator, Wallet2 } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator, Wallet2, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
@@ -11,6 +11,7 @@ import { OsAcoes } from "@/components/os/os-acoes";
 import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
 import { OsRetiradaCard } from "@/components/os/os-retirada-card";
+import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -25,22 +26,31 @@ interface OsDetalheRow extends OrdemServico {
 export default async function OrdemServicoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: os }, { data: itens }, { data: pecas }, { data: frete }, { data: prestadores }, { data: lojas }, { data: pagamentos }] =
-    await Promise.all([
-      supabase
-        .from("ordens_servico")
-        .select<string, OsDetalheRow>(
-          "*, clientes(id, nome, telefone, email), equipamentos(id, tipo, marca, modelo, numero_serie)"
-        )
-        .eq("id", id)
-        .maybeSingle(),
-      supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
-      supabase.from("pecas").select("*").order("nome", { ascending: true }),
-      supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
-      supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
-      supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
-      supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
-    ]);
+  const [
+    { data: os },
+    { data: itens },
+    { data: pecas },
+    { data: frete },
+    { data: prestadores },
+    { data: lojas },
+    { data: pagamentos },
+    { data: empresasAutorizadas },
+  ] = await Promise.all([
+    supabase
+      .from("ordens_servico")
+      .select<string, OsDetalheRow>(
+        "*, clientes(id, nome, telefone, email), equipamentos(id, tipo, marca, modelo, numero_serie)"
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
+    supabase.from("pecas").select("*").order("nome", { ascending: true }),
+    supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
+    supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
+    supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
+    supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
+    supabase.from("empresas_autorizadas").select("*").eq("ativo", true).order("nome", { ascending: true }),
+  ]);
 
   if (!os) notFound();
 
@@ -165,6 +175,27 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                 clienteTelefone={cliente?.telefone ?? null}
                 total={total}
                 saldoDevedor={saldoDevedor}
+                temEmpresaAutorizada={Boolean(os.empresa_autorizada_id)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="size-4.5 text-primary" />
+                Empresa Autorizada
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EmpresaAutorizadaCard
+                osId={os.id}
+                empresasIniciais={empresasAutorizadas ?? []}
+                empresaAutorizadaId={os.empresa_autorizada_id}
+                numeroOsAutorizada={os.numero_os_autorizada}
+                referenciaAutorizada={os.referencia_autorizada}
+                produtoAutorizada={os.produto_autorizada}
+                numeroSerieAutorizada={os.numero_serie_autorizada}
               />
             </CardContent>
           </Card>

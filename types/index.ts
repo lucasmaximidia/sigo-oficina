@@ -23,6 +23,7 @@ export type PrestadorFrete = Database["public"]["Tables"]["prestadores_frete"]["
 export type Frete = Database["public"]["Tables"]["fretes"]["Row"];
 export type EntradaEstoque = Database["public"]["Tables"]["entradas_estoque"]["Row"];
 export type EntradaEstoqueItem = Database["public"]["Tables"]["entrada_estoque_itens"]["Row"];
+export type EmpresaAutorizada = Database["public"]["Tables"]["empresas_autorizadas"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
@@ -44,6 +45,20 @@ export interface ParceiroPendente {
   totalFechavel: number;
   totalGeral: number;
   itens: ItemParceiroPendente[];
+}
+
+export interface ItemAutorizadaPendente {
+  osId: string;
+  osNumero: number;
+  valor: number;
+  dataFinalizacao: string | null;
+}
+
+export interface AutorizadaPendente {
+  empresaId: string;
+  empresaNome: string;
+  total: number;
+  itens: ItemAutorizadaPendente[];
 }
 
 export interface Entrada {

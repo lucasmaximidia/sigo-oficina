@@ -25,6 +25,7 @@ export function OsAcoes({
   clienteTelefone,
   total,
   saldoDevedor,
+  temEmpresaAutorizada,
 }: {
   osId: string;
   status: OsStatus;
@@ -33,6 +34,7 @@ export function OsAcoes({
   clienteTelefone: string | null;
   total: number;
   saldoDevedor: number;
+  temEmpresaAutorizada: boolean;
 }) {
   const router = useRouter();
   const [confirmarFinalizar, setConfirmarFinalizar] = useState(false);
@@ -118,6 +120,15 @@ export function OsAcoes({
           Baixar Etiqueta (PNG)
         </a>
       </Button>
+
+      {temEmpresaAutorizada && (
+        <Button asChild variant="outline">
+          <a href={`/api/ordens-servico/${osId}/etiqueta-autorizada`} target="_blank" rel="noopener noreferrer">
+            <Tag className="size-4" />
+            Baixar Etiqueta Autorizada (PNG)
+          </a>
+        </Button>
+      )}
 
       {status === "finalizado" && (
         <Button asChild variant="outline">

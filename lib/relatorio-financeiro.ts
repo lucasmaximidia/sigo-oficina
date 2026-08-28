@@ -31,4 +31,5 @@ export const formaPagamentoLabel: Record<string, string> = {
   dinheiro: "Dinheiro",
   pix: "PIX",
   cartao: "Cartão",
+  autorizada: "Autorizada",
 };
