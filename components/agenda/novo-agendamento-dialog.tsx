@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NovoClienteDialog } from "@/components/clientes/novo-cliente-dialog";
+import { ClienteCombobox } from "@/components/clientes/cliente-combobox";
 import { createAgendaEvento } from "@/lib/actions";
 import type { Cliente } from "@/types";
 
@@ -93,18 +94,8 @@ export function NovoAgendamentoDialog({
             </div>
             <div>
               <Label className="mb-1.5 block">Cliente</Label>
-              <Select name="cliente_id" value={clienteId} onValueChange={setClienteId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <input type="hidden" name="cliente_id" value={clienteId} />
+              <ClienteCombobox clientes={clientes} value={clienteId} onValueChange={setClienteId} />
               <NovoClienteDialog
                 onCreated={(id, nome) => {
                   setClientes((prev) => [...prev, { id, nome }]);
