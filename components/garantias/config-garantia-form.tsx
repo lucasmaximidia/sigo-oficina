@@ -13,11 +13,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updateConfiguracoesGarantia } from "@/lib/actions";
 import type { Configuracao } from "@/types";
 
-const TEXTO_PADRAO = `TERMO DE GARANTIA
+const TEXTO_PADRAO = `Esta garantia refere-se exclusivamente ao serviço executado e à(s) peça(s) listada(s) acima, nesta ordem de serviço.
 
-A SIGO Oficina assegura ao cliente a garantia sobre os serviços prestados e peças substituídas, conforme as seguintes condições:
+1. PRAZO
+O prazo de validade é o indicado acima, contado a partir da data de entrega do equipamento ao cliente, conforme o Código de Defesa do Consumidor (Lei 8.078/90, art. 26, II).
 
-1. PRAZO: O prazo de validade desta garantia é de {PRAZO_DIAS} dias, contados a partir da data de entrega do equipamento ao cliente, conforme determinação legal (CDC, art. 26, II).`;
+2. COBERTURA
+Esta garantia é do tipo: {TIPO_COBERTURA}, cobrindo exclusivamente os itens e serviços listados acima. Caso o mesmo problema volte a ocorrer dentro do prazo, o reparo será refeito sem custo adicional.
+
+3. O QUE NÃO ESTÁ COBERTO
+Esta garantia não cobre defeitos causados por:
+- Mau uso, quedas, impactos, umidade, líquidos ou insetos;
+- Oscilação ou queda de energia elétrica, raios ou instalação elétrica inadequada;
+- Abertura, ajuste ou tentativa de reparo por terceiros não autorizados após a entrega;
+- Desgaste natural de peças não substituídas nesta OS;
+- Problema diferente do(s) item(ns) listado(s) acima.
+
+4. COMO ACIONAR A GARANTIA
+Para acionar a garantia, o cliente deve apresentar este certificado (ou informar o número da OS). O equipamento será reavaliado; confirmado que se trata do mesmo problema, o reparo é realizado sem custo.
+
+5. PERDA DA GARANTIA
+Esta garantia perde a validade caso o equipamento seja aberto, ajustado ou reparado por terceiros após a entrega, ou seja constatado uso inadequado do produto.`;
 
 export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
   const [isPending, startTransition] = useTransition();
@@ -93,9 +109,11 @@ export function ConfigGarantiaForm({ config }: { config: Configuracao }) {
                 rows={8}
                 defaultValue={config.garantia_texto_padrao ?? TEXTO_PADRAO}
                 className="font-mono text-xs"
+                preserveCase
               />
               <p className="mt-2 text-xs text-muted-foreground">
-                Variáveis disponíveis: {"{CLIENTE_NOME}"}, {"{EQUIPAMENTO}"}, {"{PRAZO_DIAS}"}, {"{DATA_SERVICO}"}
+                Variável disponível: {"{TIPO_COBERTURA}"} (puxa o tipo selecionado acima). O nome do cliente, o
+                equipamento e o prazo já aparecem em campos próprios do certificado — não precisa repeti-los aqui.
               </p>
             </CardContent>
           </Card>

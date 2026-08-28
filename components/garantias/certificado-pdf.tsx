@@ -147,15 +147,9 @@ export function CertificadoPdf({
 }) {
   const textoBase =
     config.garantia_texto_padrao ||
-    `A {EMPRESA_NOME} assegura ao cliente a garantia sobre os serviços prestados e peças substituídas, conforme as seguintes condições: 1. PRAZO: o prazo de validade desta garantia é de {PRAZO_DIAS} dias, contados a partir da data de entrega do equipamento ao cliente, conforme determinação legal (CDC, art. 26, II). 2. COBERTURA: {TIPO_COBERTURA}. Esta garantia não cobre danos causados por mau uso, quedas, líquidos, oscilação de energia ou intervenção de terceiros não autorizados.`;
+    `Esta garantia refere-se exclusivamente ao serviço executado e à(s) peça(s) listada(s) acima, nesta ordem de serviço. O prazo de validade é o indicado acima, contado a partir da data de entrega do equipamento ao cliente, conforme determinação legal (CDC, art. 26, II). Cobertura: {TIPO_COBERTURA}. Esta garantia não cobre danos causados por mau uso, quedas, líquidos, oscilação de energia ou intervenção de terceiros não autorizados.`;
 
-  const texto = textoBase
-    .replace(/\{CLIENTE_NOME\}/g, clienteNome)
-    .replace(/\{EQUIPAMENTO\}/g, equipamentoDescricao)
-    .replace(/\{PRAZO_DIAS\}/g, String(garantiaDias))
-    .replace(/\{DATA_SERVICO\}/g, formatDatePdf(dataInicio))
-    .replace(/\{EMPRESA_NOME\}/g, config.nome_empresa)
-    .replace(/\{TIPO_COBERTURA\}/g, config.garantia_tipo_cobertura);
+  const texto = textoBase.replace(/\{TIPO_COBERTURA\}/g, config.garantia_tipo_cobertura);
 
   return (
     <Document title={`Certificado-Garantia-${numero}`}>
