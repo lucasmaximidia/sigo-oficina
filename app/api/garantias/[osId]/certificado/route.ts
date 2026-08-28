@@ -13,6 +13,7 @@ interface OsComRelacoes {
   status: string;
   data_finalizacao: string | null;
   garantia_dias: number;
+  problema_relatado: string | null;
   clientes: { nome: string; telefone: string | null } | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null; numero_serie: string | null } | null;
 }
@@ -24,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
     supabase
       .from("ordens_servico")
       .select<string, OsComRelacoes>(
-        "id, numero, status, data_finalizacao, garantia_dias, clientes(nome, telefone), equipamentos(tipo, marca, modelo, numero_serie)"
+        "id, numero, status, data_finalizacao, garantia_dias, problema_relatado, clientes(nome, telefone), equipamentos(tipo, marca, modelo, numero_serie)"
       )
       .eq("id", osId)
       .maybeSingle(),
@@ -63,6 +64,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
       clienteTelefone: os.clientes?.telefone ?? null,
       equipamentoDescricao,
       numeroSerie: equipamento?.numero_serie ?? null,
+      problemaRelatado: os.problema_relatado,
       itens: itens ?? [],
       dataInicio,
       dataExpiracao,
