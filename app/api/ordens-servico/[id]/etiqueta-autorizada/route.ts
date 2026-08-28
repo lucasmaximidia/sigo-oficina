@@ -18,7 +18,7 @@ interface OsComRelacoes {
   referencia_autorizada: string | null;
   produto_autorizada: string | null;
   numero_serie_autorizada: string | null;
-  clientes: { nome: string } | null;
+  clientes: { nome: string; telefone: string | null } | null;
   empresas_autorizadas: { nome: string } | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null; numero_serie: string | null } | null;
 }
@@ -50,7 +50,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     supabase
       .from("ordens_servico")
       .select<string, OsComRelacoes>(
-        "numero, data_entrada, numero_os_autorizada, referencia_autorizada, produto_autorizada, numero_serie_autorizada, clientes(nome), empresas_autorizadas(nome), equipamentos(tipo, marca, modelo, numero_serie)"
+        "numero, data_entrada, numero_os_autorizada, referencia_autorizada, produto_autorizada, numero_serie_autorizada, clientes(nome, telefone), empresas_autorizadas(nome), equipamentos(tipo, marca, modelo, numero_serie)"
       )
       .eq("id", id)
       .maybeSingle(),
@@ -84,6 +84,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       config,
       empresaNome: os.empresas_autorizadas.nome,
       clienteNome: os.clientes?.nome ?? "Cliente não informado",
+      clienteTelefone: os.clientes?.telefone ?? null,
       produto,
       numeroSerie,
       referencia: os.referencia_autorizada ?? "",
