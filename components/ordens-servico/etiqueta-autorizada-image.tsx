@@ -6,9 +6,9 @@ export const ETIQUETA_AUTORIZADA_ALTURA = 800;
 
 // Grid fixo: cada zona tem uma altura exata e a soma bate certinho com
 // ETIQUETA_AUTORIZADA_ALTURA, preenchendo a etiqueta de ponta a ponta sem sobra.
-const ALTURA_CABECALHO = 200;
-const ALTURA_CLIENTE = 140;
-const ALTURA_PRODUTO = 140;
+const ALTURA_CABECALHO = 188;
+const ALTURA_CLIENTE = 164;
+const ALTURA_PRODUTO = 128;
 const ALTURA_SERIE_REFERENCIA = 200;
 const ALTURA_OS_DATA = 120;
 
@@ -32,6 +32,7 @@ export function EtiquetaAutorizadaImage({
   config,
   empresaNome,
   clienteNome,
+  clienteTelefone,
   produto,
   numeroSerie,
   referencia,
@@ -41,6 +42,7 @@ export function EtiquetaAutorizadaImage({
   config: Pick<Configuracao, "etiqueta_logo_url">;
   empresaNome: string;
   clienteNome: string;
+  clienteTelefone: string | null;
   produto: string;
   numeroSerie: string;
   referencia: string;
@@ -102,9 +104,12 @@ export function EtiquetaAutorizadaImage({
         }}
       >
         <DivisorFino />
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 14 }}>
           <span style={{ fontSize: 18, color: "#333333" }}>Cliente</span>
-          <span style={{ fontSize: 32, fontWeight: 700, marginTop: 4 }}>{clienteNome}</span>
+          <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{clienteNome}</span>
+          {clienteTelefone && (
+            <span style={{ fontSize: 22, color: "#333333", marginTop: 4 }}>{clienteTelefone}</span>
+          )}
         </div>
       </div>
 
