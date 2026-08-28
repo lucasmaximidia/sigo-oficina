@@ -8,7 +8,7 @@ export type OsStatus =
 
 export type OsUrgencia = "baixa" | "media" | "alta";
 export type OsOrigem = "balcao" | "domicilio" | "frete";
-export type FormaPagamento = "dinheiro" | "pix" | "cartao";
+export type FormaPagamento = "dinheiro" | "pix" | "cartao" | "autorizada";
 export type TipoCartao = "debito" | "credito";
 export type ItemOrigem = "estoque" | "loja_parceira" | "compra_emergencial";
 export type VendaItemTipo = "peca" | "servico";
@@ -213,6 +213,11 @@ export interface Database {
           garantia_dias: number;
           parada: boolean;
           parada_motivo: string | null;
+          empresa_autorizada_id: string | null;
+          numero_os_autorizada: string | null;
+          referencia_autorizada: string | null;
+          produto_autorizada: string | null;
+          numero_serie_autorizada: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -240,6 +245,11 @@ export interface Database {
           garantia_dias?: number;
           parada?: boolean;
           parada_motivo?: string | null;
+          empresa_autorizada_id?: string | null;
+          numero_os_autorizada?: string | null;
+          referencia_autorizada?: string | null;
+          produto_autorizada?: string | null;
+          numero_serie_autorizada?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -267,8 +277,37 @@ export interface Database {
           garantia_dias?: number;
           parada?: boolean;
           parada_motivo?: string | null;
+          empresa_autorizada_id?: string | null;
+          numero_os_autorizada?: string | null;
+          referencia_autorizada?: string | null;
+          produto_autorizada?: string | null;
+          numero_serie_autorizada?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      empresas_autorizadas: {
+        Row: {
+          id: string;
+          nome: string;
+          telefone: string | null;
+          ativo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          telefone?: string | null;
+          ativo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          telefone?: string | null;
+          ativo?: boolean;
+          created_at?: string;
         };
         Relationships: [];
       };

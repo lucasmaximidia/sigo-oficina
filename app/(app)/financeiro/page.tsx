@@ -29,7 +29,8 @@ import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
 import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
 import { formatCurrency } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
-import type { ParceiroPendente, Entrada, FreteComRelacoes } from "@/types";
+import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
+import type { ParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
 
 interface OsEntradaRow {
   id: string;
@@ -64,6 +65,19 @@ interface ItemParceiroPendenteRow {
   lojas_parceiras: { nome: string } | null;
 }
 
+interface OsAutorizadaPendenteRow {
+  id: string;
+  numero: number;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+  data_finalizacao: string | null;
+  empresa_autorizada_id: string | null;
+  empresas_autorizadas: { nome: string } | null;
+  os_itens: { quantidade: number; valor_unitario: number }[];
+  os_pagamentos: { valor: number }[];
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function FinanceiroPage() {
@@ -72,8 +86,16 @@ export default async function FinanceiroPage() {
   const em7dias = new Date(hoje);
   em7dias.setDate(em7dias.getDate() + 7);
 
-  const [{ data: contas }, { data: despesas }, { data: fretes }, { data: osPagas }, { data: vendas }, { data: retiradas }, { data: itensParceiroPendentes }] =
-    await Promise.all([
+  const [
+    { data: contas },
+    { data: despesas },
+    { data: fretes },
+    { data: osPagas },
+    { data: vendas },
+    { data: retiradas },
+    { data: itensParceiroPendentes },
+    { data: osAutorizadaPendentes },
+  ] = await Promise.all([
       supabase.from("financeiro_contas").select("*").is("deletado_em", null).order("vencimento", { ascending: true }),
       supabase.from("financeiro_despesas").select("*").is("deletado_em", null).order("data", { ascending: false }),
       supabase
@@ -102,6 +124,14 @@ export default async function FinanceiroPage() {
         )
         .eq("origem", "loja_parceira")
         .is("pago_em", null),
+      supabase
+        .from("ordens_servico")
+        .select<string, OsAutorizadaPendenteRow>(
+          "id, numero, valor_mao_obra, valor_frete, desconto, data_finalizacao, empresa_autorizada_id, empresas_autorizadas(nome), os_itens(quantidade, valor_unitario), os_pagamentos(valor)"
+        )
+        .eq("status", "finalizado")
+        .is("forma_pagamento", null)
+        .not("empresa_autorizada_id", "is", null),
     ]);
 
   const osIdsPagas = (osPagas ?? []).map((os) => os.id);
@@ -226,6 +256,27 @@ export default async function FinanceiroPage() {
     }, new Map<string, ParceiroPendente>()).values()
   );
 
+  const autorizadasPendentes = Array.from(
+    (osAutorizadaPendentes ?? []).reduce((acc, os) => {
+      if (!os.empresa_autorizada_id) return acc;
+      const totalItens = os.os_itens.reduce((a, i) => a + i.quantidade * i.valor_unitario, 0);
+      const totalPago = os.os_pagamentos.reduce((a, p) => a + p.valor, 0);
+      const valor = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto - totalPago;
+      if (valor <= 0.001) return acc;
+
+      const atual = acc.get(os.empresa_autorizada_id) ?? {
+        empresaId: os.empresa_autorizada_id,
+        empresaNome: os.empresas_autorizadas?.nome ?? "Autorizada",
+        total: 0,
+        itens: [],
+      };
+      atual.total += valor;
+      atual.itens.push({ osId: os.id, osNumero: os.numero, valor, dataFinalizacao: os.data_finalizacao });
+      acc.set(os.empresa_autorizada_id as string, atual);
+      return acc;
+    }, new Map<string, AutorizadaPendente>()).values()
+  );
+
   return (
     <div>
       <PageHeader
@@ -335,6 +386,7 @@ export default async function FinanceiroPage() {
         </TabsContent>
 
         <TabsContent value="entradas">
+          <AcertoAutorizadas autorizadas={autorizadasPendentes} />
           <EntradasTab entradas={entradas} />
         </TabsContent>
 

@@ -27,6 +27,7 @@ interface OsListRow {
   data_entrada: string;
   clientes: { nome: string; telefone: string | null } | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+  empresas_autorizadas: { nome: string } | null;
 }
 
 interface OsKanbanRow {
@@ -123,7 +124,7 @@ export default async function OrdensServicoPage({
   let query = supabase
     .from("ordens_servico")
     .select<string, OsListRow>(
-      "id, numero, status, urgencia, data_entrada, clientes(nome, telefone), equipamentos(tipo, marca, modelo)",
+      "id, numero, status, urgencia, data_entrada, clientes(nome, telefone), equipamentos(tipo, marca, modelo), empresas_autorizadas(nome)",
       { count: "exact" }
     )
     .order("data_entrada", { ascending: false })
@@ -133,11 +134,16 @@ export default async function OrdensServicoPage({
 
   if (busca) {
     const numeroBusca = Number(busca.replace(/\D/g, ""));
-    const { data: clientesEncontrados } = await supabase.from("clientes").select("id").ilike("nome", `%${busca}%`);
+    const [{ data: clientesEncontrados }, { data: empresasEncontradas }] = await Promise.all([
+      supabase.from("clientes").select("id").ilike("nome", `%${busca}%`),
+      supabase.from("empresas_autorizadas").select("id").ilike("nome", `%${busca}%`),
+    ]);
     const clienteIds = (clientesEncontrados ?? []).map((c) => c.id);
+    const empresaIds = (empresasEncontradas ?? []).map((e) => e.id);
 
     const condicoes: string[] = [];
     if (clienteIds.length > 0) condicoes.push(`cliente_id.in.(${clienteIds.join(",")})`);
+    if (empresaIds.length > 0) condicoes.push(`empresa_autorizada_id.in.(${empresaIds.join(",")})`);
     if (Number.isFinite(numeroBusca) && numeroBusca > 0) condicoes.push(`numero.eq.${numeroBusca}`);
 
     query = condicoes.length > 0 ? query.or(condicoes.join(",")) : query.eq("id", "00000000-0000-0000-0000-000000000000");
@@ -222,7 +228,10 @@ export default async function OrdensServicoPage({
                       </p>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        {os.empresas_autorizadas && <Badge variant="info">{os.empresas_autorizadas.nome}</Badge>}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{formatDate(os.data_entrada)}</TableCell>
                     <TableCell>
@@ -254,7 +263,10 @@ export default async function OrdensServicoPage({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold text-primary">#OS-{String(os.numero).padStart(4, "0")}</p>
-                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                    <div className="flex flex-wrap items-center justify-end gap-1.5">
+                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      {os.empresas_autorizadas && <Badge variant="info">{os.empresas_autorizadas.nome}</Badge>}
+                    </div>
                   </div>
                   <p className="mt-1 truncate text-sm font-medium text-foreground">{cliente?.nome ?? "—"}</p>
                   <p className="truncate text-xs text-muted-foreground">
