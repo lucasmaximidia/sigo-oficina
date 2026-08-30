@@ -24,6 +24,7 @@ export type GarantiaStatus = "ativa" | "critica" | "expirada" | "sem_garantia";
 export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" | "expirado";
 export type OrcamentoItemTipo = "peca" | "mao_obra";
 export type FreteStatus = "pendente" | "pago";
+export type FreteTipo = "buscar" | "entrega";
 export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 
 // Observação: os campos Row/Insert/Update abaixo são escritos como literais de
@@ -912,6 +913,7 @@ export interface Database {
           prestador_id: string | null;
           valor_custo: number;
           status: FreteStatus;
+          tipo: FreteTipo;
           data_pagamento: string | null;
           created_at: string;
           updated_at: string;
@@ -922,6 +924,7 @@ export interface Database {
           prestador_id?: string | null;
           valor_custo?: number;
           status?: FreteStatus;
+          tipo?: FreteTipo;
           data_pagamento?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -932,6 +935,7 @@ export interface Database {
           prestador_id?: string | null;
           valor_custo?: number;
           status?: FreteStatus;
+          tipo?: FreteTipo;
           data_pagamento?: string | null;
           created_at?: string;
           updated_at?: string;

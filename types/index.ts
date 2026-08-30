@@ -1,4 +1,4 @@
-import type { Database } from "./database";
+import type { Database, FreteTipo } from "./database";
 
 export type Cliente = Database["public"]["Tables"]["clientes"]["Row"];
 export type Equipamento = Database["public"]["Tables"]["equipamentos"]["Row"];
@@ -77,6 +77,7 @@ export interface FreteComRelacoes {
   os_id: string;
   valor_custo: number;
   status: "pendente" | "pago";
+  tipo: FreteTipo;
   data_pagamento: string | null;
   created_at: string;
   ordens_servico: { numero: number; valor_frete: number } | null;

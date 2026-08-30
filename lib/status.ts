@@ -6,6 +6,7 @@ import type {
   GarantiaStatus,
   OrcamentoStatus,
   FreteStatus,
+  FreteTipo,
   RetiradaTipo,
 } from "@/types";
 
@@ -64,6 +65,11 @@ export const orcamentoStatusMap: Record<OrcamentoStatus, { label: string; varian
 export const freteStatusMap: Record<FreteStatus, { label: string; variant: "warning" | "success" }> = {
   pendente: { label: "Pendente", variant: "warning" },
   pago: { label: "Pago", variant: "success" },
+};
+
+export const freteTipoMap: Record<FreteTipo, { label: string; variant: "info" | "success" }> = {
+  buscar: { label: "Buscar", variant: "info" },
+  entrega: { label: "Entrega", variant: "success" },
 };
 
 export const retiradaTipoMap: Record<RetiradaTipo, { label: string; variant: "secondary" | "info" | "warning" }> = {

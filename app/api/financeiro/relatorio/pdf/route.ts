@@ -81,7 +81,10 @@ export async function GET(request: Request) {
     lista.push(item);
     itensPorOs.set(item.os_id, lista);
   }
-  const fretePagoPorOs = new Map((fretes ?? []).map((f) => [f.os_id, f.valor_custo]));
+  const fretePagoPorOs = new Map<string, number>();
+  for (const f of fretes ?? []) {
+    fretePagoPorOs.set(f.os_id, (fretePagoPorOs.get(f.os_id) ?? 0) + f.valor_custo);
+  }
 
   const linhas: RelatorioLinha[] = ordens.map((os) => {
     const itensDaOs = itensPorOs.get(os.id) ?? [];

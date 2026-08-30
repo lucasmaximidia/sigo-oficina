@@ -15,6 +15,7 @@ import type {
   OrcamentoStatus,
   OrcamentoItemTipo,
   FreteStatus,
+  FreteTipo,
   RetiradaTipo,
 } from "@/types";
 
@@ -436,16 +437,15 @@ export async function createPrestadorFrete(formData: FormData) {
   return data.id as string;
 }
 
-export async function upsertFrete(osId: string, formData: FormData) {
+export async function addFrete(osId: string, formData: FormData) {
   const prestadorId = str(formData, "prestador_id");
-  const { error } = await supabase.from("fretes").upsert(
-    {
-      os_id: osId,
-      prestador_id: prestadorId,
-      valor_custo: num(formData, "valor_custo"),
-    },
-    { onConflict: "os_id" }
-  );
+  const tipo = (str(formData, "tipo") as FreteTipo | null) ?? "entrega";
+  const { error } = await supabase.from("fretes").insert({
+    os_id: osId,
+    prestador_id: prestadorId,
+    valor_custo: num(formData, "valor_custo"),
+    tipo,
+  });
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
   revalidatePath("/financeiro");
@@ -456,6 +456,13 @@ export async function marcarFretePago(freteId: string, osId: string) {
     .from("fretes")
     .update({ status: "pago" as FreteStatus, data_pagamento: new Date().toISOString().slice(0, 10) })
     .eq("id", freteId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/financeiro");
+}
+
+export async function deleteFrete(freteId: string, osId: string) {
+  const { error } = await supabase.from("fretes").delete().eq("id", freteId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
   revalidatePath("/financeiro");
