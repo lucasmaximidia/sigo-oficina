@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Calculator, Wallet2, Building2 } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Wallet2, Building2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
@@ -12,6 +12,7 @@ import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
 import { OsRetiradaCard } from "@/components/os/os-retirada-card";
 import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
+import { OsInfoAccordion } from "@/components/os/os-info-accordion";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -100,6 +101,27 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <Zap className="size-4.5 text-primary" />
+                Ações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OsAcoes
+                osId={os.id}
+                status={os.status as OsStatus}
+                numero={os.numero}
+                clienteNome={cliente?.nome ?? "cliente"}
+                clienteTelefone={cliente?.telefone ?? null}
+                total={total}
+                saldoDevedor={saldoDevedor}
+                temEmpresaAutorizada={Boolean(os.empresa_autorizada_id)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <User className="size-4.5 text-primary" />
                 Dados do Cliente
               </CardTitle>
@@ -159,82 +181,52 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
         </div>
 
         <div className="flex flex-col gap-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="size-4.5 text-primary" />
-                Ações
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OsAcoes
-                osId={os.id}
-                status={os.status as OsStatus}
-                numero={os.numero}
-                clienteNome={cliente?.nome ?? "cliente"}
-                clienteTelefone={cliente?.telefone ?? null}
-                total={total}
-                saldoDevedor={saldoDevedor}
-                temEmpresaAutorizada={Boolean(os.empresa_autorizada_id)}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="size-4.5 text-primary" />
-                Empresa Autorizada
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmpresaAutorizadaCard
-                osId={os.id}
-                empresasIniciais={empresasAutorizadas ?? []}
-                empresaAutorizadaId={os.empresa_autorizada_id}
-                numeroOsAutorizada={os.numero_os_autorizada}
-                referenciaAutorizada={os.referencia_autorizada}
-                produtoAutorizada={os.produto_autorizada}
-                numeroSerieAutorizada={os.numero_serie_autorizada}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet2 className="size-4.5 text-primary" />
-                Pagamentos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OsPagamentos osId={os.id} total={total} pagamentos={pagamentos ?? []} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="size-4.5 text-primary" />
-                Resumo de Valores
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OsResumoValores os={os} totalPecas={totalPecas} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="size-4.5 text-primary" />
-                Custo do Frete
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
-            </CardContent>
-          </Card>
+          <OsInfoAccordion
+            defaultOpen="financeiro"
+            sections={[
+              {
+                id: "empresa-autorizada",
+                icon: <Building2 className="size-4.5 text-primary" />,
+                title: "Empresa Autorizada",
+                content: (
+                  <EmpresaAutorizadaCard
+                    osId={os.id}
+                    empresasIniciais={empresasAutorizadas ?? []}
+                    empresaAutorizadaId={os.empresa_autorizada_id}
+                    numeroOsAutorizada={os.numero_os_autorizada}
+                    referenciaAutorizada={os.referencia_autorizada}
+                    produtoAutorizada={os.produto_autorizada}
+                    numeroSerieAutorizada={os.numero_serie_autorizada}
+                  />
+                ),
+              },
+              {
+                id: "financeiro",
+                icon: <Wallet2 className="size-4.5 text-primary" />,
+                title: "Financeiro",
+                content: (
+                  <div className="flex flex-col gap-5">
+                    <OsResumoValores os={os} totalPecas={totalPecas} />
+                    <div className="flex flex-col gap-3 border-t border-border pt-4">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Wallet2 className="size-4 text-primary" />
+                        Pagamentos
+                      </p>
+                      <OsPagamentos osId={os.id} total={total} pagamentos={pagamentos ?? []} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "frete",
+                icon: <Truck className="size-4.5 text-primary" />,
+                title: "Custo do Frete",
+                content: (
+                  <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
+                ),
+              },
+            ]}
+          />
 
           {os.status === "finalizado" && (
             <OsRetiradaCard

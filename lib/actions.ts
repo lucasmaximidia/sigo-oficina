@@ -365,6 +365,7 @@ export async function addOsItem(osId: string, formData: FormData) {
 
   const quantidade = Number(str(formData, "quantidade") ?? "1");
   const valorUnitario = num(formData, "valor_unitario");
+  const custoUnitario = origem === "compra_emergencial" ? num(formData, "custo_unitario") : null;
 
   const { data: item, error } = await supabase
     .from("os_itens")
@@ -376,6 +377,7 @@ export async function addOsItem(osId: string, formData: FormData) {
       origem,
       quantidade,
       valor_unitario: valorUnitario,
+      custo_unitario: custoUnitario,
     })
     .select("id")
     .single();
@@ -392,14 +394,17 @@ export async function addOsItem(osId: string, formData: FormData) {
   }
 
   // Compra emergencial: o dinheiro já sai do caixa na hora da compra, antes
-  // do cliente pagar a OS — então gera a despesa automaticamente aqui.
+  // do cliente pagar a OS — então gera a despesa automaticamente aqui, pelo
+  // custo real. O valor repassado ao cliente (valor_unitario) segue compondo
+  // o total da OS normalmente; a margem entre os dois aparece sozinha no
+  // Financeiro quando o cliente pagar, sem lançamento duplicado.
   if (origem === "compra_emergencial") {
     const { data: os } = await supabase.from("ordens_servico").select("numero").eq("id", osId).single();
     const numeroOs = os ? `OS #OS-${String(os.numero).padStart(4, "0")}` : "OS";
     const { error: despesaError } = await supabase.from("financeiro_despesas").insert({
       descricao: `COMPRA EMERGENCIAL - ${descricao} (${numeroOs})`,
       categoria: "Compra Emergencial",
-      valor: quantidade * valorUnitario,
+      valor: quantidade * (custoUnitario ?? 0),
       os_item_id: item.id,
     });
     if (despesaError) throw new Error(`Item adicionado, mas a despesa não foi lançada: ${despesaError.message}`);
