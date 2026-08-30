@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { RELATORIO_COLUNAS, RELATORIO_OPCAO_RESUMO } from "@/lib/relatorio-financeiro";
+import { RELATORIO_COLUNAS, RELATORIO_OPCAO_RESUMO, RELATORIO_COLUNAS_PADRAO_POR_LOJA } from "@/lib/relatorio-financeiro";
 import type { LojaParceira } from "@/types";
 
 function primeiroDiaDoMes() {
@@ -36,6 +36,13 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
 
   function toggleTodas(marcar: boolean) {
     setColunas(marcar ? new Set(TODAS_AS_CHAVES) : new Set());
+  }
+
+  function handleLojaChange(value: string) {
+    setLojaParceiraId(value);
+    const loja = lojas.find((l) => l.id === value);
+    const preset = loja ? RELATORIO_COLUNAS_PADRAO_POR_LOJA[loja.nome] : undefined;
+    if (preset) setColunas(new Set(preset));
   }
 
   function handleGerar() {
@@ -86,7 +93,7 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
 
         <div className="sm:max-w-xs">
           <Label className="mb-1.5 block">Loja parceira</Label>
-          <Select value={lojaParceiraId} onValueChange={setLojaParceiraId}>
+          <Select value={lojaParceiraId} onValueChange={handleLojaChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

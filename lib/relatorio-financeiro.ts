@@ -27,6 +27,12 @@ export const RELATORIO_COLUNAS: RelatorioColuna[] = [
 // bloco de resumo (total recebido / faturamento) aparece no fim do PDF.
 export const RELATORIO_OPCAO_RESUMO = { key: "resumo_total", label: "Resumo Total (Recebido / Faturamento)" } as const;
 
+// Colunas marcadas por padrão ao escolher uma loja parceira específica no
+// filtro do relatório (fechamento mensal recorrente com esse parceiro).
+export const RELATORIO_COLUNAS_PADRAO_POR_LOJA: Record<string, string[]> = {
+  "CASA DOS REPAROS": ["cliente", "data_entrada", "forma_pagamento", "produto", "valor_pecas_loja", "pecas_loja_desc"],
+};
+
 export const formaPagamentoLabel: Record<string, string> = {
   dinheiro: "Dinheiro",
   pix: "PIX",
