@@ -96,29 +96,29 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
         <OsParadaToggle osId={os.id} parada={os.parada} motivo={os.parada_motivo} />
       </div>
 
+      <Card className="mb-5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="size-4.5 text-primary" />
+            Ações
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OsAcoes
+            osId={os.id}
+            status={os.status as OsStatus}
+            numero={os.numero}
+            clienteNome={cliente?.nome ?? "cliente"}
+            clienteTelefone={cliente?.telefone ?? null}
+            total={total}
+            saldoDevedor={saldoDevedor}
+            temEmpresaAutorizada={Boolean(os.empresa_autorizada_id)}
+          />
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="flex flex-col gap-5 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="size-4.5 text-primary" />
-                Ações
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OsAcoes
-                osId={os.id}
-                status={os.status as OsStatus}
-                numero={os.numero}
-                clienteNome={cliente?.nome ?? "cliente"}
-                clienteTelefone={cliente?.telefone ?? null}
-                total={total}
-                saldoDevedor={saldoDevedor}
-                temEmpresaAutorizada={Boolean(os.empresa_autorizada_id)}
-              />
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
