@@ -17,13 +17,13 @@ export default async function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#2542b8",
+          background: "#ffffff",
         }}
       >
         {config?.logo_url ? (
           <img src={config.logo_url} width={130} height={130} style={{ objectFit: "contain" }} alt="" />
         ) : (
-          <span style={{ color: "#ffffff", fontSize: 96, fontWeight: 700 }}>S</span>
+          <span style={{ color: "#2542b8", fontSize: 96, fontWeight: 700 }}>S</span>
         )}
       </div>
     ),

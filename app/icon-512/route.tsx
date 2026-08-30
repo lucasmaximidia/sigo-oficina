@@ -16,7 +16,7 @@ export async function GET() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#2542b8",
+          background: "#ffffff",
           borderRadius: 106,
         }}
       >
@@ -24,7 +24,7 @@ export async function GET() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={config.logo_url} width={370} height={370} style={{ objectFit: "contain" }} alt="" />
         ) : (
-          <span style={{ color: "#ffffff", fontSize: 290, fontWeight: 700 }}>S</span>
+          <span style={{ color: "#2542b8", fontSize: 290, fontWeight: 700 }}>S</span>
         )}
       </div>
     ),
