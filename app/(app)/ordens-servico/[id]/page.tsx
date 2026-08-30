@@ -31,7 +31,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     { data: os },
     { data: itens },
     { data: pecas },
-    { data: frete },
+    { data: fretes },
     { data: prestadores },
     { data: lojas },
     { data: pagamentos },
@@ -46,7 +46,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
       .maybeSingle(),
     supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
-    supabase.from("fretes").select("*").eq("os_id", id).maybeSingle(),
+    supabase.from("fretes").select("*").eq("os_id", id).order("created_at", { ascending: true }),
     supabase.from("prestadores_frete").select("*").order("nome", { ascending: true }),
     supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
     supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
@@ -222,7 +222,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                 icon: <Truck className="size-4.5 text-primary" />,
                 title: "Custo do Frete",
                 content: (
-                  <FreteCard osId={os.id} frete={frete ?? null} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
+                  <FreteCard osId={os.id} fretes={fretes ?? []} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
                 ),
               },
             ]}

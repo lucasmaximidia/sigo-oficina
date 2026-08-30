@@ -101,7 +101,7 @@ export default async function FinanceiroPage() {
       supabase
         .from("fretes")
         .select<string, FreteComRelacoes>(
-          "id, os_id, valor_custo, status, data_pagamento, created_at, ordens_servico(numero, valor_frete), prestadores_frete(nome)"
+          "id, os_id, valor_custo, status, tipo, data_pagamento, created_at, ordens_servico(numero, valor_frete), prestadores_frete(nome)"
         )
         .order("created_at", { ascending: false }),
       supabase

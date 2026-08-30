@@ -9,7 +9,7 @@ import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { cn, formatCurrency } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
-import { freteStatusMap } from "@/lib/status";
+import { freteStatusMap, freteTipoMap } from "@/lib/status";
 import type { FreteComRelacoes } from "@/types";
 
 export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
@@ -48,6 +48,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>OS</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Prestador</TableHead>
                 <TableHead>Cobrado do cliente</TableHead>
                 <TableHead>Pago ao prestador</TableHead>
@@ -59,6 +60,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
             <TableBody>
               {fretesFiltrados.map((frete) => {
                 const statusInfo = freteStatusMap[frete.status];
+                const tipoInfo = freteTipoMap[frete.tipo];
                 const cobrado = frete.ordens_servico?.valor_frete ?? 0;
                 const margem = cobrado - frete.valor_custo;
                 return (
@@ -69,6 +71,9 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
                           #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
                         </Link>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
                     </TableCell>
                     <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
@@ -87,7 +92,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
               })}
               {fretesFiltrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                     {fretes.length === 0
                       ? 'Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem "Frete" numa OS.'
                       : "Nenhum frete no período selecionado."}
@@ -101,6 +106,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
         <div className="flex flex-col divide-y divide-border md:hidden">
           {fretesFiltrados.map((frete) => {
             const statusInfo = freteStatusMap[frete.status];
+            const tipoInfo = freteTipoMap[frete.tipo];
             const cobrado = frete.ordens_servico?.valor_frete ?? 0;
             const margem = cobrado - frete.valor_custo;
             return (
@@ -116,6 +122,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
                     Cobrado {formatCurrency(cobrado)} · Pago {formatCurrency(frete.valor_custo)}
                   </p>
                   <div className="mt-1.5 flex items-center gap-2">
+                    <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
                     <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                     <span className={cn("text-sm font-semibold", margem >= 0 ? "text-success" : "text-destructive")}>
                       Margem {formatCurrency(margem)}
