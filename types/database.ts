@@ -219,6 +219,7 @@ export interface Database {
           referencia_autorizada: string | null;
           produto_autorizada: string | null;
           numero_serie_autorizada: string | null;
+          observacoes_internas: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -251,6 +252,7 @@ export interface Database {
           referencia_autorizada?: string | null;
           produto_autorizada?: string | null;
           numero_serie_autorizada?: string | null;
+          observacoes_internas?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -283,6 +285,7 @@ export interface Database {
           referencia_autorizada?: string | null;
           produto_autorizada?: string | null;
           numero_serie_autorizada?: string | null;
+          observacoes_internas?: string | null;
           created_at?: string;
           updated_at?: string;
         };

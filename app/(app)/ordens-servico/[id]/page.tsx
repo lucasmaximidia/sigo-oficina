@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Wallet2, Building2 } from "lucide-react";
+import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Wallet2, Building2, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
@@ -13,6 +13,7 @@ import { FreteCard } from "@/components/os/frete-card";
 import { OsRetiradaCard } from "@/components/os/os-retirada-card";
 import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
 import { OsInfoAccordion } from "@/components/os/os-info-accordion";
+import { OsObservacoes } from "@/components/os/os-observacoes";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -224,6 +225,12 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                 content: (
                   <FreteCard osId={os.id} fretes={fretes ?? []} prestadoresIniciais={prestadores ?? []} valorCobrado={os.valor_frete} />
                 ),
+              },
+              {
+                id: "observacoes",
+                icon: <EyeOff className="size-4.5 text-primary" />,
+                title: "Observações",
+                content: <OsObservacoes osId={os.id} observacoes={os.observacoes_internas} />,
               },
             ]}
           />
