@@ -2,7 +2,7 @@ import { Document, Page, View, Text, Image, Svg, Circle, Path, StyleSheet } from
 import type { Configuracao } from "@/types";
 
 const cores = {
-  primary: "#045d72",
+  primary: "#2542b8",
   text: "#191c1e",
   muted: "#5b6b70",
   border: "#e2e6ea",

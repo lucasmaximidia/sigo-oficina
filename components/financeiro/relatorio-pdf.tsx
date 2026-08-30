@@ -3,7 +3,7 @@ import { RELATORIO_COLUNAS, type RelatorioColuna } from "@/lib/relatorio-finance
 import type { Configuracao } from "@/types";
 
 const cores = {
-  primary: "#045d72",
+  primary: "#2542b8",
   text: "#191c1e",
   muted: "#5b6b70",
   border: "#dbe0e3",
