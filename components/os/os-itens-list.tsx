@@ -223,7 +223,7 @@ export function OsItensList({
                 </div>
                 <div>
                   <Label htmlFor="valor_unitario" className="mb-1.5 block">
-                    Valor unitário (R$)
+                    {origem === "compra_emergencial" ? "Valor repassado ao cliente (R$)" : "Valor unitário (R$)"}
                   </Label>
                   <NumericInput
                     key={`valor-${pecaId}`}
@@ -233,6 +233,19 @@ export function OsItensList({
                   />
                 </div>
               </div>
+
+              {origem === "compra_emergencial" && (
+                <div>
+                  <Label htmlFor="custo_unitario" className="mb-1.5 block">
+                    Custo unitário — o que você pagou (R$)
+                  </Label>
+                  <NumericInput id="custo_unitario" name="custo_unitario" defaultValue={0} />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    O custo vira despesa na hora. O valor repassado ao cliente compõe o total da OS normalmente — a
+                    diferença entre os dois é sua margem, e aparece no Financeiro quando a OS for paga.
+                  </p>
+                </div>
+              )}
 
               <DialogFooter>
                 <Button type="submit" disabled={isPending || (origem === "loja_parceira" && !lojaParceiraId)}>
@@ -266,6 +279,13 @@ export function OsItensList({
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {item.quantidade}x {formatCurrency(item.valor_unitario)}
+                  {item.origem === "compra_emergencial" && item.custo_unitario !== null && (
+                    <>
+                      {" "}
+                      · custo {formatCurrency(item.custo_unitario)} · margem{" "}
+                      {formatCurrency((item.valor_unitario - item.custo_unitario) * item.quantidade)}
+                    </>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-3">

@@ -321,6 +321,7 @@ export interface Database {
           origem: ItemOrigem;
           quantidade: number;
           valor_unitario: number;
+          custo_unitario: number | null;
           pago_em: string | null;
           created_at: string;
         };
@@ -333,6 +334,7 @@ export interface Database {
           origem?: ItemOrigem;
           quantidade?: number;
           valor_unitario?: number;
+          custo_unitario?: number | null;
           pago_em?: string | null;
           created_at?: string;
         };
@@ -345,6 +347,7 @@ export interface Database {
           origem?: ItemOrigem;
           quantidade?: number;
           valor_unitario?: number;
+          custo_unitario?: number | null;
           pago_em?: string | null;
           created_at?: string;
         };
