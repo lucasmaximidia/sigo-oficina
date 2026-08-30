@@ -177,6 +177,15 @@ export async function updateOrdemServicoStatus(id: string, status: OsStatus) {
   revalidatePath("/garantias");
 }
 
+export async function updateObservacoesOs(id: string, observacoes: string) {
+  const { error } = await supabase
+    .from("ordens_servico")
+    .update({ observacoes_internas: observacoes.trim() || null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/ordens-servico/${id}`);
+}
+
 export async function createEmpresaAutorizada(formData: FormData) {
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
