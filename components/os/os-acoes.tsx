@@ -101,50 +101,52 @@ export function OsAcoes({
     });
   }
 
+  const jaEncerrada = status === "finalizado" || status === "cancelado";
+
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-      <div className="flex flex-wrap gap-2.5">
-        <Button asChild variant="outline">
-          <a href={`/api/ordens-servico/${osId}/pdf`} target="_blank" rel="noopener noreferrer">
-            <Printer className="size-4" />
-            Imprimir OS
-          </a>
-        </Button>
-        <Button type="button" variant="secondary" onClick={handleWhatsapp}>
-          <MessageCircle className="size-4" />
-          Compartilhar no WhatsApp
-        </Button>
+    <div className="flex flex-wrap gap-2.5">
+      <Button asChild variant="outline">
+        <a href={`/api/ordens-servico/${osId}/pdf`} target="_blank" rel="noopener noreferrer">
+          <Printer className="size-4" />
+          Imprimir OS
+        </a>
+      </Button>
+      <Button type="button" variant="secondary" onClick={handleWhatsapp}>
+        <MessageCircle className="size-4" />
+        Compartilhar no WhatsApp
+      </Button>
 
+      <Button asChild variant="outline">
+        <a href={`/api/ordens-servico/${osId}/etiqueta`} target="_blank" rel="noopener noreferrer">
+          <Tag className="size-4" />
+          Baixar Etiqueta (PNG)
+        </a>
+      </Button>
+
+      {temEmpresaAutorizada && (
         <Button asChild variant="outline">
-          <a href={`/api/ordens-servico/${osId}/etiqueta`} target="_blank" rel="noopener noreferrer">
+          <a href={`/api/ordens-servico/${osId}/etiqueta-autorizada`} target="_blank" rel="noopener noreferrer">
             <Tag className="size-4" />
-            Baixar Etiqueta (PNG)
+            Baixar Etiqueta Autorizada (PNG)
           </a>
         </Button>
+      )}
 
-        {temEmpresaAutorizada && (
-          <Button asChild variant="outline">
-            <a href={`/api/ordens-servico/${osId}/etiqueta-autorizada`} target="_blank" rel="noopener noreferrer">
-              <Tag className="size-4" />
-              Baixar Etiqueta Autorizada (PNG)
-            </a>
-          </Button>
-        )}
+      {status === "finalizado" && (
+        <Button asChild variant="outline">
+          <a href={`/api/garantias/${osId}/certificado`} target="_blank" rel="noopener noreferrer">
+            <ShieldCheck className="size-4" />
+            Baixar Certificado de Garantia
+          </a>
+        </Button>
+      )}
 
-        {status === "finalizado" && (
-          <Button asChild variant="outline">
-            <a href={`/api/garantias/${osId}/certificado`} target="_blank" rel="noopener noreferrer">
-              <ShieldCheck className="size-4" />
-              Baixar Certificado de Garantia
-            </a>
-          </Button>
-        )}
-
+      {!jaEncerrada && (
         <Dialog open={confirmarFinalizar} onOpenChange={setConfirmarFinalizar}>
           <DialogTrigger asChild>
-            <Button type="button" disabled={status === "finalizado" || status === "cancelado"}>
+            <Button type="button">
               <CheckCircle2 className="size-4" />
-              {status === "finalizado" ? "Ordem finalizada" : "Finalizar Ordem"}
+              Finalizar Ordem
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -174,64 +176,62 @@ export function OsAcoes({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
 
-        {(status === "finalizado" || status === "cancelado") && (
-          <Button type="button" variant="outline" onClick={handleReabrir} disabled={isReabrindo}>
-            <RotateCcw className="size-4" />
-            {isReabrindo ? "Reabrindo..." : "Reabrir OS"}
-          </Button>
-        )}
-      </div>
+      {jaEncerrada && (
+        <Button type="button" variant="outline" onClick={handleReabrir} disabled={isReabrindo}>
+          <RotateCcw className="size-4" />
+          {isReabrindo ? "Reabrindo..." : "Reabrir OS"}
+        </Button>
+      )}
 
-      <div className="flex flex-wrap gap-2.5">
-        {status !== "cancelado" && (
-          <Dialog open={confirmarCancelar} onOpenChange={setConfirmarCancelar}>
-            <DialogTrigger asChild>
-              <Button type="button" variant="outline">
-                <Ban className="size-4" />
-                Cancelar OS
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Cancelar ordem de serviço?</DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-muted-foreground">
-                A OS #OS-{String(numero).padStart(4, "0")} fica marcada como cancelada, mas continua no histórico —
-                nada é apagado. Você pode reabri-la depois se precisar.
-              </p>
-              <DialogFooter>
-                <Button type="button" variant="destructive" onClick={handleCancelar} disabled={isCancelando}>
-                  {isCancelando ? "Cancelando..." : "Sim, cancelar OS"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-
-        <Dialog open={confirmarExcluir} onOpenChange={setConfirmarExcluir}>
+      {status !== "cancelado" && (
+        <Dialog open={confirmarCancelar} onOpenChange={setConfirmarCancelar}>
           <DialogTrigger asChild>
-            <Button type="button" variant="destructive">
-              <Trash2 className="size-4" />
-              Excluir OS
+            <Button type="button" variant="outline">
+              <Ban className="size-4" />
+              Cancelar OS
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Excluir ordem de serviço?</DialogTitle>
+              <DialogTitle>Cancelar ordem de serviço?</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              Essa ação não pode ser desfeita. A OS #OS-{String(numero).padStart(4, "0")}, seus itens e o frete
-              vinculado (se houver) serão apagados, e ela some do Financeiro.
+              A OS #OS-{String(numero).padStart(4, "0")} fica marcada como cancelada, mas continua no histórico —
+              nada é apagado. Você pode reabri-la depois se precisar.
             </p>
             <DialogFooter>
-              <Button type="button" variant="destructive" onClick={handleExcluir} disabled={isDeleting}>
-                {isDeleting ? "Excluindo..." : "Sim, excluir definitivamente"}
+              <Button type="button" variant="destructive" onClick={handleCancelar} disabled={isCancelando}>
+                {isCancelando ? "Cancelando..." : "Sim, cancelar OS"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      )}
+
+      <Dialog open={confirmarExcluir} onOpenChange={setConfirmarExcluir}>
+        <DialogTrigger asChild>
+          <Button type="button" variant="destructive">
+            <Trash2 className="size-4" />
+            Excluir OS
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir ordem de serviço?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Essa ação não pode ser desfeita. A OS #OS-{String(numero).padStart(4, "0")}, seus itens e o frete
+            vinculado (se houver) serão apagados, e ela some do Financeiro.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="destructive" onClick={handleExcluir} disabled={isDeleting}>
+              {isDeleting ? "Excluindo..." : "Sim, excluir definitivamente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
