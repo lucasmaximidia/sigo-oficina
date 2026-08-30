@@ -25,6 +25,12 @@ const DOT_CLASS: Record<OsUrgencia, string> = {
   baixa: "bg-muted-foreground/40",
 };
 
+const URGENCIA_WASH: Record<OsUrgencia, string> = {
+  alta: "bg-destructive/5",
+  media: "bg-warning/5",
+  baixa: "bg-card",
+};
+
 const COLUNA_DOT: Record<OsStatus, string> = {
   aguardando_orcamento: "bg-muted-foreground/60",
   aguardando_pecas: "bg-warning",
@@ -88,33 +94,37 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                 emDrag && "bg-accent ring-2 ring-primary/40"
               )}
             >
-              {itens.map((os) => (
-                <Link
-                  key={os.id}
-                  href={`/ordens-servico/${os.id}`}
-                  draggable
-                  onDragStart={(e) => {
-                    setDraggingId(os.id);
-                    e.dataTransfer.effectAllowed = "move";
-                  }}
-                  onDragEnd={() => setDraggingId(null)}
-                  className={cn(
-                    "flex cursor-grab flex-col gap-1.5 rounded-xl border border-border bg-card p-3 shadow-sm transition-[transform,box-shadow,opacity] duration-150 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing",
-                    draggingId === os.id && "opacity-40"
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] font-bold text-foreground">#OS-{String(os.numero).padStart(4, "0")}</span>
-                    <span className={cn("size-1.75 shrink-0 rounded-full", DOT_CLASS[os.urgencia])} />
-                  </div>
-                  <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
-                  <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
-                  <div className="mt-0.5 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">{os.dataLabel}</span>
-                    <span className="text-[13px] font-bold text-primary">{formatCurrency(os.total)}</span>
-                  </div>
-                </Link>
-              ))}
+              {itens.map((os) => {
+                const encerrada = os.status === "finalizado" || os.status === "cancelado";
+                return (
+                  <Link
+                    key={os.id}
+                    href={`/ordens-servico/${os.id}`}
+                    draggable
+                    onDragStart={(e) => {
+                      setDraggingId(os.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => setDraggingId(null)}
+                    className={cn(
+                      "flex cursor-grab flex-col gap-1.5 rounded-xl border border-border p-3 shadow-sm transition-[transform,box-shadow,opacity] duration-150 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing",
+                      encerrada ? "bg-card" : URGENCIA_WASH[os.urgencia],
+                      draggingId === os.id && "opacity-40"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[13px] font-bold text-foreground">#OS-{String(os.numero).padStart(4, "0")}</span>
+                      <span className={cn("size-1.75 shrink-0 rounded-full", DOT_CLASS[os.urgencia])} />
+                    </div>
+                    <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
+                    <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
+                    <div className="mt-0.5 flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">{os.dataLabel}</span>
+                      <span className="text-[13px] font-bold text-primary">{formatCurrency(os.total)}</span>
+                    </div>
+                  </Link>
+                );
+              })}
               {itens.length === 0 && (
                 <p className="px-1 py-4 text-center text-xs text-muted-foreground">Nenhuma OS aqui</p>
               )}
