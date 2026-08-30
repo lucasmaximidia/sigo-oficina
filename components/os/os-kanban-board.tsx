@@ -66,13 +66,13 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2">
+    <div className="flex h-full gap-3 overflow-x-auto pb-2">
       {osStatusSteps.map((step) => {
         const itens = ordens.filter((o) => o.status === step.value);
         const emDrag = dragOverStatus === step.value;
         return (
-          <div key={step.value} className="min-w-[190px] flex-1 lg:min-w-[210px]">
-            <div className="mb-2.5 flex items-center gap-2 px-0.5">
+          <div key={step.value} className="flex h-full min-w-[190px] flex-1 flex-col lg:min-w-[210px]">
+            <div className="mb-2.5 flex shrink-0 items-center gap-2 px-0.5">
               <span className={cn("size-2 rounded-full", COLUNA_DOT[step.value])} />
               <p className="text-xs font-bold text-foreground">{step.label}</p>
               <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-secondary-foreground">
@@ -90,7 +90,7 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                 handleDrop(step.value);
               }}
               className={cn(
-                "flex max-h-[70vh] min-h-[200px] flex-col gap-2.5 overflow-y-auto rounded-2xl bg-secondary/70 p-2.5 transition-colors duration-150",
+                "flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-2xl bg-secondary/70 p-2.5 transition-colors duration-150",
                 emDrag && "bg-accent ring-2 ring-primary/40"
               )}
             >

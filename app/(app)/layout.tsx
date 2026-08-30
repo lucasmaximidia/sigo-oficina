@@ -25,16 +25,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .map((peca) => ({ id: peca.id, nome: peca.nome, quantidade: peca.quantidade }));
 
   return (
-    <div className="flex min-h-dvh bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
       <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopbar
           logoUrl={config?.logo_url ?? null}
           notificacoesContas={notificacoesContas}
           notificacoesPecas={notificacoesPecas}
         />
-        <main className="flex-1 px-4 py-5 pb-28 md:px-6 md:py-6 lg:px-8 lg:pb-6">
-          <div className="mx-auto w-full max-w-7xl">
+        <main className="flex-1 overflow-y-auto px-4 py-5 pb-28 md:px-6 md:py-6 lg:px-8 lg:pb-6">
+          <div className="mx-auto h-full w-full max-w-7xl">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
