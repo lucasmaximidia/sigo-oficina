@@ -112,7 +112,7 @@ export default async function OrdensServicoPage({
     });
 
     return (
-      <div>
+      <div className="flex h-full flex-col">
         <PageHeader
           title="Ordens de Serviço"
           description="Arraste os cards entre as colunas para mudar o status. Finalizadas há mais de 30 dias saem daqui — veja o histórico completo na Lista."
@@ -131,7 +131,9 @@ export default async function OrdensServicoPage({
             </>
           }
         />
-        <OsKanbanBoard ordens={itensKanban} />
+        <div className="min-h-0 flex-1">
+          <OsKanbanBoard ordens={itensKanban} />
+        </div>
       </div>
     );
   }
