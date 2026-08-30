@@ -184,7 +184,7 @@ export function RelatorioPdf({
               <Text style={styles.resumoValor}>{formatCurrencyPdf(totalComDesconto)}</Text>
             </View>
             <View style={styles.resumoCard}>
-              <Text style={styles.resumoLabel}>Faturamento da Oficina (M.O. + Peças Oficina + Frete Cobrado)</Text>
+              <Text style={styles.resumoLabel}>Faturamento da Oficina (M.O. + Valor Peças (Oficina) + Frete Cobrado)</Text>
               <Text style={styles.resumoValor}>{formatCurrencyPdf(faturamentoOficina)}</Text>
             </View>
           </View>

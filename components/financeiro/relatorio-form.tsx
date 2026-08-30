@@ -108,8 +108,8 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
           </Select>
           <p className="mt-1.5 text-xs text-muted-foreground">
             Escolha uma loja para listar só as OS com peças dela (útil para o fechamento mensal com o parceiro) — as
-            colunas &quot;Peças Loja&quot; e &quot;Peças Utilizadas - Loja&quot; passam a considerar só as peças dessa
-            loja.
+            colunas &quot;Valor Peças (Loja)&quot; e &quot;Itens Utilizados (Loja)&quot; passam a considerar só as
+            peças dessa loja.
           </p>
         </div>
 
