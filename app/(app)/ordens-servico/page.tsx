@@ -65,16 +65,31 @@ export default async function OrdensServicoPage({
   const viewToggle = <OsViewToggle view={view} />;
 
   if (view === "kanban") {
-    const { data: ordensKanban } = await supabase
-      .from("ordens_servico")
-      .select<string, OsKanbanRow>(
-        "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, clientes(nome), equipamentos(tipo, marca, modelo), os_itens(quantidade, valor_unitario)"
-      )
-      .neq("status", "cancelado")
-      .order("data_entrada", { ascending: false })
-      .limit(200);
+    const colunasKanban =
+      "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, clientes(nome), equipamentos(tipo, marca, modelo), os_itens(quantidade, valor_unitario)";
+    const limiteFinalizadas = new Date();
+    limiteFinalizadas.setDate(limiteFinalizadas.getDate() - 30);
 
-    const itensKanban: OsKanbanItem[] = (ordensKanban ?? []).map((os) => {
+    const [{ data: ordensAtivas }, { data: ordensFinalizadas }] = await Promise.all([
+      supabase
+        .from("ordens_servico")
+        .select<string, OsKanbanRow>(colunasKanban)
+        .not("status", "in", "(cancelado,finalizado)")
+        .order("data_entrada", { ascending: false })
+        .limit(200),
+      // Só as finalizadas dos últimos 30 dias — o histórico completo fica na visão Lista,
+      // pra essa coluna não crescer pra sempre e virar rolagem infinita.
+      supabase
+        .from("ordens_servico")
+        .select<string, OsKanbanRow>(colunasKanban)
+        .eq("status", "finalizado")
+        .gte("data_finalizacao", limiteFinalizadas.toISOString().slice(0, 10))
+        .order("data_finalizacao", { ascending: false })
+        .limit(200),
+    ]);
+    const ordensKanban = [...(ordensAtivas ?? []), ...(ordensFinalizadas ?? [])];
+
+    const itensKanban: OsKanbanItem[] = ordensKanban.map((os) => {
       const totalItens = (os.os_itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
       const total = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
       const equipamento = os.equipamentos;
@@ -100,7 +115,7 @@ export default async function OrdensServicoPage({
       <div>
         <PageHeader
           title="Ordens de Serviço"
-          description="Arraste os cards entre as colunas para mudar o status."
+          description="Arraste os cards entre as colunas para mudar o status. Finalizadas há mais de 30 dias saem daqui — veja o histórico completo na Lista."
           actions={
             <>
               {viewToggle}

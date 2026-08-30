@@ -90,7 +90,7 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                 handleDrop(step.value);
               }}
               className={cn(
-                "flex min-h-[420px] flex-col gap-2.5 rounded-2xl bg-secondary/70 p-2.5 transition-colors duration-150",
+                "flex max-h-[70vh] min-h-[200px] flex-col gap-2.5 overflow-y-auto rounded-2xl bg-secondary/70 p-2.5 transition-colors duration-150",
                 emDrag && "bg-accent ring-2 ring-primary/40"
               )}
             >
