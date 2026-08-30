@@ -57,7 +57,7 @@ export default async function VerificarGarantiaPage({ params }: { params: Promis
             ) : (
               <>
                 {valido ? (
-                  <ShieldCheck size={56} color="#059669" style={{ margin: "20px auto" }} />
+                  <ShieldCheck size={56} color="#4f7a24" style={{ margin: "20px auto" }} />
                 ) : (
                   <ShieldAlert size={56} color="#f59e0b" style={{ margin: "20px auto" }} />
                 )}
