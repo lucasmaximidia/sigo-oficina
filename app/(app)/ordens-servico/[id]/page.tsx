@@ -182,7 +182,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
 
         <div className="flex flex-col gap-5">
           <OsInfoAccordion
-            defaultOpen="financeiro"
+            defaultOpen=""
             sections={[
               {
                 id: "empresa-autorizada",
