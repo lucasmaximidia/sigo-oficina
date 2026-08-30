@@ -53,7 +53,7 @@ export function AppSidebar() {
         <Link
           href="/ordens-servico/nova"
           title="Nova OS"
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-action px-4 text-sm font-semibold text-action-foreground shadow-sm transition-colors hover:bg-action-hover"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-semibold text-background shadow-sm transition-colors hover:bg-foreground/90"
         >
           <Plus className="size-4.5 shrink-0" />
           {!collapsed && "Nova OS"}

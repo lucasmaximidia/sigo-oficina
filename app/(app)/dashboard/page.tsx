@@ -172,8 +172,8 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <MiniStat icon={Hourglass} label="Aguardando Orçamento" value={aguardandoOrcamento ?? 0} />
-              <MiniStat icon={Package} label="Aguardando Peças" value={aguardandoPecas ?? 0} />
-              <MiniStat icon={Wrench} label="Em Execução" value={emExecucao ?? 0} />
+              <MiniStat icon={Package} label="Aguardando Peças" value={aguardandoPecas ?? 0} tone="action" />
+              <MiniStat icon={Wrench} label="Em Execução" value={emExecucao ?? 0} tone="success" />
               <MiniStat icon={PackageCheck} label="Aguardando Pagamento" value={aguardandoPagamento ?? 0} tone="warning" />
             </div>
           </CardContent>
@@ -332,14 +332,25 @@ function MiniStat({
   icon: LucideIcon;
   label: string;
   value: number;
-  tone?: "default" | "warning";
+  tone?: "default" | "action" | "success" | "warning";
 }) {
   return (
-    <div className="rounded-xl bg-card/70 p-3.5">
+    <div
+      className={cn(
+        "rounded-xl p-3.5",
+        tone === "action" && "bg-action/10",
+        tone === "success" && "bg-success/10",
+        tone === "warning" && "bg-warning/15",
+        tone === "default" && "bg-accent"
+      )}
+    >
       <div
         className={cn(
-          "flex size-8 items-center justify-center rounded-lg",
-          tone === "warning" ? "bg-warning/15 text-warning" : "bg-accent text-primary"
+          "flex size-8 items-center justify-center rounded-lg bg-card/70",
+          tone === "action" && "text-action",
+          tone === "success" && "text-success",
+          tone === "warning" && "text-warning",
+          tone === "default" && "text-primary"
         )}
       >
         <Icon className="size-4" strokeWidth={2} />
