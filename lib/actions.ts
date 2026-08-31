@@ -425,10 +425,91 @@ export async function addOsItem(osId: string, formData: FormData) {
   revalidatePath("/estoque");
 }
 
+export async function updateOsItem(itemId: string, osId: string, formData: FormData) {
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const quantidade = Number(str(formData, "quantidade") ?? "1");
+  const valorUnitario = num(formData, "valor_unitario");
+
+  const { data: itemAtual, error: itemError } = await supabase
+    .from("os_itens")
+    .select("origem, peca_id, quantidade, custo_unitario")
+    .eq("id", itemId)
+    .single();
+  if (itemError) throw new Error(itemError.message);
+
+  const custoUnitario = itemAtual.origem === "compra_emergencial" ? num(formData, "custo_unitario") : itemAtual.custo_unitario;
+
+  const { error } = await supabase
+    .from("os_itens")
+    .update({ descricao, quantidade, valor_unitario: valorUnitario, custo_unitario: custoUnitario })
+    .eq("id", itemId);
+  if (error) throw new Error(error.message);
+
+  // Corrige o estoque pela diferença entre a quantidade antiga e a nova.
+  if (itemAtual.origem === "estoque" && itemAtual.peca_id) {
+    const diferenca = itemAtual.quantidade - quantidade;
+    if (diferenca !== 0) {
+      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", itemAtual.peca_id).single();
+      if (peca) {
+        await supabase
+          .from("pecas")
+          .update({ quantidade: Math.max(0, peca.quantidade + diferenca) })
+          .eq("id", itemAtual.peca_id);
+      }
+    }
+  }
+
+  // Mantém a despesa da compra emergencial em dia com o novo custo.
+  if (itemAtual.origem === "compra_emergencial") {
+    await supabase
+      .from("financeiro_despesas")
+      .update({ valor: quantidade * (custoUnitario ?? 0) })
+      .eq("os_item_id", itemId);
+    revalidatePath("/financeiro");
+  }
+
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/estoque");
+}
+
 export async function removeOsItem(itemId: string, osId: string) {
   const { error } = await supabase.from("os_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
+}
+
+// ---------- Mão de obra descrita ----------
+async function recalcularMaoObraOs(osId: string) {
+  const { data: itens, error } = await supabase.from("os_mao_obra_itens").select("valor").eq("os_id", osId);
+  if (error) throw new Error(error.message);
+  const total = (itens ?? []).reduce((acc, i) => acc + i.valor, 0);
+  const { error: updateError } = await supabase.from("ordens_servico").update({ valor_mao_obra: total }).eq("id", osId);
+  if (updateError) throw new Error(updateError.message);
+}
+
+export async function addOsMaoObraItem(osId: string, formData: FormData) {
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const valor = num(formData, "valor");
+
+  const { error } = await supabase.from("os_mao_obra_itens").insert({ os_id: osId, descricao, valor });
+  if (error) throw new Error(error.message);
+
+  await recalcularMaoObraOs(osId);
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
+}
+
+export async function removeOsMaoObraItem(itemId: string, osId: string) {
+  const { error } = await supabase.from("os_mao_obra_itens").delete().eq("id", itemId);
+  if (error) throw new Error(error.message);
+
+  await recalcularMaoObraOs(osId);
+  revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
 }
 
 // ---------- Fretes ----------
@@ -1427,6 +1508,7 @@ export async function removeOrcamentoItem(itemId: string, orcamentoId: string) {
 export async function resetarSistema() {
   const tabelas = [
     "os_itens",
+    "os_mao_obra_itens",
     "venda_itens",
     "vendas_pdv",
     "venda_pagamentos",

@@ -15,7 +15,7 @@ interface OsComRelacoes extends OrdemServico {
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [{ data: os }, { data: itens }, { data: config }] = await Promise.all([
+  const [{ data: os }, { data: itens }, { data: config }, { data: maoObraItens }] = await Promise.all([
     supabase
       .from("ordens_servico")
       .select<string, OsComRelacoes>(
@@ -25,6 +25,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       .maybeSingle(),
     supabase.from("os_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
     supabase.from("configuracoes").select("*").eq("id", 1).single(),
+    supabase.from("os_mao_obra_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
   ]);
 
   if (!os || !config) {
@@ -40,6 +41,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     OsPdf({
       os,
       itens: itens ?? [],
+      maoObraItens: maoObraItens ?? [],
       config,
       clienteNome: os.clientes?.nome ?? "Cliente",
       clienteTelefone: os.clientes?.telefone ?? null,

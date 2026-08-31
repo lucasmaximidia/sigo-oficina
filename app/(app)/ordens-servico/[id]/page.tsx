@@ -14,6 +14,7 @@ import { OsRetiradaCard } from "@/components/os/os-retirada-card";
 import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
 import { OsInfoAccordion } from "@/components/os/os-info-accordion";
 import { OsObservacoes } from "@/components/os/os-observacoes";
+import { OsMaoObraList } from "@/components/os/os-mao-obra-list";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -37,6 +38,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     { data: lojas },
     { data: pagamentos },
     { data: empresasAutorizadas },
+    { data: maoObraItens },
   ] = await Promise.all([
     supabase
       .from("ordens_servico")
@@ -52,6 +54,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true }),
     supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
     supabase.from("empresas_autorizadas").select("*").eq("ativo", true).order("nome", { ascending: true }),
+    supabase.from("os_mao_obra_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
   ]);
 
   if (!os) notFound();
@@ -177,6 +180,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
             </CardHeader>
             <CardContent>
               <OsItensList osId={os.id} itens={itens ?? []} pecas={pecas ?? []} lojas={lojas ?? []} />
+              <OsMaoObraList osId={os.id} itens={maoObraItens ?? []} />
             </CardContent>
           </Card>
         </div>
@@ -207,7 +211,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                 title: "Financeiro",
                 content: (
                   <div className="flex flex-col gap-5">
-                    <OsResumoValores os={os} totalPecas={totalPecas} />
+                    <OsResumoValores os={os} totalPecas={totalPecas} maoObraItens={maoObraItens ?? []} />
                     <div className="flex flex-col gap-3 border-t border-border pt-4">
                       <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                         <Wallet2 className="size-4 text-primary" />

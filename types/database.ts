@@ -414,6 +414,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      os_mao_obra_itens: {
+        Row: {
+          id: string;
+          os_id: string;
+          descricao: string;
+          valor: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          os_id: string;
+          descricao: string;
+          valor?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          os_id?: string;
+          descricao?: string;
+          valor?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       os_pagamentos: {
         Row: {
           id: string;

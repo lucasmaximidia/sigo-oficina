@@ -21,7 +21,7 @@ interface OsComRelacoes {
 export async function GET(request: Request, { params }: { params: Promise<{ osId: string }> }) {
   const { osId } = await params;
 
-  const [{ data: os }, { data: config }, { data: itens }] = await Promise.all([
+  const [{ data: os }, { data: config }, { data: itens }, { data: maoObraItens }] = await Promise.all([
     supabase
       .from("ordens_servico")
       .select<string, OsComRelacoes>(
@@ -31,6 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
       .maybeSingle(),
     supabase.from("configuracoes").select("*").eq("id", 1).single(),
     supabase.from("os_itens").select("id, descricao, quantidade").eq("os_id", osId).order("created_at", { ascending: true }),
+    supabase.from("os_mao_obra_itens").select("id, descricao").eq("os_id", osId).order("created_at", { ascending: true }),
   ]);
 
   if (!os || !config) {
@@ -66,6 +67,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
       numeroSerie: equipamento?.numero_serie ?? null,
       problemaRelatado: os.problema_relatado,
       itens: itens ?? [],
+      maoObraItens: maoObraItens ?? [],
       dataInicio,
       dataExpiracao,
       garantiaDias: os.garantia_dias,
