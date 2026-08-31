@@ -13,6 +13,8 @@ const TABELAS = [
   "os_pagamentos",
   "fretes",
   "prestadores_frete",
+  "balancos_estoque",
+  "balanco_estoque_itens",
   "vendas_pdv",
   "venda_itens",
   "venda_pagamentos",

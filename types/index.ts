@@ -24,6 +24,8 @@ export type Frete = Database["public"]["Tables"]["fretes"]["Row"];
 export type EntradaEstoque = Database["public"]["Tables"]["entradas_estoque"]["Row"];
 export type EntradaEstoqueItem = Database["public"]["Tables"]["entrada_estoque_itens"]["Row"];
 export type EmpresaAutorizada = Database["public"]["Tables"]["empresas_autorizadas"]["Row"];
+export type BalancoEstoque = Database["public"]["Tables"]["balancos_estoque"]["Row"];
+export type BalancoEstoqueItem = Database["public"]["Tables"]["balanco_estoque_itens"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
@@ -70,6 +72,10 @@ export interface Entrada {
   formaPagamento: string;
   formaPagamentoChave: string;
   valor: number;
+}
+
+export interface BalancoEstoqueComItens extends BalancoEstoque {
+  itens: BalancoEstoqueItem[];
 }
 
 export interface FreteComRelacoes {
