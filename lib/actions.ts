@@ -768,6 +768,27 @@ export async function createContaPagar(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function updateContaPagar(id: string, formData: FormData) {
+  const descricao = strUp(formData, "descricao");
+  const vencimento = str(formData, "vencimento");
+  if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
+
+  const { error } = await supabase
+    .from("financeiro_contas")
+    .update({
+      descricao,
+      categoria: strUp(formData, "categoria"),
+      fornecedor: strUp(formData, "fornecedor"),
+      numero_documento: strUp(formData, "numero_documento"),
+      valor: num(formData, "valor"),
+      vencimento,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
 export async function marcarContaPaga(id: string) {
   const { error } = await supabase
     .from("financeiro_contas")

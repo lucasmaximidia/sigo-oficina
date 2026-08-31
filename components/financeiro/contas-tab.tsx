@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
+import { EditarContaDialog } from "@/components/financeiro/editar-conta-dialog";
 import { ExcluirContaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -101,6 +102,7 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                        <EditarContaDialog conta={conta} />
                         <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
                       </div>
                     </TableCell>
@@ -144,6 +146,7 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                  <EditarContaDialog conta={conta} />
                   <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
                 </div>
               </div>
