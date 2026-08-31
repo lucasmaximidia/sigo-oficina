@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { addOsItem, removeOsItem } from "@/lib/actions";
+import { EditarOsItemDialog } from "@/components/os/editar-os-item-dialog";
 import type { OsItem, Peca, LojaParceira, ItemOrigem } from "@/types";
 
 const origemInfo: Record<ItemOrigem, { label: string; icon: typeof Package; variant: "secondary" | "info" | "warning" }> = {
@@ -292,6 +293,7 @@ export function OsItensList({
                 <p className="text-sm font-semibold text-foreground">
                   {formatCurrency(item.quantidade * item.valor_unitario)}
                 </p>
+                <EditarOsItemDialog osId={osId} item={item} />
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}

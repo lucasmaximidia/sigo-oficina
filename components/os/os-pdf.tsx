@@ -1,5 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import type { OrdemServico, OsItem, Configuracao } from "@/types";
+import type { OrdemServico, OsItem, OsMaoObraItem, Configuracao } from "@/types";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
 
 const cores = {
@@ -119,6 +119,7 @@ function formatDatePdf(value: string) {
 export function OsPdf({
   os,
   itens,
+  maoObraItens,
   config,
   clienteNome,
   clienteTelefone,
@@ -127,6 +128,7 @@ export function OsPdf({
 }: {
   os: OrdemServico;
   itens: OsItem[];
+  maoObraItens: OsMaoObraItem[];
   config: Configuracao;
   clienteNome: string;
   clienteTelefone: string | null;
@@ -228,6 +230,24 @@ export function OsPdf({
             )}
           </View>
         </View>
+
+        {maoObraItens.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mão de Obra</Text>
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.thDescricao}>Descrição</Text>
+                <Text style={styles.thValor}>Valor</Text>
+              </View>
+              {maoObraItens.map((item) => (
+                <View key={item.id} style={styles.tableRow}>
+                  <Text style={styles.tdDescricao}>{item.descricao}</Text>
+                  <Text style={styles.tdValor}>{formatCurrencyPdf(item.valor)}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.totaisBloco}>
           <View style={styles.totalLinha}>

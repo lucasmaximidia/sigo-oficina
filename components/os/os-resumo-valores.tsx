@@ -7,9 +7,18 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { updateOrdemServicoValores } from "@/lib/actions";
-import type { OrdemServico } from "@/types";
+import type { OrdemServico, OsMaoObraItem } from "@/types";
 
-export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPecas: number }) {
+export function OsResumoValores({
+  os,
+  totalPecas,
+  maoObraItens,
+}: {
+  os: OrdemServico;
+  totalPecas: number;
+  maoObraItens: OsMaoObraItem[];
+}) {
+  const maoObraDescrita = maoObraItens.length > 0;
   const [maoObra, setMaoObra] = useState(os.valor_mao_obra);
   const [frete, setFrete] = useState(os.valor_frete);
   const [desconto, setDesconto] = useState(os.desconto);
@@ -34,7 +43,19 @@ export function OsResumoValores({ os, totalPecas }: { os: OrdemServico; totalPec
         <Label htmlFor="valor_mao_obra" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
           Mão de Obra (R$)
         </Label>
-        <NumericInput id="valor_mao_obra" name="valor_mao_obra" defaultValue={os.valor_mao_obra} onValueChange={setMaoObra} />
+        <NumericInput
+          id="valor_mao_obra"
+          name="valor_mao_obra"
+          defaultValue={os.valor_mao_obra}
+          onValueChange={setMaoObra}
+          readOnly={maoObraDescrita}
+          className={maoObraDescrita ? "bg-secondary text-muted-foreground" : undefined}
+        />
+        {maoObraDescrita && (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Somado a partir da mão de obra descrita em Peças e Serviços.
+          </p>
+        )}
       </div>
       <div>
         <Label htmlFor="valor_frete" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">

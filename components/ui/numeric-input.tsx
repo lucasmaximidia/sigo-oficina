@@ -23,6 +23,7 @@ export interface NumericInputProps {
   className?: string;
   disabled?: boolean;
   required?: boolean;
+  readOnly?: boolean;
   /** Se falso, aceita apenas números inteiros (sem separador decimal). Padrão: true. */
   decimal?: boolean;
   value?: number;

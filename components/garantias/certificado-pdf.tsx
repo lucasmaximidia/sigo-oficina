@@ -128,6 +128,7 @@ export function CertificadoPdf({
   numeroSerie,
   problemaRelatado,
   itens,
+  maoObraItens,
   dataInicio,
   dataExpiracao,
   garantiaDias,
@@ -141,6 +142,7 @@ export function CertificadoPdf({
   numeroSerie: string | null;
   problemaRelatado: string | null;
   itens: { id: string; descricao: string; quantidade: number }[];
+  maoObraItens: { id: string; descricao: string }[];
   dataInicio: string;
   dataExpiracao: string;
   garantiaDias: number;
@@ -229,6 +231,22 @@ export function CertificadoPdf({
             )}
           </View>
         </View>
+
+        {maoObraItens.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mão de Obra Realizada</Text>
+            <View style={styles.table}>
+              <View style={styles.tableHeader}>
+                <Text style={styles.thDescricao}>Descrição</Text>
+              </View>
+              {maoObraItens.map((item) => (
+                <View key={item.id} style={styles.tableRow}>
+                  <Text style={styles.tdDescricao}>{item.descricao}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.destaqueBloco}>
           <View style={styles.destaqueItem}>
