@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarGrid, urgenciaBordaClass } from "@/components/agenda/calendar-grid";
 import { cn } from "@/lib/utils";
 import { NovoAgendamentoDialog } from "@/components/agenda/novo-agendamento-dialog";
+import { EditarAgendamentoDialog } from "@/components/agenda/editar-agendamento-dialog";
+import { MarcarConcluidoButton } from "@/components/agenda/marcar-concluido-button";
 import { buildMonthGrid, monthLabels } from "@/lib/calendar";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaEvento, AgendaStatus } from "@/types";
@@ -119,7 +121,10 @@ export default async function AgendaPage({
                     <p className="text-sm font-semibold text-primary">
                       {new Date(evento.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
-                    <Badge variant={status.variant}>{status.label}</Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                      <EditarAgendamentoDialog evento={evento} clientes={clientes ?? []} />
+                    </div>
                   </div>
                   <p className="mt-1 text-sm font-medium text-foreground">{evento.titulo}</p>
                   {cliente && (
@@ -133,6 +138,11 @@ export default async function AgendaPage({
                       <MapPin className="size-3.5" />
                       {evento.endereco}
                     </p>
+                  )}
+                  {evento.status !== "concluido" && evento.status !== "cancelado" && (
+                    <div className="mt-2">
+                      <MarcarConcluidoButton id={evento.id} />
+                    </div>
                   )}
                 </div>
               );

@@ -1191,6 +1191,29 @@ export async function createAgendaEvento(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function updateAgendaEvento(id: string, formData: FormData) {
+  const titulo = strUp(formData, "titulo");
+  const data = str(formData, "data");
+  const hora = str(formData, "hora") ?? "09:00";
+  if (!titulo || !data) throw new Error("Título e data são obrigatórios");
+  const { error } = await supabase
+    .from("agenda_eventos")
+    .update({
+      titulo,
+      tipo: (str(formData, "tipo") as AgendaTipo) ?? "oficina",
+      cliente_id: str(formData, "cliente_id"),
+      endereco: strUp(formData, "endereco"),
+      data_hora_inicio: new Date(`${data}T${hora}`).toISOString(),
+      status: (str(formData, "status") as AgendaStatus) ?? "agendado",
+      tecnico: strUp(formData, "tecnico"),
+      observacoes: strUp(formData, "observacoes"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/agenda");
+  revalidatePath("/dashboard");
+}
+
 export async function updateAgendaStatus(id: string, status: AgendaStatus) {
   const { error } = await supabase.from("agenda_eventos").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
