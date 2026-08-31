@@ -1,4 +1,5 @@
-import { AlertTriangle, Store, FileText, Boxes } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, Store, FileText, Boxes, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,12 @@ export default async function EstoquePage() {
         actions={
           <>
             <ExportarCsvButton tipo="estoque" />
+            <Button asChild variant="outline">
+              <Link href="/estoque/balanco">
+                <ClipboardCheck className="size-4" />
+                Balanço de Estoque
+              </Link>
+            </Button>
             <EntradaEstoqueDialog lojas={lojas ?? []} pecas={pecas ?? []} />
             <PecaDialog lojas={lojas ?? []} />
           </>

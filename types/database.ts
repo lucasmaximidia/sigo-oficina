@@ -189,6 +189,63 @@ export interface Database {
         };
         Relationships: [];
       };
+      balancos_estoque: {
+        Row: {
+          id: string;
+          data: string;
+          observacao: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          data?: string;
+          observacao?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          data?: string;
+          observacao?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      balanco_estoque_itens: {
+        Row: {
+          id: string;
+          balanco_id: string;
+          peca_id: string | null;
+          peca_nome: string;
+          peca_codigo: string | null;
+          quantidade_sistema: number;
+          quantidade_contada: number;
+          diferenca: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          balanco_id: string;
+          peca_id?: string | null;
+          peca_nome: string;
+          peca_codigo?: string | null;
+          quantidade_sistema: number;
+          quantidade_contada: number;
+          diferenca: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          balanco_id?: string;
+          peca_id?: string | null;
+          peca_nome?: string;
+          peca_codigo?: string | null;
+          quantidade_sistema?: number;
+          quantidade_contada?: number;
+          diferenca?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       ordens_servico: {
         Row: {
           id: string;

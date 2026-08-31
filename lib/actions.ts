@@ -515,6 +515,48 @@ export async function updatePeca(id: string, formData: FormData) {
   revalidatePath("/estoque");
 }
 
+export interface BalancoEstoqueItemInput {
+  pecaId: string;
+  pecaNome: string;
+  pecaCodigo: string | null;
+  quantidadeSistema: number;
+  quantidadeContada: number;
+}
+
+export async function criarBalancoEstoque(itens: BalancoEstoqueItemInput[], observacao?: string | null) {
+  if (itens.length === 0) throw new Error("Conte ao menos um item para salvar o balanço");
+
+  const { data: balanco, error: balancoError } = await supabase
+    .from("balancos_estoque")
+    .insert({ observacao: observacao?.trim() || null })
+    .select("id")
+    .single();
+  if (balancoError) throw new Error(balancoError.message);
+
+  const linhas = itens.map((item) => ({
+    balanco_id: balanco.id,
+    peca_id: item.pecaId,
+    peca_nome: item.pecaNome,
+    peca_codigo: item.pecaCodigo,
+    quantidade_sistema: item.quantidadeSistema,
+    quantidade_contada: item.quantidadeContada,
+    diferenca: item.quantidadeContada - item.quantidadeSistema,
+  }));
+  const { error: itensError } = await supabase.from("balanco_estoque_itens").insert(linhas);
+  if (itensError) throw new Error(itensError.message);
+
+  const atualizacoes = await Promise.all(
+    itens.map((item) => supabase.from("pecas").update({ quantidade: item.quantidadeContada }).eq("id", item.pecaId))
+  );
+  const erroAtualizacao = atualizacoes.find((r) => r.error);
+  if (erroAtualizacao?.error) throw new Error(erroAtualizacao.error.message);
+
+  revalidatePath("/estoque");
+  revalidatePath("/estoque/balanco");
+  revalidatePath("/dashboard");
+  return balanco.id as string;
+}
+
 export interface EntradaEstoqueItemInput {
   peca_id: string | null;
   novaPeca?: { nome: string; codigo: string | null; categoria: string | null };
@@ -1374,6 +1416,7 @@ export async function resetarSistema() {
     "financeiro_contas",
     "ordens_servico",
     "equipamentos",
+    "balancos_estoque",
     "pecas",
     "lojas_parceiras",
     "clientes",
