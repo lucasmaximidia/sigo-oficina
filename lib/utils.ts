@@ -13,7 +13,13 @@ export function formatCurrency(value: number) {
 }
 
 export function formatDate(value: string | Date) {
-  const date = typeof value === "string" ? new Date(value) : value;
+  // Datas "puras" (YYYY-MM-DD, sem horário) precisam ser interpretadas no
+  // horário local — do contrário `new Date("2026-10-25")` vira meia-noite UTC,
+  // e em fusos atrás de UTC (ex: Brasil) isso exibe o dia anterior (24/10).
+  const date =
+    typeof value === "string"
+      ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value)
+      : value;
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
