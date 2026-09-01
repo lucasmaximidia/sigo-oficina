@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { RelatorioForm } from "@/components/financeiro/relatorio-form";
+import { FechamentoMensalForm } from "@/components/financeiro/fechamento-mensal-form";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,10 @@ export default async function RelatorioFinanceiroPage() {
         Voltar para Financeiro
       </Link>
       <PageHeader title="Relatório Financeiro" description="Gere um PDF com os serviços realizados no período escolhido." />
-      <RelatorioForm lojas={lojas ?? []} />
+      <div className="flex flex-col gap-6">
+        <RelatorioForm lojas={lojas ?? []} />
+        <FechamentoMensalForm />
+      </div>
     </div>
   );
 }
