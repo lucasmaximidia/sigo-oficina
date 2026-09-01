@@ -34,16 +34,16 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-5 bottom-5 z-40 h-[76px] lg:hidden"
+      className="pointer-events-none fixed inset-x-5 bottom-5 z-40 h-[76px] lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Navegação principal"
     >
-      <div className="absolute bottom-0 left-0 flex h-16 w-[45%] items-center rounded-full bg-card shadow-[0_10px_26px_-10px_rgba(20,22,42,0.28)]">
+      <div className="pointer-events-auto absolute bottom-0 left-0 flex h-16 w-[45%] items-center rounded-full bg-card shadow-[0_10px_26px_-10px_rgba(20,22,42,0.28)]">
         <TabLink {...tabs[0]} active={isActive(tabs[0].href)} />
         <TabLink {...tabs[1]} active={isActive(tabs[1].href)} />
       </div>
 
-      <div className="absolute bottom-0 right-0 flex h-16 w-[45%] items-center rounded-full bg-card shadow-[0_10px_26px_-10px_rgba(20,22,42,0.28)]">
+      <div className="pointer-events-auto absolute bottom-0 right-0 flex h-16 w-[45%] items-center rounded-full bg-card shadow-[0_10px_26px_-10px_rgba(20,22,42,0.28)]">
         <TabLink {...tabs[2]} active={isActive(tabs[2].href)} />
         <TabLink {...tabs[3]} active={isActive(tabs[3].href)} />
       </div>
@@ -51,7 +51,7 @@ export function MobileBottomNav() {
       <Link
         href="/ordens-servico/nova"
         aria-label="Nova OS"
-        className="absolute bottom-[18px] left-1/2 flex size-[62px] -translate-x-1/2 items-center justify-center rounded-full bg-foreground text-background shadow-[0_10px_22px_-6px_rgba(20,22,42,0.5)]"
+        className="pointer-events-auto absolute bottom-[18px] left-1/2 flex size-[62px] -translate-x-1/2 items-center justify-center rounded-full bg-foreground text-background shadow-[0_10px_22px_-6px_rgba(20,22,42,0.5)]"
       >
         <Plus className="size-6.5" strokeWidth={2.5} />
       </Link>
