@@ -17,13 +17,27 @@ function primeiroDiaDoMes() {
   return new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
 }
 
+function mesAtualValue() {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+}
+
 const TODAS_AS_CHAVES = [...RELATORIO_COLUNAS.map((c) => c.key), RELATORIO_OPCAO_RESUMO.key];
 
 export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
   const [inicio, setInicio] = useState(primeiroDiaDoMes());
   const [fim, setFim] = useState(new Date().toISOString().slice(0, 10));
+  const [mes, setMes] = useState(mesAtualValue());
   const [lojaParceiraId, setLojaParceiraId] = useState<string>("todas");
   const [colunas, setColunas] = useState<Set<string>>(new Set(TODAS_AS_CHAVES));
+
+  function handleMesChange(valor: string) {
+    setMes(valor);
+    if (!valor) return;
+    const [ano, mesNum] = valor.split("-").map(Number);
+    setInicio(`${valor}-01`);
+    setFim(new Date(ano, mesNum, 0).toISOString().slice(0, 10));
+  }
 
   function toggleColuna(key: string) {
     setColunas((prev) => {
@@ -76,18 +90,42 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        <div className="sm:max-w-xs">
+          <Label htmlFor="relatorio_mes" className="mb-1.5 block">
+            Selecionar mês
+          </Label>
+          <Input id="relatorio_mes" type="month" value={mes} onChange={(e) => handleMesChange(e.target.value)} />
+          <p className="mt-1.5 text-xs text-muted-foreground">Preenche automaticamente o período abaixo.</p>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:max-w-md">
           <div>
             <Label htmlFor="relatorio_inicio" className="mb-1.5 block">
               Período de
             </Label>
-            <Input id="relatorio_inicio" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+            <Input
+              id="relatorio_inicio"
+              type="date"
+              value={inicio}
+              onChange={(e) => {
+                setInicio(e.target.value);
+                setMes("");
+              }}
+            />
           </div>
           <div>
             <Label htmlFor="relatorio_fim" className="mb-1.5 block">
               até
             </Label>
-            <Input id="relatorio_fim" type="date" value={fim} onChange={(e) => setFim(e.target.value)} />
+            <Input
+              id="relatorio_fim"
+              type="date"
+              value={fim}
+              onChange={(e) => {
+                setFim(e.target.value);
+                setMes("");
+              }}
+            />
           </div>
         </div>
 
