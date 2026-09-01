@@ -47,6 +47,17 @@ export function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+// Data em que o lembrete de uma conta a vencer deve aparecer: no próprio
+// vencimento, ou antecipado para a sexta-feira quando o vencimento cai num
+// sábado ou domingo (o estabelecimento não abre no fim de semana).
+export function dataLembreteVencimento(vencimentoIso: string): string {
+  const data = new Date(`${vencimentoIso}T00:00:00`);
+  const diaSemana = data.getDay();
+  if (diaSemana === 6) data.setDate(data.getDate() - 1);
+  else if (diaSemana === 0) data.setDate(data.getDate() - 2);
+  return data.toISOString().slice(0, 10);
+}
+
 export function formatDateTime(value: string | Date) {
   const date = typeof value === "string" ? new Date(value) : value;
   return new Intl.DateTimeFormat("pt-BR", {

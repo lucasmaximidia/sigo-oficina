@@ -25,9 +25,9 @@ function CampoData({
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 6 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {icon}
-        <span style={{ fontSize: 18, color: "#333333" }}>{label}</span>
+        <span style={{ fontSize: 20, color: "#333333" }}>{label}</span>
       </div>
-      <span style={{ fontSize: 26, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
+      <span style={{ fontSize: 30, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
     </div>
   );
 }
@@ -107,8 +107,8 @@ export function EtiquetaOsImage({
       >
         <DivisorFino />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 16 }}>
-          <span style={{ fontSize: 40, fontWeight: 700 }}>{clienteNome}</span>
-          {clienteTelefone && <span style={{ fontSize: 32, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
+          <span style={{ fontSize: 44, fontWeight: 700 }}>{clienteNome}</span>
+          {clienteTelefone && <span style={{ fontSize: 35, color: "#333333", marginTop: 6 }}>{clienteTelefone}</span>}
         </div>
       </div>
 
@@ -125,8 +125,8 @@ export function EtiquetaOsImage({
           padding: "0 20px",
         }}
       >
-        <span style={{ fontSize: 20, color: "#333333" }}>Equipamento</span>
-        <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{equipamentoDescricao}</span>
+        <span style={{ fontSize: 22, color: "#333333" }}>Equipamento</span>
+        <span style={{ fontSize: 34, fontWeight: 700, marginTop: 4 }}>{equipamentoDescricao}</span>
       </div>
 
       {/* 4. Defeito relatado */}
@@ -152,8 +152,8 @@ export function EtiquetaOsImage({
             padding: "18px 20px",
           }}
         >
-          <span style={{ fontSize: 20, color: "#333333" }}>Defeito Relatado</span>
-          <span style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.25, marginTop: 6 }}>{problema}</span>
+          <span style={{ fontSize: 22, color: "#333333" }}>Defeito Relatado</span>
+          <span style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.25, marginTop: 6 }}>{problema}</span>
         </div>
       </div>
 
@@ -171,11 +171,11 @@ export function EtiquetaOsImage({
         <DivisorFino />
         <div style={{ display: "flex", alignItems: "flex-start", width: "100%", gap: 16, marginTop: 18 }}>
           <CampoData
-            icon={<IconCalendario size={20} color="#111111" />}
+            icon={<IconCalendario size={22} color="#111111" />}
             label="Data Entrada:"
             valor={dataEntrada}
           />
-          <CampoData icon={<IconDocumento size={20} color="#111111" />} label="Nº O.S.:" valor={numeroOs} />
+          <CampoData icon={<IconDocumento size={22} color="#111111" />} label="Nº O.S.:" valor={numeroOs} />
         </div>
       </div>
     </div>

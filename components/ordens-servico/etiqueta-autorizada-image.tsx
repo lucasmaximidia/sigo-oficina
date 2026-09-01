@@ -17,9 +17,9 @@ function CampoData({ icon, label, valor }: { icon: React.ReactNode; label: strin
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 6 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {icon}
-        <span style={{ fontSize: 18, color: "#333333" }}>{label}</span>
+        <span style={{ fontSize: 20, color: "#333333" }}>{label}</span>
       </div>
-      <span style={{ fontSize: 24, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
+      <span style={{ fontSize: 28, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
     </div>
   );
 }
@@ -85,7 +85,7 @@ export function EtiquetaAutorizadaImage({
         ) : (
           <IconLavadora size={70} color="#cccccc" />
         )}
-        <span style={{ fontSize: 22, fontWeight: 700, color: "#111111", marginTop: 4 }}>
+        <span style={{ fontSize: 25, fontWeight: 700, color: "#111111", marginTop: 4 }}>
           AUTORIZADA {empresaNome}
         </span>
       </div>
@@ -105,10 +105,10 @@ export function EtiquetaAutorizadaImage({
       >
         <DivisorFino />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 14 }}>
-          <span style={{ fontSize: 18, color: "#333333" }}>Cliente</span>
-          <span style={{ fontSize: 30, fontWeight: 700, marginTop: 4 }}>{clienteNome}</span>
+          <span style={{ fontSize: 20, color: "#333333" }}>Cliente</span>
+          <span style={{ fontSize: 34, fontWeight: 700, marginTop: 4 }}>{clienteNome}</span>
           {clienteTelefone && (
-            <span style={{ fontSize: 22, color: "#333333", marginTop: 4 }}>{clienteTelefone}</span>
+            <span style={{ fontSize: 25, color: "#333333", marginTop: 4 }}>{clienteTelefone}</span>
           )}
         </div>
       </div>
@@ -126,8 +126,8 @@ export function EtiquetaAutorizadaImage({
           padding: "0 20px",
         }}
       >
-        <span style={{ fontSize: 18, color: "#333333" }}>Produto</span>
-        <span style={{ fontSize: 24, fontWeight: 700, marginTop: 6, lineHeight: 1.25 }}>{produto}</span>
+        <span style={{ fontSize: 20, color: "#333333" }}>Produto</span>
+        <span style={{ fontSize: 28, fontWeight: 700, marginTop: 6, lineHeight: 1.25 }}>{produto}</span>
       </div>
 
       {/* 4. Nº de série e Referência */}
@@ -153,12 +153,12 @@ export function EtiquetaAutorizadaImage({
           }}
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 18, color: "#333333" }}>Nº de Série</span>
-            <span style={{ fontSize: 26, fontWeight: 700, marginTop: 2 }}>{numeroSerie || "—"}</span>
+            <span style={{ fontSize: 20, color: "#333333" }}>Nº de Série</span>
+            <span style={{ fontSize: 30, fontWeight: 700, marginTop: 2 }}>{numeroSerie || "—"}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 18, color: "#333333" }}>Referência</span>
-            <span style={{ fontSize: 26, fontWeight: 700, marginTop: 2 }}>{referencia || "—"}</span>
+            <span style={{ fontSize: 20, color: "#333333" }}>Referência</span>
+            <span style={{ fontSize: 30, fontWeight: 700, marginTop: 2 }}>{referencia || "—"}</span>
           </div>
         </div>
       </div>
@@ -176,8 +176,8 @@ export function EtiquetaAutorizadaImage({
       >
         <DivisorFino />
         <div style={{ display: "flex", alignItems: "flex-start", width: "100%", gap: 16, marginTop: 18 }}>
-          <CampoData icon={<IconDocumento size={20} color="#111111" />} label="Nº OS Autorizada:" valor={numeroOsAutorizada || "—"} />
-          <CampoData icon={<IconCalendario size={20} color="#111111" />} label="Data Entrada:" valor={dataEntrada} />
+          <CampoData icon={<IconDocumento size={22} color="#111111" />} label="Nº OS Autorizada:" valor={numeroOsAutorizada || "—"} />
+          <CampoData icon={<IconCalendario size={22} color="#111111" />} label="Data Entrada:" valor={dataEntrada} />
         </div>
       </div>
     </div>
