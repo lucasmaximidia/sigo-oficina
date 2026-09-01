@@ -19,11 +19,16 @@ export function OsResumoValores({
   maoObraItens: OsMaoObraItem[];
 }) {
   const maoObraDescrita = maoObraItens.length > 0;
-  const [maoObra, setMaoObra] = useState(os.valor_mao_obra);
+  const [maoObraEditavel, setMaoObraEditavel] = useState(os.valor_mao_obra);
   const [frete, setFrete] = useState(os.valor_frete);
   const [desconto, setDesconto] = useState(os.desconto);
   const [isPending, startTransition] = useTransition();
 
+  // Quando há itens de mão de obra descrita, o valor vem sempre de
+  // `os.valor_mao_obra` (recalculado no servidor a cada item adicionado/removido)
+  // em vez do estado local — que só é reinicializado na montagem do componente e
+  // ficaria desatualizado após uma alteração feita em Peças e Serviços.
+  const maoObra = maoObraDescrita ? os.valor_mao_obra : maoObraEditavel;
   const total = totalPecas + maoObra + frete - desconto;
 
   function handleSubmit(formData: FormData) {
@@ -46,8 +51,9 @@ export function OsResumoValores({
         <NumericInput
           id="valor_mao_obra"
           name="valor_mao_obra"
-          defaultValue={os.valor_mao_obra}
-          onValueChange={setMaoObra}
+          value={maoObraDescrita ? os.valor_mao_obra : undefined}
+          defaultValue={maoObraDescrita ? undefined : os.valor_mao_obra}
+          onValueChange={maoObraDescrita ? undefined : setMaoObraEditavel}
           readOnly={maoObraDescrita}
           className={maoObraDescrita ? "bg-secondary text-muted-foreground" : undefined}
         />
