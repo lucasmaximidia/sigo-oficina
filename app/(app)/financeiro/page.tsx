@@ -339,10 +339,11 @@ export default async function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
         <StatCard icon={TrendingUp} label="Recebido este mês" value={formatCurrency(totalRecebidoNoMes)} tone="success" />
         <StatCard icon={AlertTriangle} label="Vencendo Hoje/Atrasado" value={formatCurrency(totalVencendo)} tone="danger" />
         <StatCard icon={ClipboardList} label="Próximos 7 dias" value={formatCurrency(totalProximos)} />
+        <StatCard icon={Wrench} label="Mão de Obra do mês" value={formatCurrency(totalMaoObraNoMes)} tone="highlight" />
       </div>
 
       <Tabs defaultValue="visao-geral" className="mt-5">
@@ -357,7 +358,7 @@ export default async function FinanceiroPage() {
         </TabsList>
 
         <TabsContent value="visao-geral" className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
             <StatCard
               icon={TrendingUp}
               label="Faturamento do mês"
@@ -376,12 +377,6 @@ export default async function FinanceiroPage() {
               label="Ticket médio"
               value={formatCurrency(ticketMedio)}
               hint={`${entradasMesAtual.length} ${entradasMesAtual.length === 1 ? "entrada" : "entradas"} no mês`}
-            />
-            <StatCard
-              icon={Wrench}
-              label="Mão de Obra do mês"
-              value={formatCurrency(totalMaoObraNoMes)}
-              hint={new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(hoje)}
             />
           </div>
 
