@@ -11,6 +11,7 @@ import {
   BarChart3,
   Wallet2,
   PiggyBank,
+  Wrench,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
@@ -188,6 +189,13 @@ export default async function FinanceiroPage() {
   const ticketMedio = entradasMesAtual.length > 0 ? totalRecebidoNoMes / entradasMesAtual.length : 0;
   const variacaoMes = totalMesAnterior > 0 ? ((totalRecebidoNoMes - totalMesAnterior) / totalMesAnterior) * 100 : null;
 
+  const totalMaoObraNoMes = (osPagas ?? [])
+    .filter((os) => {
+      const data = os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "");
+      return data.startsWith(hojeStr.slice(0, 7));
+    })
+    .reduce((acc, os) => acc + os.valor_mao_obra, 0);
+
   const mesesGrafico = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(hoje.getFullYear(), hoje.getMonth() - (5 - i), 1);
     const chave = d.toISOString().slice(0, 7);
@@ -349,7 +357,7 @@ export default async function FinanceiroPage() {
         </TabsList>
 
         <TabsContent value="visao-geral" className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
             <StatCard
               icon={TrendingUp}
               label="Faturamento do mês"
@@ -368,6 +376,12 @@ export default async function FinanceiroPage() {
               label="Ticket médio"
               value={formatCurrency(ticketMedio)}
               hint={`${entradasMesAtual.length} ${entradasMesAtual.length === 1 ? "entrada" : "entradas"} no mês`}
+            />
+            <StatCard
+              icon={Wrench}
+              label="Mão de Obra do mês"
+              value={formatCurrency(totalMaoObraNoMes)}
+              hint={new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(hoje)}
             />
           </div>
 
