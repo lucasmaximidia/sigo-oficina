@@ -103,6 +103,7 @@ export function RelatorioPdf({
   fim,
   mostrarResumo,
   lojaParceiraNome,
+  orientacao = "landscape",
 }: {
   linhas: RelatorioLinha[];
   colunasSelecionadas: string[];
@@ -111,6 +112,7 @@ export function RelatorioPdf({
   fim: string;
   mostrarResumo: boolean;
   lojaParceiraNome?: string | null;
+  orientacao?: "landscape" | "portrait";
 }) {
   const colunas = RELATORIO_COLUNAS.filter((c) => colunasSelecionadas.includes(c.key));
 
@@ -127,7 +129,7 @@ export function RelatorioPdf({
 
   return (
     <Document title={`Relatorio-Financeiro-${inicio}-a-${fim}`}>
-      <Page size="A4" orientation="landscape" style={styles.page} wrap>
+      <Page size="A4" orientation={orientacao} style={styles.page} wrap>
         <View style={styles.header} fixed>
           <View style={styles.empresaBloco}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}

@@ -30,6 +30,7 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
   const [mes, setMes] = useState(mesAtualValue());
   const [lojaParceiraId, setLojaParceiraId] = useState<string>("todas");
   const [colunas, setColunas] = useState<Set<string>>(new Set(TODAS_AS_CHAVES));
+  const [orientacao, setOrientacao] = useState<"landscape" | "portrait">("landscape");
 
   function handleMesChange(valor: string) {
     setMes(valor);
@@ -72,6 +73,7 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
       inicio,
       fim,
       colunas: Array.from(colunas).join(","),
+      orientacao,
     });
     if (lojaParceiraId !== "todas") params.set("loja", lojaParceiraId);
     window.open(`/api/financeiro/relatorio/pdf?${params.toString()}`, "_blank");
@@ -127,6 +129,22 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
               }}
             />
           </div>
+        </div>
+
+        <div className="sm:max-w-xs">
+          <Label className="mb-1.5 block">Orientação da página</Label>
+          <Select value={orientacao} onValueChange={(v) => setOrientacao(v as "landscape" | "portrait")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="landscape">Horizontal (paisagem)</SelectItem>
+              <SelectItem value="portrait">Vertical (retrato)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Horizontal cabe mais colunas lado a lado; vertical é melhor com poucas colunas selecionadas.
+          </p>
         </div>
 
         <div className="sm:max-w-xs">

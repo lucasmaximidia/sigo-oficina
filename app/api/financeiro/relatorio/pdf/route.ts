@@ -26,6 +26,7 @@ export async function GET(request: Request) {
   const fim = url.searchParams.get("fim");
   const colunasParam = url.searchParams.get("colunas");
   const lojaParceiraId = url.searchParams.get("loja");
+  const orientacao = url.searchParams.get("orientacao") === "portrait" ? "portrait" : "landscape";
 
   if (!inicio || !fim) {
     return NextResponse.json({ error: "Informe o período (inicio e fim)" }, { status: 400 });
@@ -130,6 +131,7 @@ export async function GET(request: Request) {
       fim,
       mostrarResumo,
       lojaParceiraNome,
+      orientacao,
     })
   );
 
