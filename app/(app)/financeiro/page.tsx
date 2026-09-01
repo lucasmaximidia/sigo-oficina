@@ -104,7 +104,7 @@ export default async function FinanceiroPage() {
       supabase
         .from("fretes")
         .select<string, FreteComRelacoes>(
-          "id, os_id, valor_custo, status, tipo, data_pagamento, created_at, ordens_servico(numero, valor_frete), prestadores_frete(nome)"
+          "id, os_id, valor_custo, status, tipo, data_pagamento, created_at, ordens_servico(numero, valor_frete, data_pagamento, data_finalizacao, forma_pagamento), prestadores_frete(nome)"
         )
         .order("created_at", { ascending: false }),
       supabase
@@ -217,12 +217,18 @@ export default async function FinanceiroPage() {
   const totalFretePagoNoMes = (fretes ?? [])
     .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
     .reduce((acc, f) => acc + f.valor_custo, 0);
-  // Lucro só é considerado "realizado" quando o frete já foi pago ao
-  // prestador (antes disso o valor cobrado do cliente ainda cobre uma
-  // dívida em aberto, não é lucro) — por isso usa a mesma data/filtro de
-  // "Pago este mês" acima, e não a data de pagamento da OS.
+  // O mês do lucro segue o mês em que o cliente pagou a OS (mesmo critério
+  // de "Faturamento do mês"/"Mão de Obra do mês"), não a data em que o
+  // frete foi pago ao prestador — o freteiro pode ter sido pago antes de a
+  // OS ser finalizada/paga pelo cliente, e o lucro só existe quando as duas
+  // pontas (cobrado e pago) já são conhecidas.
   const lucroFreteNoMes = (fretes ?? [])
-    .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
+    .filter((f) => {
+      const os = f.ordens_servico;
+      if (!os || !os.forma_pagamento) return false;
+      const data = os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "");
+      return data.startsWith(mesAtual);
+    })
     .reduce((acc, f) => acc + (f.ordens_servico?.valor_frete ?? 0) - f.valor_custo, 0);
 
   const vencendoHojeOuAtrasado = (contas ?? []).filter(
