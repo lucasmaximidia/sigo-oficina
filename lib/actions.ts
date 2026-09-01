@@ -1011,6 +1011,43 @@ export async function restaurarRetirada(id: string) {
   revalidatePath("/configuracoes/lixeira");
 }
 
+// Ajuste manual do saldo em caixa — usado para reconciliar o saldo que o
+// sistema calcula (a partir do que foi lançado) com o caixa físico real,
+// por exemplo o saldo que já existia antes de começar a usar o SIGO.
+export async function createAjusteCaixa(formData: FormData) {
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const tipo = str(formData, "tipo") ?? "entrada";
+  const valorAbsoluto = num(formData, "valor");
+  const { error } = await supabase.from("financeiro_ajustes_caixa").insert({
+    descricao,
+    valor: tipo === "saida" ? -valorAbsoluto : valorAbsoluto,
+    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteAjusteCaixa(id: string) {
+  const { error } = await supabase
+    .from("financeiro_ajustes_caixa")
+    .update({ deletado_em: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
+}
+
+export async function restaurarAjusteCaixa(id: string) {
+  const { error } = await supabase.from("financeiro_ajustes_caixa").update({ deletado_em: null }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+  revalidatePath("/dashboard");
+  revalidatePath("/configuracoes/lixeira");
+}
+
 // Fecha a conta corrente com um parceiro que não emite boleto/NF: soma
 // todos os itens de OS ainda pendentes dessa loja, lança a retirada
 // correspondente e marca os itens como pagos.

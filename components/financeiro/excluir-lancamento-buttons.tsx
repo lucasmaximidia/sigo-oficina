@@ -1,7 +1,7 @@
 "use client";
 
 import { ConfirmDeleteButton } from "@/components/financeiro/confirm-delete-button";
-import { deleteContaPagar, deleteDespesa, deleteRetirada, deleteVendaPdv, reabrirOrdemServico } from "@/lib/actions";
+import { deleteContaPagar, deleteDespesa, deleteRetirada, deleteVendaPdv, deleteAjusteCaixa, reabrirOrdemServico } from "@/lib/actions";
 
 export function ExcluirContaButton({ id, descricao }: { id: string; descricao: string }) {
   return (
@@ -44,6 +44,17 @@ export function ExcluirRetiradaButton({ id, descricao }: { id: string; descricao
       description={`A retirada "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
       onConfirm={() => deleteRetirada(id)}
       successMessage="Retirada excluída"
+    />
+  );
+}
+
+export function ExcluirAjusteCaixaButton({ id, descricao }: { id: string; descricao: string }) {
+  return (
+    <ConfirmDeleteButton
+      title="Excluir ajuste de caixa?"
+      description={`O ajuste "${descricao}" sai do Financeiro, mas fica na Lixeira (Configurações) por segurança — dá pra restaurar depois.`}
+      onConfirm={() => deleteAjusteCaixa(id)}
+      successMessage="Ajuste excluído"
     />
   );
 }
