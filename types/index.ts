@@ -88,7 +88,13 @@ export interface FreteComRelacoes {
   tipo: FreteTipo;
   data_pagamento: string | null;
   created_at: string;
-  ordens_servico: { numero: number; valor_frete: number } | null;
+  ordens_servico: {
+    numero: number;
+    valor_frete: number;
+    data_pagamento: string | null;
+    data_finalizacao: string | null;
+    forma_pagamento: string | null;
+  } | null;
   prestadores_frete: { nome: string } | null;
 }
 
