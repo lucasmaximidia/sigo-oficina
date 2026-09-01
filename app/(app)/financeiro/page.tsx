@@ -217,6 +217,13 @@ export default async function FinanceiroPage() {
   const totalFretePagoNoMes = (fretes ?? [])
     .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
     .reduce((acc, f) => acc + f.valor_custo, 0);
+  // Lucro só é considerado "realizado" quando o frete já foi pago ao
+  // prestador (antes disso o valor cobrado do cliente ainda cobre uma
+  // dívida em aberto, não é lucro) — por isso usa a mesma data/filtro de
+  // "Pago este mês" acima, e não a data de pagamento da OS.
+  const lucroFreteNoMes = (fretes ?? [])
+    .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
+    .reduce((acc, f) => acc + (f.ordens_servico?.valor_frete ?? 0) - f.valor_custo, 0);
 
   const vencendoHojeOuAtrasado = (contas ?? []).filter(
     (c) => c.status !== "pago" && c.vencimento <= hojeStr
@@ -339,11 +346,12 @@ export default async function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-5">
         <StatCard icon={TrendingUp} label="Recebido este mês" value={formatCurrency(totalRecebidoNoMes)} tone="success" />
         <StatCard icon={AlertTriangle} label="Vencendo Hoje/Atrasado" value={formatCurrency(totalVencendo)} tone="danger" />
         <StatCard icon={ClipboardList} label="Próximos 7 dias" value={formatCurrency(totalProximos)} />
         <StatCard icon={Wrench} label="Mão de Obra do mês" value={formatCurrency(totalMaoObraNoMes)} tone="highlight" />
+        <StatCard icon={Truck} label="Lucro no Frete do mês" value={formatCurrency(lucroFreteNoMes)} tone="success" />
       </div>
 
       <Tabs defaultValue="visao-geral" className="mt-5">
