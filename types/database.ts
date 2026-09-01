@@ -708,6 +708,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      financeiro_ajustes_caixa: {
+        Row: {
+          id: string;
+          descricao: string;
+          valor: number;
+          data: string;
+          created_at: string;
+          deletado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          descricao: string;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          descricao?: string;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Relationships: [];
+      };
       financeiro_retiradas: {
         Row: {
           id: string;

@@ -24,10 +24,11 @@ import { EntradasTab } from "@/components/financeiro/entradas-tab";
 import { ContasTab } from "@/components/financeiro/contas-tab";
 import { DespesasTab } from "@/components/financeiro/despesas-tab";
 import { RetiradasTab } from "@/components/financeiro/retiradas-tab";
+import { AjustesCaixaTab } from "@/components/financeiro/ajustes-caixa-tab";
 import { FretesTab } from "@/components/financeiro/fretes-tab";
 import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
 import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
 import type { ParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
@@ -95,6 +96,7 @@ export default async function FinanceiroPage() {
     { data: retiradas },
     { data: itensParceiroPendentes },
     { data: osAutorizadaPendentes },
+    { data: ajustesCaixa },
   ] = await Promise.all([
       supabase.from("financeiro_contas").select("*").is("deletado_em", null).order("vencimento", { ascending: true }),
       supabase.from("financeiro_despesas").select("*").is("deletado_em", null).order("data", { ascending: false }),
@@ -132,6 +134,7 @@ export default async function FinanceiroPage() {
         .eq("status", "finalizado")
         .is("forma_pagamento", null)
         .not("empresa_autorizada_id", "is", null),
+      supabase.from("financeiro_ajustes_caixa").select("*").is("deletado_em", null).order("data", { ascending: false }),
     ]);
 
   const osIdsPagas = (osPagas ?? []).map((os) => os.id);
@@ -218,14 +221,16 @@ export default async function FinanceiroPage() {
   const totalProximos = proximos7dias.reduce((acc, c) => acc + c.valor, 0);
 
   // Saldo em caixa: soma de tudo que já entrou (desde o início) menos tudo
-  // que já saiu (despesas, contas pagas, fretes pagos e retiradas).
+  // que já saiu (despesas, contas pagas, fretes pagos e retiradas), mais os
+  // ajustes manuais (ex: saldo em caixa anterior ao sistema).
   const totalEntradasGeral = entradas.reduce((acc, e) => acc + e.valor, 0);
   const totalDespesasGeral = (despesas ?? []).reduce((acc, d) => acc + d.valor, 0);
   const totalContasPagasGeral = (contas ?? []).filter((c) => c.status === "pago").reduce((acc, c) => acc + c.valor, 0);
   const totalFretesPagosGeral = (fretes ?? []).filter((f) => f.status === "pago").reduce((acc, f) => acc + f.valor_custo, 0);
   const totalRetiradasGeral = (retiradas ?? []).reduce((acc, r) => acc + r.valor, 0);
   const totalSaidasGeral = totalDespesasGeral + totalContasPagasGeral + totalFretesPagosGeral + totalRetiradasGeral;
-  const saldoCaixa = totalEntradasGeral - totalSaidasGeral;
+  const totalAjustesGeral = (ajustesCaixa ?? []).reduce((acc, a) => acc + a.valor, 0);
+  const saldoCaixa = totalEntradasGeral - totalSaidasGeral + totalAjustesGeral;
 
   // O acerto só pode ser fechado com itens de OS que o cliente já pagou,
   // mas a lista mostra todos os itens pendentes com o parceiro (o toggle
@@ -314,6 +319,15 @@ export default async function FinanceiroPage() {
             <p className="text-xs text-muted-foreground">Saídas (total)</p>
             <p className="text-sm font-semibold text-destructive">{formatCurrency(totalSaidasGeral)}</p>
           </div>
+          {totalAjustesGeral !== 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground">Ajustes (total)</p>
+              <p className={cn("text-sm font-semibold", totalAjustesGeral >= 0 ? "text-success" : "text-destructive")}>
+                {totalAjustesGeral >= 0 ? "+" : ""}
+                {formatCurrency(totalAjustesGeral)}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -330,6 +344,7 @@ export default async function FinanceiroPage() {
           <TabsTrigger value="contas">Contas a Pagar (Boletos)</TabsTrigger>
           <TabsTrigger value="despesas">Despesas</TabsTrigger>
           <TabsTrigger value="retiradas">Retiradas</TabsTrigger>
+          <TabsTrigger value="ajustes">Ajustes de Caixa</TabsTrigger>
           <TabsTrigger value="fretes">Fretes</TabsTrigger>
         </TabsList>
 
@@ -401,6 +416,10 @@ export default async function FinanceiroPage() {
         <TabsContent value="retiradas" className="flex flex-col gap-4">
           <AcertoParceiros parceiros={parceirosPendentes} />
           <RetiradasTab retiradas={retiradas ?? []} />
+        </TabsContent>
+
+        <TabsContent value="ajustes">
+          <AjustesCaixaTab ajustes={ajustesCaixa ?? []} />
         </TabsContent>
 
         <TabsContent value="fretes">

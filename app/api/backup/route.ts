@@ -22,6 +22,7 @@ const TABELAS = [
   "financeiro_contas",
   "financeiro_despesas",
   "financeiro_retiradas",
+  "financeiro_ajustes_caixa",
   "orcamentos",
   "orcamento_itens",
   "agenda_eventos",
