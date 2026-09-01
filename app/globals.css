@@ -150,6 +150,19 @@
   --radius-xl: calc(var(--radius) + 6px);
 }
 
+/* Trava o scroll/bounce do documento: sem isso, no iOS/Safari o gesto de
+   arrastar até o fim do <main> (que tem seu próprio overflow-y-auto) "vaza"
+   para o body inteiro, deslocando toda a casca do app (topbar, nav
+   flutuante) junto durante o toque — e ao soltar, o body volta pro lugar
+   enquanto o <main> fica na posição rolada, cobrindo o fim do conteúdo com
+   a nav fixa. Todo o scroll real acontece dentro do <main>. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);
