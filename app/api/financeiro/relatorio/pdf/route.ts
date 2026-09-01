@@ -96,6 +96,7 @@ export async function GET(request: Request) {
     const valorPecasLoja = itensLoja.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
     const valorPecasOficina = itensOficina.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
     const valorTotal = valorPecasLoja + os.valor_mao_obra + valorPecasOficina + os.valor_frete;
+    const fretePago = fretePagoPorOs.get(os.id) ?? 0;
 
     const equipamento = os.equipamentos;
     const produto = equipamento ? [equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") || equipamento.tipo : "—";
@@ -108,8 +109,9 @@ export async function GET(request: Request) {
       valor_pecas_loja: valorPecasLoja,
       mao_obra: os.valor_mao_obra,
       valor_pecas_oficina: valorPecasOficina,
-      frete_pago: fretePagoPorOs.get(os.id) ?? 0,
+      frete_pago: fretePago,
       frete_cobrado: os.valor_frete,
+      frete_margem: os.valor_frete - fretePago,
       pecas_loja_desc: itensLoja.map((i) => i.descricao).join(", ") || "—",
       pecas_oficina_desc: itensOficina.map((i) => i.descricao).join(", ") || "—",
       valor_total: valorTotal,

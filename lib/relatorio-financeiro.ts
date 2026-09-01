@@ -12,6 +12,7 @@ export const RELATORIO_COLUNAS: RelatorioColuna[] = [
   { key: "mao_obra", label: "Mão de Obra", tipo: "moeda", align: "right", flex: 1 },
   { key: "frete_pago", label: "Frete Pago (Freteiro)", tipo: "moeda", align: "right", flex: 1 },
   { key: "frete_cobrado", label: "Frete Cobrado (Cliente)", tipo: "moeda", align: "right", flex: 1 },
+  { key: "frete_margem", label: "Margem de Frete", tipo: "moeda", align: "right", flex: 1 },
   { key: "pecas_oficina_desc", label: "Itens Utilizados (Oficina)", tipo: "texto", flex: 2 },
   { key: "valor_com_desconto", label: "Valor c/ Desconto", tipo: "moeda", align: "right", flex: 1.1 },
   { key: "forma_pagamento", label: "Forma Pagamento", tipo: "texto", flex: 1 },
