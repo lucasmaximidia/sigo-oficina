@@ -59,7 +59,7 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               <TableHead>Estoque</TableHead>
               <TableHead>Custo / Venda</TableHead>
               <TableHead>Lucro Unitário</TableHead>
-              <TableHead className="w-10">Ações</TableHead>
+              <TableHead className="w-24">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
