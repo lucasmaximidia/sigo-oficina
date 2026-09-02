@@ -15,6 +15,7 @@ import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
 import { OsInfoAccordion } from "@/components/os/os-info-accordion";
 import { OsObservacoes } from "@/components/os/os-observacoes";
 import { OsMaoObraList } from "@/components/os/os-mao-obra-list";
+import { WhatsappButton } from "@/components/ui/whatsapp-button";
 import { formatDateTime } from "@/lib/utils";
 import { urgenciaMap } from "@/lib/status";
 import type { OrdemServico, OsStatus, OsUrgencia } from "@/types";
@@ -132,7 +133,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Info label="Nome" value={cliente?.nome} />
-              <Info label="Telefone" value={cliente?.telefone} />
+              <Info label="Telefone" value={cliente?.telefone} action={<WhatsappButton telefone={cliente?.telefone} />} />
               <Info label="E-mail" value={cliente?.email} />
               <Info label="Entrada" value={formatDateTime(os.data_entrada)} />
             </CardContent>
@@ -253,11 +254,14 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
   );
 }
 
-function Info({ label, value }: { label: string; value?: string | null }) {
+function Info({ label, value, action }: { label: string; value?: string | null; action?: React.ReactNode }) {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm text-foreground">{value || "—"}</p>
+      <p className="mt-0.5 flex items-center gap-2 text-sm text-foreground">
+        {value || "—"}
+        {action}
+      </p>
     </div>
   );
 }
