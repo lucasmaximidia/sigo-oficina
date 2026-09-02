@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClienteFormDialog } from "@/components/clientes/cliente-form-dialog";
 import { EquipamentoDialog } from "@/components/clientes/equipamento-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
+import { WhatsappButton } from "@/components/ui/whatsapp-button";
 import { osStatusMap } from "@/lib/status";
 import { formatDate, cn } from "@/lib/utils";
 import type { OsStatus } from "@/types";
@@ -189,6 +190,7 @@ export default async function ClientesPage({
                     <p className="flex items-center gap-2 text-sm text-foreground">
                       <Phone className="size-3.5 text-muted-foreground" />
                       {clienteDetalhe.telefone || "—"}
+                      <WhatsappButton telefone={clienteDetalhe.telefone} />
                     </p>
                     <p className="mt-1 flex items-center gap-2 text-sm text-foreground">
                       <Mail className="size-3.5 text-muted-foreground" />
