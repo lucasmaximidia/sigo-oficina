@@ -76,6 +76,11 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 10, fontFamily: "Helvetica-Bold" },
   totalValor: { fontSize: 12, fontFamily: "Helvetica-Bold", color: cores.primary },
+  detalheTitulo: { fontSize: 9, fontFamily: "Helvetica-Bold", color: cores.text, marginBottom: 6, marginTop: 12 },
+  detalheHeaderRow: { flexDirection: "row", backgroundColor: cores.bgMuted, borderBottomWidth: 1, borderBottomColor: cores.border },
+  detalheTh: { padding: 5, fontSize: 7, fontFamily: "Helvetica-Bold", color: cores.muted, textTransform: "uppercase" },
+  detalheRow: { flexDirection: "row", borderTopWidth: 1, borderTopColor: cores.border },
+  detalheTd: { padding: 5, fontSize: 8 },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -89,6 +94,10 @@ const styles = StyleSheet.create({
 
 function formatCurrencyPdf(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatDatePdf(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T00:00:00`));
 }
 
 const MESES = [
@@ -117,6 +126,35 @@ export interface FormaPagamentoResumo {
   valor: number;
 }
 
+export interface ItemDetalhado {
+  descricao: string;
+  data: string;
+  valor: number;
+}
+
+function DetalheTabela({ titulo, itens }: { titulo: string; itens: ItemDetalhado[] }) {
+  if (itens.length === 0) return null;
+  return (
+    <>
+      <Text style={styles.detalheTitulo}>{titulo}</Text>
+      <View style={styles.tabela}>
+        <View style={styles.detalheHeaderRow}>
+          <Text style={[styles.detalheTh, { flex: 3 }]}>Descrição</Text>
+          <Text style={[styles.detalheTh, { flex: 1 }]}>Data</Text>
+          <Text style={[styles.detalheTh, { flex: 1, textAlign: "right" }]}>Valor</Text>
+        </View>
+        {itens.map((item, index) => (
+          <View key={index} style={styles.detalheRow} wrap={false}>
+            <Text style={[styles.detalheTd, { flex: 3 }]}>{item.descricao}</Text>
+            <Text style={[styles.detalheTd, { flex: 1 }]}>{formatDatePdf(item.data)}</Text>
+            <Text style={[styles.detalheTd, { flex: 1, textAlign: "right" }]}>{formatCurrencyPdf(item.valor)}</Text>
+          </View>
+        ))}
+      </View>
+    </>
+  );
+}
+
 export function FechamentoPdf({
   config,
   mes,
@@ -129,6 +167,11 @@ export function FechamentoPdf({
   ajustesMes,
   saldoFinal,
   formasNoMes,
+  detalheDespesas,
+  detalheContas,
+  detalheFretes,
+  detalheRetiradas,
+  detalheAjustes,
 }: {
   config: Pick<Configuracao, "nome_empresa" | "logo_url">;
   mes: string;
@@ -141,6 +184,11 @@ export function FechamentoPdf({
   ajustesMes: number;
   saldoFinal: number;
   formasNoMes: FormaPagamentoResumo[];
+  detalheDespesas: ItemDetalhado[];
+  detalheContas: ItemDetalhado[];
+  detalheFretes: ItemDetalhado[];
+  detalheRetiradas: ItemDetalhado[];
+  detalheAjustes: ItemDetalhado[];
 }) {
   const saidasMes = despesasMes + contasPagasMes + fretesPagosMes + retiradasMes;
   const dataEmissao = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date());
@@ -222,9 +270,19 @@ export function FechamentoPdf({
           </>
         )}
 
-        <Text style={styles.footer}>
-          Documento gerado automaticamente pelo SIGO Oficina para registro contábil do mês.
-        </Text>
+        <DetalheTabela titulo="Despesas" itens={detalheDespesas} />
+        <DetalheTabela titulo="Contas Pagas" itens={detalheContas} />
+        <DetalheTabela titulo="Fretes Pagos" itens={detalheFretes} />
+        <DetalheTabela titulo="Retiradas" itens={detalheRetiradas} />
+        <DetalheTabela titulo="Ajustes de Caixa" itens={detalheAjustes} />
+
+        <Text
+          style={styles.footer}
+          fixed
+          render={({ pageNumber, totalPages }) =>
+            `Documento gerado automaticamente pelo SIGO Oficina para registro contábil do mês. · Página ${pageNumber} de ${totalPages}`
+          }
+        />
       </Page>
     </Document>
   );
