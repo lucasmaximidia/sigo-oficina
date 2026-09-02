@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { supabase } from "@/lib/supabase";
 import { FechamentoPdf } from "@/components/financeiro/fechamento-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
+import { retiradaTipoMap } from "@/lib/status";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,9 +19,18 @@ interface OsPagaRow {
   valor_recebido_liquido: number | null;
 }
 
+interface FreteRow {
+  valor_custo: number;
+  status: string;
+  data_pagamento: string | null;
+  ordens_servico: { numero: number } | null;
+  prestadores_frete: { nome: string } | null;
+}
+
 interface MovimentoDatado {
   data: string;
   valor: number;
+  descricao: string;
 }
 
 export async function GET(request: Request) {
@@ -55,11 +65,13 @@ export async function GET(request: Request) {
       )
       .not("forma_pagamento", "is", null),
     supabase.from("vendas_pdv").select("id, created_at, total, forma_pagamento").is("deletado_em", null),
-    supabase.from("financeiro_despesas").select("valor, data").is("deletado_em", null),
-    supabase.from("financeiro_contas").select("valor, pago_em, status").is("deletado_em", null),
-    supabase.from("fretes").select("valor_custo, status, data_pagamento"),
-    supabase.from("financeiro_retiradas").select("valor, data").is("deletado_em", null),
-    supabase.from("financeiro_ajustes_caixa").select("valor, data").is("deletado_em", null),
+    supabase.from("financeiro_despesas").select("descricao, categoria, valor, data").is("deletado_em", null),
+    supabase.from("financeiro_contas").select("descricao, fornecedor, valor, pago_em, status").is("deletado_em", null),
+    supabase
+      .from("fretes")
+      .select<string, FreteRow>("valor_custo, status, data_pagamento, ordens_servico(numero), prestadores_frete(nome)"),
+    supabase.from("financeiro_retiradas").select("descricao, tipo, valor, data").is("deletado_em", null),
+    supabase.from("financeiro_ajustes_caixa").select("descricao, valor, data").is("deletado_em", null),
   ]);
 
   const osIds = (osPagas ?? []).map((os) => os.id);
@@ -76,24 +88,46 @@ export async function GET(request: Request) {
     const totalItens = totalItensPorOs.get(os.id) ?? 0;
     const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
     const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
-    return { data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""), valor };
+    return { data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""), valor, descricao: "" };
   });
-  const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({ data: v.created_at.slice(0, 10), valor: v.total }));
+  const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({ data: v.created_at.slice(0, 10), valor: v.total, descricao: "" }));
   const entradas = [...entradasOs, ...entradasPdv];
 
-  const saidasDespesas: MovimentoDatado[] = (despesas ?? []).map((d) => ({ data: d.data, valor: d.valor }));
+  const saidasDespesas: MovimentoDatado[] = (despesas ?? []).map((d) => ({
+    data: d.data,
+    valor: d.valor,
+    descricao: d.categoria ? `${d.descricao} (${d.categoria})` : d.descricao,
+  }));
   const saidasContas: MovimentoDatado[] = (contas ?? [])
     .filter((c) => c.status === "pago" && c.pago_em)
-    .map((c) => ({ data: c.pago_em as string, valor: c.valor }));
+    .map((c) => ({
+      data: c.pago_em as string,
+      valor: c.valor,
+      descricao: c.fornecedor ? `${c.descricao} — ${c.fornecedor}` : c.descricao,
+    }));
   const saidasFretes: MovimentoDatado[] = (fretes ?? [])
     .filter((f) => f.status === "pago" && f.data_pagamento)
-    .map((f) => ({ data: f.data_pagamento as string, valor: f.valor_custo }));
-  const saidasRetiradas: MovimentoDatado[] = (retiradas ?? []).map((r) => ({ data: r.data, valor: r.valor }));
-  const ajustesMovimento: MovimentoDatado[] = (ajustes ?? []).map((a) => ({ data: a.data, valor: a.valor }));
+    .map((f) => ({
+      data: f.data_pagamento as string,
+      valor: f.valor_custo,
+      descricao: [
+        f.ordens_servico ? `OS #OS-${String(f.ordens_servico.numero).padStart(4, "0")}` : null,
+        f.prestadores_frete?.nome ?? null,
+      ]
+        .filter(Boolean)
+        .join(" — ") || "Frete",
+    }));
+  const saidasRetiradas: MovimentoDatado[] = (retiradas ?? []).map((r) => ({
+    data: r.data,
+    valor: r.valor,
+    descricao: `${r.descricao} (${retiradaTipoMap[r.tipo]?.label ?? r.tipo})`,
+  }));
+  const ajustesMovimento: MovimentoDatado[] = (ajustes ?? []).map((a) => ({ data: a.data, valor: a.valor, descricao: a.descricao }));
 
   const somaAntes = (lista: MovimentoDatado[]) => lista.filter((m) => m.data < inicioMes).reduce((acc, m) => acc + m.valor, 0);
-  const somaNoMes = (lista: MovimentoDatado[]) =>
-    lista.filter((m) => m.data >= inicioMes && m.data <= fimMes).reduce((acc, m) => acc + m.valor, 0);
+  const noMes = (lista: MovimentoDatado[]) =>
+    lista.filter((m) => m.data >= inicioMes && m.data <= fimMes).sort((a, b) => (a.data < b.data ? -1 : 1));
+  const somaNoMes = (lista: MovimentoDatado[]) => noMes(lista).reduce((acc, m) => acc + m.valor, 0);
 
   const entradasAntes = somaAntes(entradas);
   const saidasAntes =
@@ -138,6 +172,11 @@ export async function GET(request: Request) {
       ajustesMes,
       saldoFinal,
       formasNoMes,
+      detalheDespesas: noMes(saidasDespesas),
+      detalheContas: noMes(saidasContas),
+      detalheFretes: noMes(saidasFretes),
+      detalheRetiradas: noMes(saidasRetiradas),
+      detalheAjustes: noMes(ajustesMovimento),
     })
   );
 
