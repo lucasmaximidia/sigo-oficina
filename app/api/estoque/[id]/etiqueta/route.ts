@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { EtiquetaPecaImage, ETIQUETA_PECA_LARGURA, ETIQUETA_PECA_ALTURA } from "@/components/estoque/etiqueta-peca-image";
 import { slugify } from "@/lib/utils";
 
@@ -34,6 +34,7 @@ async function loadGoogleFont(family: string, weight: number) {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [{ data: peca }, { data: config }] = await Promise.all([

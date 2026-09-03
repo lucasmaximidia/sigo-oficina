@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import type {
   Database,
   OsStatus,
@@ -37,6 +37,7 @@ function strUp(fd: FormData, key: string) {
 
 // ---------- Clientes ----------
 export async function createCliente(formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { data, error } = await supabase
@@ -60,6 +61,7 @@ export async function createCliente(formData: FormData) {
 }
 
 export async function updateCliente(id: string, formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase
@@ -80,6 +82,7 @@ export async function updateCliente(id: string, formData: FormData) {
 }
 
 export async function createEquipamento(clienteId: string, formData: FormData) {
+  const supabase = await createClient();
   const tipo = strUp(formData, "tipo");
   if (!tipo) throw new Error("Tipo é obrigatório");
   const { error } = await supabase.from("equipamentos").insert({
@@ -95,6 +98,7 @@ export async function createEquipamento(clienteId: string, formData: FormData) {
 
 // ---------- Ordens de Serviço ----------
 export async function createOrdemServico(formData: FormData) {
+  const supabase = await createClient();
   let clienteId = str(formData, "cliente_id");
 
   if (!clienteId) {
@@ -153,6 +157,7 @@ export async function createOrdemServico(formData: FormData) {
 }
 
 export async function updateOrdemServicoValores(id: string, formData: FormData) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("ordens_servico")
     .update({
@@ -167,6 +172,7 @@ export async function updateOrdemServicoValores(id: string, formData: FormData) 
 }
 
 export async function updateOrdemServicoStatus(id: string, status: OsStatus) {
+  const supabase = await createClient();
   const patch: Database["public"]["Tables"]["ordens_servico"]["Update"] = { status };
   if (status === "finalizado") patch.data_finalizacao = new Date().toISOString();
   const { error } = await supabase.from("ordens_servico").update(patch).eq("id", id);
@@ -178,6 +184,7 @@ export async function updateOrdemServicoStatus(id: string, status: OsStatus) {
 }
 
 export async function updateObservacoesOs(id: string, observacoes: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("ordens_servico")
     .update({ observacoes_internas: observacoes.trim() || null })
@@ -187,6 +194,7 @@ export async function updateObservacoesOs(id: string, observacoes: string) {
 }
 
 export async function createEmpresaAutorizada(formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { data, error } = await supabase
@@ -210,6 +218,7 @@ export async function updateOrdemServicoAutorizada(
     numeroSerieAutorizada: string | null;
   }
 ) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("ordens_servico")
     .update({
@@ -226,6 +235,7 @@ export async function updateOrdemServicoAutorizada(
 }
 
 export async function setOrdemServicoParada(id: string, parada: boolean, motivo?: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("ordens_servico")
     .update({ parada, parada_motivo: parada ? motivo ?? null : null })
@@ -236,6 +246,7 @@ export async function setOrdemServicoParada(id: string, parada: boolean, motivo?
 }
 
 export async function deleteOrdemServico(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("ordens_servico").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/ordens-servico");
@@ -247,6 +258,7 @@ export async function deleteOrdemServico(id: string) {
 // Soma tudo que compõe o valor de uma OS (peças + mão de obra + frete -
 // desconto) e quanto já foi pago até agora nos pagamentos registrados.
 async function getOsTotais(osId: string) {
+  const supabase = await createClient();
   const [{ data: os }, { data: itens }, { data: pagamentos }] = await Promise.all([
     supabase.from("ordens_servico").select("valor_mao_obra, valor_frete, desconto").eq("id", osId).single(),
     supabase.from("os_itens").select("quantidade, valor_unitario").eq("os_id", osId),
@@ -275,6 +287,7 @@ export async function registrarPagamentoOs(
     valorRecebidoLiquido?: number | null;
   }
 ) {
+  const supabase = await createClient();
   if (input.valor <= 0) throw new Error("Informe um valor válido");
   const isCartao = input.formaPagamento === "cartao";
   const { error } = await supabase.from("os_pagamentos").insert({
@@ -311,6 +324,7 @@ export async function registrarPagamentoOs(
 // aparecer como não quitada no Financeiro até um novo pagamento fechar a
 // conta.
 export async function deleteOsPagamento(id: string, osId: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("os_pagamentos").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
@@ -334,6 +348,7 @@ export async function deleteOsPagamento(id: string, osId: string) {
 }
 
 export async function setOrdemServicoRetirada(id: string, dataRetirada: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("ordens_servico").update({ data_retirada: dataRetirada }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${id}`);
@@ -345,6 +360,7 @@ export async function setOrdemServicoRetirada(id: string, dataRetirada: string) 
 // de novo). data_finalizacao é mantida de propósito — é o sinal de que essa
 // OS já foi finalizada antes e precisa ser avisado na tela.
 export async function reabrirOrdemServico(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("ordens_servico")
     .update({
@@ -366,6 +382,7 @@ export async function reabrirOrdemServico(id: string) {
 }
 
 export async function addOsItem(osId: string, formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const pecaId = str(formData, "peca_id");
@@ -426,6 +443,7 @@ export async function addOsItem(osId: string, formData: FormData) {
 }
 
 export async function updateOsItem(itemId: string, osId: string, formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const quantidade = Number(str(formData, "quantidade") ?? "1");
@@ -474,6 +492,7 @@ export async function updateOsItem(itemId: string, osId: string, formData: FormD
 }
 
 export async function removeOsItem(itemId: string, osId: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("os_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
@@ -481,6 +500,7 @@ export async function removeOsItem(itemId: string, osId: string) {
 
 // ---------- Mão de obra descrita ----------
 async function recalcularMaoObraOs(osId: string) {
+  const supabase = await createClient();
   const { data: itens, error } = await supabase.from("os_mao_obra_itens").select("valor").eq("os_id", osId);
   if (error) throw new Error(error.message);
   const total = (itens ?? []).reduce((acc, i) => acc + i.valor, 0);
@@ -489,6 +509,7 @@ async function recalcularMaoObraOs(osId: string) {
 }
 
 export async function addOsMaoObraItem(osId: string, formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const valor = num(formData, "valor");
@@ -503,6 +524,7 @@ export async function addOsMaoObraItem(osId: string, formData: FormData) {
 }
 
 export async function removeOsMaoObraItem(itemId: string, osId: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("os_mao_obra_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
 
@@ -514,6 +536,7 @@ export async function removeOsMaoObraItem(itemId: string, osId: string) {
 
 // ---------- Fretes ----------
 export async function createPrestadorFrete(formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { data, error } = await supabase
@@ -528,6 +551,7 @@ export async function createPrestadorFrete(formData: FormData) {
 }
 
 export async function addFrete(osId: string, formData: FormData) {
+  const supabase = await createClient();
   const prestadorId = str(formData, "prestador_id");
   const tipo = (str(formData, "tipo") as FreteTipo | null) ?? "entrega";
   const { error } = await supabase.from("fretes").insert({
@@ -542,6 +566,7 @@ export async function addFrete(osId: string, formData: FormData) {
 }
 
 export async function marcarFretePago(freteId: string, osId: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("fretes")
     .update({ status: "pago" as FreteStatus, data_pagamento: new Date().toISOString().slice(0, 10) })
@@ -552,6 +577,7 @@ export async function marcarFretePago(freteId: string, osId: string) {
 }
 
 export async function deleteFrete(freteId: string, osId: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("fretes").delete().eq("id", freteId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
@@ -560,6 +586,7 @@ export async function deleteFrete(freteId: string, osId: string) {
 
 // ---------- Estoque ----------
 export async function createPeca(formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase.from("pecas").insert({
@@ -577,6 +604,7 @@ export async function createPeca(formData: FormData) {
 }
 
 export async function updatePeca(id: string, formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase
@@ -605,6 +633,7 @@ export interface BalancoEstoqueItemInput {
 }
 
 export async function criarBalancoEstoque(itens: BalancoEstoqueItemInput[], observacao?: string | null) {
+  const supabase = await createClient();
   if (itens.length === 0) throw new Error("Conte ao menos um item para salvar o balanço");
 
   const { data: balanco, error: balancoError } = await supabase
@@ -661,6 +690,7 @@ export async function createEntradaEstoque(input: {
   itens: EntradaEstoqueItemInput[];
   parcelas: EntradaEstoqueParcelaInput[];
 }) {
+  const supabase = await createClient();
   if (!input.dataNf) throw new Error("Data da NF é obrigatória");
   if (input.itens.length === 0) throw new Error("Adicione ao menos um item recebido");
 
@@ -740,6 +770,7 @@ export async function createEntradaEstoque(input: {
 }
 
 export async function createLojaParceira(formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase.from("lojas_parceiras").insert({
@@ -755,6 +786,7 @@ export async function createLojaParceira(formData: FormData) {
 }
 
 export async function updateLojaParceira(id: string, formData: FormData) {
+  const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
   const { error } = await supabase
@@ -794,6 +826,7 @@ export async function finalizarVendaPdv(input: {
   desconto: number;
   itens: PdvItemInput[];
 }) {
+  const supabase = await createClient();
   const subtotal = input.itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
   const total = Math.max(0, subtotal - input.desconto);
 
@@ -864,6 +897,7 @@ function addMeses(dataISO: string, meses: number): string {
 }
 
 export async function createContaPagar(formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   const vencimento = str(formData, "vencimento");
   if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
@@ -892,6 +926,7 @@ export async function createContaPagar(formData: FormData) {
 }
 
 export async function updateContaPagar(id: string, formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   const vencimento = str(formData, "vencimento");
   if (!descricao || !vencimento) throw new Error("Descrição e vencimento são obrigatórios");
@@ -913,6 +948,7 @@ export async function updateContaPagar(id: string, formData: FormData) {
 }
 
 export async function marcarContaPaga(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("financeiro_contas")
     .update({ status: "pago", pago_em: new Date().toISOString().slice(0, 10) })
@@ -923,6 +959,7 @@ export async function marcarContaPaga(id: string) {
 }
 
 export async function deleteContaPagar(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("financeiro_contas")
     .update({ deletado_em: new Date().toISOString() })
@@ -934,6 +971,7 @@ export async function deleteContaPagar(id: string) {
 }
 
 export async function restaurarContaPagar(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("financeiro_contas").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -942,6 +980,7 @@ export async function restaurarContaPagar(id: string) {
 }
 
 export async function createDespesa(formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const { error } = await supabase.from("financeiro_despesas").insert({
@@ -955,6 +994,7 @@ export async function createDespesa(formData: FormData) {
 }
 
 export async function deleteDespesa(id: string) {
+  const supabase = await createClient();
   const { data: despesa } = await supabase.from("financeiro_despesas").select("os_item_id").eq("id", id).single();
   const { error } = await supabase
     .from("financeiro_despesas")
@@ -975,6 +1015,7 @@ export async function deleteDespesa(id: string) {
 }
 
 export async function restaurarDespesa(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("financeiro_despesas").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -982,6 +1023,7 @@ export async function restaurarDespesa(id: string) {
 }
 
 export async function createRetirada(formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const { error } = await supabase.from("financeiro_retiradas").insert({
@@ -995,6 +1037,7 @@ export async function createRetirada(formData: FormData) {
 }
 
 export async function deleteRetirada(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("financeiro_retiradas")
     .update({ deletado_em: new Date().toISOString() })
@@ -1005,6 +1048,7 @@ export async function deleteRetirada(id: string) {
 }
 
 export async function restaurarRetirada(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("financeiro_retiradas").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1015,6 +1059,7 @@ export async function restaurarRetirada(id: string) {
 // sistema calcula (a partir do que foi lançado) com o caixa físico real,
 // por exemplo o saldo que já existia antes de começar a usar o SIGO.
 export async function createAjusteCaixa(formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const tipo = str(formData, "tipo") ?? "entrada";
@@ -1030,6 +1075,7 @@ export async function createAjusteCaixa(formData: FormData) {
 }
 
 export async function deleteAjusteCaixa(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("financeiro_ajustes_caixa")
     .update({ deletado_em: new Date().toISOString() })
@@ -1041,6 +1087,7 @@ export async function deleteAjusteCaixa(id: string) {
 }
 
 export async function restaurarAjusteCaixa(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("financeiro_ajustes_caixa").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1059,6 +1106,7 @@ interface ItemParceiroCandidato {
 }
 
 export async function fecharContaParceiro(lojaParceiraId: string) {
+  const supabase = await createClient();
   const [{ data: loja }, { data: itensCandidatos }] = await Promise.all([
     supabase.from("lojas_parceiras").select("nome").eq("id", lojaParceiraId).single(),
     supabase
@@ -1108,6 +1156,7 @@ interface OsAutorizadaCandidata {
 }
 
 export async function fecharContaAutorizada(empresaAutorizadaId: string) {
+  const supabase = await createClient();
   const [{ data: empresa }, { data: osCandidatas }] = await Promise.all([
     supabase.from("empresas_autorizadas").select("nome").eq("id", empresaAutorizadaId).single(),
     supabase
@@ -1173,6 +1222,7 @@ interface VendaRow {
 }
 
 export async function getVendaDetalhes(id: string): Promise<VendaDetalhes> {
+  const supabase = await createClient();
   const [{ data: venda, error }, { data: itens }, { data: pagamentos }] = await Promise.all([
     supabase
       .from("vendas_pdv")
@@ -1232,6 +1282,7 @@ interface OsDetalhesRow {
 }
 
 export async function getOsDetalhes(id: string): Promise<OsDetalhes> {
+  const supabase = await createClient();
   const [{ data: os, error }, { data: itens }] = await Promise.all([
     supabase
       .from("ordens_servico")
@@ -1269,6 +1320,7 @@ export async function getOsDetalhes(id: string): Promise<OsDetalhes> {
 }
 
 export async function deleteVendaPdv(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("vendas_pdv")
     .update({ deletado_em: new Date().toISOString() })
@@ -1281,6 +1333,7 @@ export async function deleteVendaPdv(id: string) {
 }
 
 export async function restaurarVendaPdv(id: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("vendas_pdv").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1291,6 +1344,7 @@ export async function restaurarVendaPdv(id: string) {
 
 // ---------- Agenda ----------
 export async function createAgendaEvento(formData: FormData) {
+  const supabase = await createClient();
   const titulo = strUp(formData, "titulo");
   const data = str(formData, "data");
   const hora = str(formData, "hora") ?? "09:00";
@@ -1310,6 +1364,7 @@ export async function createAgendaEvento(formData: FormData) {
 }
 
 export async function updateAgendaEvento(id: string, formData: FormData) {
+  const supabase = await createClient();
   const titulo = strUp(formData, "titulo");
   const data = str(formData, "data");
   const hora = str(formData, "hora") ?? "09:00";
@@ -1333,6 +1388,7 @@ export async function updateAgendaEvento(id: string, formData: FormData) {
 }
 
 export async function updateAgendaStatus(id: string, status: AgendaStatus) {
+  const supabase = await createClient();
   const { error } = await supabase.from("agenda_eventos").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/agenda");
@@ -1341,6 +1397,7 @@ export async function updateAgendaStatus(id: string, status: AgendaStatus) {
 
 // ---------- Tarefas ----------
 export async function createTarefa(formData: FormData) {
+  const supabase = await createClient();
   const titulo = strUp(formData, "titulo");
   if (!titulo) throw new Error("Título é obrigatório");
   const { error } = await supabase.from("tarefas").insert({ titulo });
@@ -1349,6 +1406,7 @@ export async function createTarefa(formData: FormData) {
 }
 
 export async function toggleTarefa(id: string, concluida: boolean) {
+  const supabase = await createClient();
   const { error } = await supabase.from("tarefas").update({ concluida }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
@@ -1356,6 +1414,7 @@ export async function toggleTarefa(id: string, concluida: boolean) {
 
 // ---------- Configurações ----------
 export async function updateConfiguracoesEmpresa(formData: FormData) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("configuracoes")
     .update({
@@ -1370,6 +1429,7 @@ export async function updateConfiguracoesEmpresa(formData: FormData) {
 }
 
 export async function uploadLogoEmpresa(formData: FormData) {
+  const supabase = await createClient();
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) throw new Error("Selecione uma imagem");
   if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
@@ -1397,6 +1457,7 @@ export async function uploadLogoEmpresa(formData: FormData) {
 }
 
 export async function uploadLogoEtiqueta(formData: FormData) {
+  const supabase = await createClient();
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) throw new Error("Selecione uma imagem");
   if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
@@ -1422,12 +1483,14 @@ export async function uploadLogoEtiqueta(formData: FormData) {
 }
 
 export async function removerLogoEtiqueta() {
+  const supabase = await createClient();
   const { error } = await supabase.from("configuracoes").update({ etiqueta_logo_url: null }).eq("id", 1);
   if (error) throw new Error(error.message);
   revalidatePath("/configuracoes");
 }
 
 export async function updateConfiguracoesGarantia(formData: FormData) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("configuracoes")
     .update({
@@ -1445,6 +1508,7 @@ export async function updateConfiguracoesGarantia(formData: FormData) {
 
 
 export async function updateConfiguracoesDashboard(formData: FormData) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("configuracoes")
     .update({
@@ -1468,6 +1532,7 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
 
 // ---------- Orçamentos ----------
 export async function createOrcamento(formData: FormData) {
+  const supabase = await createClient();
   let clienteId = str(formData, "cliente_id");
 
   if (!clienteId) {
@@ -1502,6 +1567,7 @@ export async function createOrcamento(formData: FormData) {
 }
 
 export async function updateOrcamentoDetalhes(id: string, formData: FormData) {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("orcamentos")
     .update({
@@ -1516,6 +1582,7 @@ export async function updateOrcamentoDetalhes(id: string, formData: FormData) {
 }
 
 export async function updateOrcamentoStatus(id: string, status: OrcamentoStatus) {
+  const supabase = await createClient();
   const { error } = await supabase.from("orcamentos").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/orcamentos/${id}`);
@@ -1523,6 +1590,7 @@ export async function updateOrcamentoStatus(id: string, status: OrcamentoStatus)
 }
 
 export async function addOrcamentoItem(orcamentoId: string, formData: FormData) {
+  const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
   const { error } = await supabase.from("orcamento_itens").insert({
@@ -1537,12 +1605,14 @@ export async function addOrcamentoItem(orcamentoId: string, formData: FormData) 
 }
 
 export async function removeOrcamentoItem(itemId: string, orcamentoId: string) {
+  const supabase = await createClient();
   const { error } = await supabase.from("orcamento_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
   revalidatePath(`/orcamentos/${orcamentoId}`);
 }
 
 export async function resetarSistema() {
+  const supabase = await createClient();
   const tabelas = [
     "os_itens",
     "os_mao_obra_itens",

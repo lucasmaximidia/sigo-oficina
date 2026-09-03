@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import {
   EtiquetaAutorizadaImage,
   ETIQUETA_AUTORIZADA_LARGURA,
@@ -44,6 +44,7 @@ async function loadGoogleFont(family: string, weight: number) {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [{ data: os }, { data: config }] = await Promise.all([

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Plus, ChevronRight, Search } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
 import { OsTableRow } from "@/components/os/os-table-row";
@@ -51,6 +51,7 @@ export default async function OrdensServicoPage({
 }: {
   searchParams: Promise<{ status?: string; page?: string; view?: string; q?: string }>;
 }) {
+  const supabase = await createClient();
   const params = await searchParams;
   const status = params.status as OsStatus | undefined;
   const busca = params.q?.trim();

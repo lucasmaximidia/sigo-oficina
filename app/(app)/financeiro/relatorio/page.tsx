@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { RelatorioForm } from "@/components/financeiro/relatorio-form";
 import { FechamentoMensalForm } from "@/components/financeiro/fechamento-mensal-form";
@@ -8,6 +8,7 @@ import { FechamentoMensalForm } from "@/components/financeiro/fechamento-mensal-
 export const dynamic = "force-dynamic";
 
 export default async function RelatorioFinanceiroPage() {
+  const supabase = await createClient();
   const { data: lojas } = await supabase.from("lojas_parceiras").select("*").order("nome", { ascending: true });
 
   return (

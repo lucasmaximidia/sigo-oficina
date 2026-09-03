@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { BalancoForm } from "@/components/estoque/balanco-form";
 import { BalancoHistorico } from "@/components/estoque/balanco-historico";
@@ -13,6 +13,7 @@ interface BalancoRow extends BalancoEstoque {
 }
 
 export default async function BalancoEstoquePage() {
+  const supabase = await createClient();
   const [{ data: pecas }, { data: balancosRaw }] = await Promise.all([
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
     supabase

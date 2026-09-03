@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { buildCsv, csvResponse } from "@/lib/csv";
 import { formatDate } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const TIPOS = ["clientes", "estoque", "contas", "despesas"] as const;
 type Tipo = (typeof TIPOS)[number];
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   const url = new URL(request.url);
   const tipo = url.searchParams.get("tipo") as Tipo | null;
   if (!tipo || !TIPOS.includes(tipo)) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { OsPdf } from "@/components/os/os-pdf";
 import type { OrdemServico } from "@/types";
 
@@ -13,6 +13,7 @@ interface OsComRelacoes extends OrdemServico {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [{ data: os }, { data: itens }, { data: config }, { data: maoObraItens }] = await Promise.all([
