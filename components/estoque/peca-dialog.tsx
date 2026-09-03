@@ -19,8 +19,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createPeca, updatePeca } from "@/lib/actions";
 import type { LojaParceira, Peca } from "@/types";
 
-export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[] }) {
-  const [open, setOpen] = useState(false);
+export function PecaDialog({
+  peca,
+  lojas,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  hideTrigger = false,
+}: {
+  peca?: Peca;
+  lojas: LojaParceira[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChangeProp ?? setOpenState;
   const [isPending, startTransition] = useTransition();
   const isEdit = Boolean(peca);
 
@@ -43,18 +57,20 @@ export function PecaDialog({ peca, lojas }: { peca?: Peca; lojas: LojaParceira[]
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {isEdit ? (
-          <Button size="icon" variant="ghost" aria-label="Editar peça">
-            <Pencil className="size-4" />
-          </Button>
-        ) : (
-          <Button>
-            <Plus className="size-4" />
-            Cadastrar Peça
-          </Button>
-        )}
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          {isEdit ? (
+            <Button size="icon" variant="ghost" aria-label="Editar peça">
+              <Pencil className="size-4" />
+            </Button>
+          ) : (
+            <Button>
+              <Plus className="size-4" />
+              Cadastrar Peça
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar peça" : "Cadastrar peça"}</DialogTitle>
