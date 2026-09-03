@@ -1,13 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Tag } from "lucide-react";
+import { Search, Tag, Pencil, MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PecaDialog } from "@/components/estoque/peca-dialog";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { LojaParceira, Peca } from "@/types";
@@ -21,6 +27,7 @@ function statusPeca(quantidade: number, minimo: number) {
 export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaParceira[] }) {
   const [busca, setBusca] = useState("");
   const [soBaixo, setSoBaixo] = useState(false);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
 
   const pecasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -59,7 +66,7 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               <TableHead>Estoque</TableHead>
               <TableHead>Custo / Venda</TableHead>
               <TableHead>Lucro Unitário</TableHead>
-              <TableHead className="w-24">Ações</TableHead>
+              <TableHead className="w-10">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,14 +97,32 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
                     <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" aria-label="Baixar etiqueta" asChild>
-                        <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
-                          <Tag className="size-4" />
-                        </a>
-                      </Button>
-                      <PecaDialog peca={peca} lojas={lojas} />
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost" aria-label="Mais ações">
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
+                            <Tag className="size-4" />
+                            Baixar etiqueta
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setEditandoId(peca.id)}>
+                          <Pencil className="size-4" />
+                          Editar peça
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <PecaDialog
+                      peca={peca}
+                      lojas={lojas}
+                      hideTrigger
+                      open={editandoId === peca.id}
+                      onOpenChange={(value) => setEditandoId(value ? peca.id : null)}
+                    />
                   </TableCell>
                 </TableRow>
               );
