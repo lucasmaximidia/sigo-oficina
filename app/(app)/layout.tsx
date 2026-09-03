@@ -50,8 +50,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           notificacoesContas={notificacoesContas}
           notificacoesPecas={notificacoesPecas}
         />
-        <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-28 md:px-6 md:py-6 lg:px-8 lg:pb-6">
-          <div className="mx-auto h-full w-full max-w-7xl">
+        <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(7rem_+_env(safe-area-inset-bottom))] md:px-6 md:py-6 lg:px-8 lg:pb-6">
+          <div className="mx-auto min-h-full w-full max-w-7xl">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
