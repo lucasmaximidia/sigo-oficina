@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
-import type { OsStatus, OsUrgencia } from "@/types";
+import type { FormaPagamento, OsStatus, OsUrgencia } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +41,11 @@ interface OsKanbanRow {
   data_entrada: string;
   data_finalizacao: string | null;
   data_retirada: string | null;
+  forma_pagamento: FormaPagamento | null;
+  empresa_autorizada_id: string | null;
   clientes: { nome: string } | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
+  empresas_autorizadas: { nome: string } | null;
   os_itens: { quantidade: number; valor_unitario: number }[];
 }
 
@@ -66,33 +69,50 @@ export default async function OrdensServicoPage({
 
   if (view === "kanban") {
     const colunasKanban =
-      "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, clientes(nome), equipamentos(tipo, marca, modelo), os_itens(quantidade, valor_unitario)";
+      "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, forma_pagamento, empresa_autorizada_id, clientes(nome), equipamentos(tipo, marca, modelo), empresas_autorizadas(nome), os_itens(quantidade, valor_unitario)";
     const limiteFinalizadas = new Date();
     limiteFinalizadas.setDate(limiteFinalizadas.getDate() - 30);
 
-    const [{ data: ordensAtivas }, { data: ordensFinalizadas }] = await Promise.all([
-      supabase
-        .from("ordens_servico")
-        .select<string, OsKanbanRow>(colunasKanban)
-        .not("status", "in", "(cancelado,finalizado)")
-        .order("data_entrada", { ascending: false })
-        .limit(200),
-      // Só as finalizadas dos últimos 30 dias — o histórico completo fica na visão Lista,
-      // pra essa coluna não crescer pra sempre e virar rolagem infinita.
-      supabase
-        .from("ordens_servico")
-        .select<string, OsKanbanRow>(colunasKanban)
-        .eq("status", "finalizado")
-        .gte("data_finalizacao", limiteFinalizadas.toISOString().slice(0, 10))
-        .order("data_finalizacao", { ascending: false })
-        .limit(200),
-    ]);
-    const ordensKanban = [...(ordensAtivas ?? []), ...(ordensFinalizadas ?? [])];
+    const [{ data: ordensAtivas }, { data: ordensFinalizadas }, { data: ordensAutorizadasPendentes }] =
+      await Promise.all([
+        supabase
+          .from("ordens_servico")
+          .select<string, OsKanbanRow>(colunasKanban)
+          .not("status", "in", "(cancelado,finalizado)")
+          .order("data_entrada", { ascending: false })
+          .limit(200),
+        // Só as finalizadas dos últimos 30 dias — o histórico completo fica na visão Lista,
+        // pra essa coluna não crescer pra sempre e virar rolagem infinita.
+        supabase
+          .from("ordens_servico")
+          .select<string, OsKanbanRow>(colunasKanban)
+          .eq("status", "finalizado")
+          .gte("data_finalizacao", limiteFinalizadas.toISOString().slice(0, 10))
+          .order("data_finalizacao", { ascending: false })
+          .limit(200),
+        // OS de autorizada finalizadas aguardando o repasse (fechado em lote no
+        // Financeiro) ficam na coluna "Autorizadas" sem limite de data — elas
+        // não somem daqui enquanto o pagamento não for acertado.
+        supabase
+          .from("ordens_servico")
+          .select<string, OsKanbanRow>(colunasKanban)
+          .eq("status", "finalizado")
+          .is("forma_pagamento", null)
+          .not("empresa_autorizada_id", "is", null)
+          .order("data_finalizacao", { ascending: false })
+          .limit(200),
+      ]);
+    const ordensPorId = new Map<string, OsKanbanRow>();
+    for (const os of [...(ordensAtivas ?? []), ...(ordensFinalizadas ?? []), ...(ordensAutorizadasPendentes ?? [])]) {
+      ordensPorId.set(os.id, os);
+    }
 
-    const itensKanban: OsKanbanItem[] = ordensKanban.map((os) => {
+    const itensKanban: OsKanbanItem[] = Array.from(ordensPorId.values()).map((os) => {
       const totalItens = (os.os_itens ?? []).reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
       const total = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
       const equipamento = os.equipamentos;
+      const aguardandoRepasseAutorizada =
+        os.status === "finalizado" && os.empresa_autorizada_id !== null && os.forma_pagamento === null;
       const dataLabel =
         os.status === "finalizado"
           ? `Finalizado ${formatDate(os.data_retirada ?? os.data_finalizacao ?? os.data_entrada)}`
@@ -108,6 +128,8 @@ export default async function OrdensServicoPage({
           ? [equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") || equipamento.tipo
           : "—",
         dataLabel,
+        aguardandoRepasseAutorizada,
+        empresaAutorizadaNome: os.empresas_autorizadas?.nome ?? null,
       };
     });
 
@@ -115,7 +137,7 @@ export default async function OrdensServicoPage({
       <div className="flex h-full flex-col">
         <PageHeader
           title="Ordens de Serviço"
-          description="Arraste os cards entre as colunas para mudar o status. Finalizadas há mais de 30 dias saem daqui — veja o histórico completo na Lista."
+          description="Arraste os cards entre as colunas para mudar o status. Finalizadas há mais de 30 dias saem daqui, exceto autorizadas aguardando repasse — veja o histórico completo na Lista."
           actions={
             <>
               {viewToggle}

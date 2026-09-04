@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { osStatusSteps } from "@/lib/status";
 import { updateOrdemServicoStatus } from "@/lib/actions";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { OsStatus, OsUrgencia } from "@/types";
@@ -17,6 +16,8 @@ export interface OsKanbanItem {
   clienteNome: string;
   equipamentoDescricao: string;
   dataLabel: string;
+  aguardandoRepasseAutorizada: boolean;
+  empresaAutorizadaNome: string | null;
 }
 
 const DOT_CLASS: Record<OsUrgencia, string> = {
@@ -31,34 +32,85 @@ const URGENCIA_WASH: Record<OsUrgencia, string> = {
   baixa: "bg-card",
 };
 
-const COLUNA_DOT: Record<OsStatus, string> = {
-  aguardando_orcamento: "bg-muted-foreground/60",
-  aguardando_pecas: "bg-warning",
-  em_execucao: "bg-info",
-  aguardando_pagamento: "bg-warning",
-  finalizado: "bg-success",
-  cancelado: "bg-destructive",
-};
+interface Coluna {
+  key: string;
+  label: string;
+  dotClass: string;
+  // Status para onde a OS vai ao ser solta aqui — null bloqueia o drop
+  // (colunas que só recebem OS automaticamente, nunca por arraste).
+  dropStatus: OsStatus | null;
+  match: (os: OsKanbanItem) => boolean;
+}
+
+const COLUNAS: Coluna[] = [
+  {
+    key: "aguardando_orcamento",
+    label: "Aguardando Orçamento",
+    dotClass: "bg-muted-foreground/60",
+    dropStatus: "aguardando_orcamento",
+    match: (os) => os.status === "aguardando_orcamento",
+  },
+  {
+    key: "aguardando_pecas",
+    label: "Aguardando Peças",
+    dotClass: "bg-warning",
+    dropStatus: "aguardando_pecas",
+    match: (os) => os.status === "aguardando_pecas",
+  },
+  {
+    key: "em_execucao",
+    label: "Em Execução",
+    dotClass: "bg-info",
+    dropStatus: "em_execucao",
+    match: (os) => os.status === "em_execucao",
+  },
+  {
+    key: "aguardando_pagamento",
+    label: "Pagamento",
+    dotClass: "bg-warning",
+    dropStatus: "aguardando_pagamento",
+    match: (os) => os.status === "aguardando_pagamento",
+  },
+  {
+    key: "finalizado",
+    label: "Finalizado",
+    dotClass: "bg-success",
+    dropStatus: "finalizado",
+    match: (os) => os.status === "finalizado" && !os.aguardandoRepasseAutorizada,
+  },
+  {
+    key: "autorizadas",
+    label: "Autorizadas",
+    dotClass: "bg-info",
+    dropStatus: null,
+    match: (os) => os.aguardandoRepasseAutorizada,
+  },
+];
 
 export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<OsStatus | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  function handleDrop(status: OsStatus) {
-    setDragOverStatus(null);
+  function handleDrop(coluna: Coluna) {
+    setDragOverKey(null);
     const id = draggingId;
     setDraggingId(null);
     if (!id) return;
     const atual = ordens.find((o) => o.id === id);
-    if (!atual || atual.status === status) return;
-    if (status === "finalizado") {
+    if (!atual) return;
+    if (coluna.dropStatus === null) {
+      toast.error("OS de autorizada cai aqui sozinha ao ser finalizada — o repasse é acertado no Financeiro.");
+      return;
+    }
+    if (atual.status === coluna.dropStatus) return;
+    if (coluna.dropStatus === "finalizado") {
       toast.error('Para finalizar, abra a OS e use "Finalizar Ordem" — é preciso informar a forma de pagamento.');
       return;
     }
     startTransition(async () => {
       try {
-        await updateOrdemServicoStatus(id, status);
+        await updateOrdemServicoStatus(id, coluna.dropStatus as OsStatus);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao mover OS");
       }
@@ -67,14 +119,14 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
 
   return (
     <div className="flex h-full gap-3 overflow-x-auto pb-2">
-      {osStatusSteps.map((step) => {
-        const itens = ordens.filter((o) => o.status === step.value);
-        const emDrag = dragOverStatus === step.value;
+      {COLUNAS.map((coluna) => {
+        const itens = ordens.filter(coluna.match);
+        const emDrag = dragOverKey === coluna.key;
         return (
-          <div key={step.value} className="flex h-full min-w-[190px] flex-1 flex-col lg:min-w-[210px]">
+          <div key={coluna.key} className="flex h-full min-w-[190px] flex-1 flex-col lg:min-w-[210px]">
             <div className="mb-2.5 flex shrink-0 items-center gap-2 px-0.5">
-              <span className={cn("size-2 rounded-full", COLUNA_DOT[step.value])} />
-              <p className="text-xs font-bold text-foreground">{step.label}</p>
+              <span className={cn("size-2 rounded-full", coluna.dotClass)} />
+              <p className="text-xs font-bold text-foreground">{coluna.label}</p>
               <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-secondary-foreground">
                 {itens.length}
               </span>
@@ -82,12 +134,12 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
             <div
               onDragOver={(e) => {
                 e.preventDefault();
-                setDragOverStatus(step.value);
+                setDragOverKey(coluna.key);
               }}
-              onDragLeave={() => setDragOverStatus((s) => (s === step.value ? null : s))}
+              onDragLeave={() => setDragOverKey((k) => (k === coluna.key ? null : k))}
               onDrop={(e) => {
                 e.preventDefault();
-                handleDrop(step.value);
+                handleDrop(coluna);
               }}
               className={cn(
                 "flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-2xl bg-secondary/70 p-2.5 transition-colors duration-150",
@@ -118,6 +170,11 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                     </div>
                     <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
                     <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
+                    {os.aguardandoRepasseAutorizada && os.empresaAutorizadaNome && (
+                      <span className="w-fit truncate rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info">
+                        {os.empresaAutorizadaNome}
+                      </span>
+                    )}
                     <div className="mt-0.5 flex items-center justify-between">
                       <span className="text-[11px] text-muted-foreground">{os.dataLabel}</span>
                       <span className="text-[13px] font-bold text-primary">{formatCurrency(os.total)}</span>
