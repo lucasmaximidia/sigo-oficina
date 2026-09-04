@@ -171,7 +171,7 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                     <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
                     <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
                     {os.empresaAutorizadaNome && (
-                      <span className="w-fit truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium text-warning">
+                      <span className="w-fit truncate rounded-full bg-action/15 px-2 py-0.5 text-[10px] font-medium text-action">
                         {os.empresaAutorizadaNome}
                       </span>
                     )}
