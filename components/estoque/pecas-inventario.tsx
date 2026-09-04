@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Tag, Pencil, MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+import { Search, Tag, Pencil, MoreVertical, Download, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -52,6 +54,8 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
   const [busca, setBusca] = useState("");
   const [filtrosAtivos, setFiltrosAtivos] = useState<Set<FiltroProblema>>(new Set());
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [baixandoEtiquetas, setBaixandoEtiquetas] = useState(false);
 
   function toggleFiltro(id: FiltroProblema) {
     setFiltrosAtivos((prev) => {
@@ -73,6 +77,65 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
       return peca.nome.toLowerCase().includes(termo) || (peca.codigo?.toLowerCase().includes(termo) ?? false);
     });
   }, [pecas, busca, filtrosAtivos]);
+
+  const todosVisiveisSelecionados =
+    pecasFiltradas.length > 0 && pecasFiltradas.every((peca) => selecionados.has(peca.id));
+  const algumVisivelSelecionado = pecasFiltradas.some((peca) => selecionados.has(peca.id));
+
+  function toggleSelecionado(id: string) {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleTodosVisiveis() {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (todosVisiveisSelecionados) {
+        pecasFiltradas.forEach((peca) => next.delete(peca.id));
+      } else {
+        pecasFiltradas.forEach((peca) => next.add(peca.id));
+      }
+      return next;
+    });
+  }
+
+  async function baixarEtiquetasSelecionadas() {
+    const ids = Array.from(selecionados);
+    if (ids.length === 0) return;
+
+    setBaixandoEtiquetas(true);
+    try {
+      const response = await fetch("/api/estoque/etiquetas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? "Erro ao gerar as etiquetas");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "etiquetas.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao baixar etiquetas");
+    } finally {
+      setBaixandoEtiquetas(false);
+    }
+  }
 
   return (
     <>
@@ -107,12 +170,35 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
             );
           })}
         </div>
+
+        {selecionados.size > 0 && (
+          <div className="flex items-center gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
+            <p className="flex-1 text-sm font-medium text-foreground">
+              {selecionados.size} {selecionados.size === 1 ? "peça selecionada" : "peças selecionadas"}
+            </p>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setSelecionados(new Set())}>
+              <X className="size-3.5" />
+              Limpar
+            </Button>
+            <Button type="button" size="sm" onClick={baixarEtiquetasSelecionadas} disabled={baixandoEtiquetas}>
+              <Download className="size-4" />
+              {baixandoEtiquetas ? "Gerando..." : "Baixar etiquetas"}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8">
+                <Checkbox
+                  checked={todosVisiveisSelecionados ? true : algumVisivelSelecionado ? "indeterminate" : false}
+                  onCheckedChange={toggleTodosVisiveis}
+                  aria-label="Selecionar todas as peças"
+                />
+              </TableHead>
               <TableHead>Item / Código</TableHead>
               <TableHead>Estoque</TableHead>
               <TableHead>Custo / Venda</TableHead>
@@ -127,6 +213,13 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
               return (
                 <TableRow key={peca.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selecionados.has(peca.id)}
+                      onCheckedChange={() => toggleSelecionado(peca.id)}
+                      aria-label={`Selecionar ${peca.nome}`}
+                    />
+                  </TableCell>
                   <TableCell className="whitespace-normal">
                     <p className="font-medium text-foreground">{peca.nome}</p>
                     {peca.codigo && <p className="whitespace-nowrap text-xs text-muted-foreground">COD: {peca.codigo}</p>}
@@ -180,7 +273,7 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
             })}
             {pecasFiltradas.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                   {pecas.length === 0 ? "Nenhuma peça cadastrada." : "Nenhuma peça encontrada."}
                 </TableCell>
               </TableRow>
@@ -194,7 +287,13 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
           const status = statusPeca(peca.quantidade, peca.quantidade_minima);
           const lucroUnitario = peca.preco_venda - peca.preco_custo;
           return (
-            <div key={peca.id} className="flex items-start justify-between gap-3 p-4">
+            <div key={peca.id} className="flex items-start gap-3 p-4">
+              <Checkbox
+                checked={selecionados.has(peca.id)}
+                onCheckedChange={() => toggleSelecionado(peca.id)}
+                aria-label={`Selecionar ${peca.nome}`}
+                className="mt-0.5 shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground">{peca.nome}</p>
                 {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
