@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfigGarantiaForm } from "@/components/garantias/config-garantia-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConfiguracoesGarantiaPage() {
+  const supabase = await createClient();
   const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
 
   return (

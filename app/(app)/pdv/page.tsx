@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { PdvClient } from "@/components/pdv/pdv-client";
@@ -11,6 +11,7 @@ interface VendaComItens extends VendaPdv {
 }
 
 export default async function PdvPage() {
+  const supabase = await createClient();
   const [{ data: pecas }, { data: vendas }] = await Promise.all([
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
     supabase

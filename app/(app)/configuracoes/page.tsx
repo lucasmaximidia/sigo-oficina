@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Trash2, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmpresaForm } from "@/components/configuracoes/empresa-form";
@@ -12,6 +12,7 @@ import { ResetSistemaDialog } from "@/components/configuracoes/reset-sistema-dia
 export const dynamic = "force-dynamic";
 
 export default async function ConfiguracoesPage() {
+  const supabase = await createClient();
   const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
 
   return (

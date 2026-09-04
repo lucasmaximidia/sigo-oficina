@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, User, Wrench, MessageSquareText, RotateCcw, Truck, Package, Zap, Wallet2, Building2, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OsStepIndicator } from "@/components/os/os-step-indicator";
 import { OsItensList } from "@/components/os/os-itens-list";
@@ -28,6 +28,7 @@ interface OsDetalheRow extends OrdemServico {
 }
 
 export default async function OrdemServicoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [

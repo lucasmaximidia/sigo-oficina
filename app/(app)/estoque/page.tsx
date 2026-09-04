@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, Store, FileText, Boxes, ClipboardCheck } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ interface EntradaRecenteRow {
 }
 
 export default async function EstoquePage() {
+  const supabase = await createClient();
   const [{ data: pecas }, { data: lojas }, { data: entradas }] = await Promise.all([
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
     supabase.from("lojas_parceiras").select("*").order("principal", { ascending: false }),

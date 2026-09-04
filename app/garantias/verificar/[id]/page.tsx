@@ -1,16 +1,18 @@
 import { ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function VerificarGarantiaPage({ params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
-  const [{ data: garantia }, { data: config }] = await Promise.all([
-    supabase.from("vw_garantias").select("*").eq("os_id", id).maybeSingle(),
-    supabase.from("configuracoes").select("nome_empresa, logo_url").eq("id", 1).maybeSingle(),
-  ]);
+  // Página pública (acessada via QR code, sem login) — usa uma função do
+  // banco com acesso elevado (security definer) que expõe só os campos
+  // necessários aqui, em vez de dar acesso direto às tabelas via RLS.
+  const { data: garantia } = await supabase.rpc("verificar_garantia", { p_os_id: id }).maybeSingle();
+  const config = garantia;
 
   const valido = garantia && (garantia.status_garantia === "ativa" || garantia.status_garantia === "critica");
 

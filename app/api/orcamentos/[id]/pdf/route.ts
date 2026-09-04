@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { OrcamentoPdf } from "@/components/orcamentos/orcamento-pdf";
 import type { Orcamento } from "@/types";
 
@@ -12,6 +12,7 @@ interface OrcamentoComCliente extends Orcamento {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [{ data: orcamento }, { data: itens }, { data: config }] = await Promise.all([

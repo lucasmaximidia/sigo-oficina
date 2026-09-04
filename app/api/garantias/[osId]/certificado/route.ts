@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { CertificadoPdf } from "@/components/garantias/certificado-pdf";
 
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ interface OsComRelacoes {
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ osId: string }> }) {
+  const supabase = await createClient();
   const { osId } = await params;
 
   const [{ data: os }, { data: config }, { data: itens }, { data: maoObraItens }] = await Promise.all([

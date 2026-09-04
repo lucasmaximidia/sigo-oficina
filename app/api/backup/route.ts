@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,7 @@ const TABELAS = [
 ] as const;
 
 export async function GET() {
+  const supabase = await createClient();
   const resultados = await Promise.all(TABELAS.map((tabela) => supabase.from(tabela).select("*")));
 
   const erro = resultados.find((r) => r.error);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { FechamentoPdf } from "@/components/financeiro/fechamento-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { retiradaTipoMap } from "@/lib/status";
@@ -34,6 +34,7 @@ interface MovimentoDatado {
 }
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   const url = new URL(request.url);
   const mes = url.searchParams.get("mes");
   if (!mes || !/^\d{4}-\d{2}$/.test(mes)) {
