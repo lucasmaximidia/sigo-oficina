@@ -309,7 +309,7 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
           <DialogTitle>Entrada de mercadoria (NF)</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-input bg-secondary/50 p-3">
             <div>
               <p className="text-sm font-medium text-foreground">Importar XML da NF-e</p>
