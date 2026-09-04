@@ -12,6 +12,7 @@ import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
 import { OsRetiradaCard } from "@/components/os/os-retirada-card";
 import { EmpresaAutorizadaCard } from "@/components/os/empresa-autorizada-card";
+import { EquipamentoDialog } from "@/components/clientes/equipamento-dialog";
 import { OsInfoAccordion } from "@/components/os/os-info-accordion";
 import { OsObservacoes } from "@/components/os/os-observacoes";
 import { OsMaoObraList } from "@/components/os/os-mao-obra-list";
@@ -141,10 +142,13 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wrench className="size-4.5 text-primary" />
-                Dados do Equipamento
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="size-4.5 text-primary" />
+                  Dados do Equipamento
+                </CardTitle>
+                {equipamento && <EquipamentoDialog equipamento={equipamento} osId={os.id} />}
+              </div>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Info label="Tipo" value={equipamento?.tipo} />
