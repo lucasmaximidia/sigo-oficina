@@ -93,6 +93,23 @@ export async function createEquipamento(clienteId: string, formData: FormData) {
   revalidatePath("/clientes");
 }
 
+export async function updateEquipamento(id: string, osId: string, formData: FormData) {
+  const tipo = strUp(formData, "tipo");
+  if (!tipo) throw new Error("Tipo é obrigatório");
+  const { error } = await supabase
+    .from("equipamentos")
+    .update({
+      tipo,
+      marca: strUp(formData, "marca"),
+      modelo: strUp(formData, "modelo"),
+      numero_serie: strUp(formData, "numero_serie"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+  revalidatePath(`/ordens-servico/${osId}`);
+}
+
 // ---------- Ordens de Serviço ----------
 export async function createOrdemServico(formData: FormData) {
   let clienteId = str(formData, "cliente_id");

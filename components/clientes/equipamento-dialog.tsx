@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createEquipamento } from "@/lib/actions";
+import { createEquipamento, updateEquipamento } from "@/lib/actions";
+import type { Equipamento } from "@/types";
 
 const tipos = [
   "Máquina de Lavar",
@@ -28,38 +29,70 @@ const tipos = [
   "Outro",
 ];
 
-export function EquipamentoDialog({ clienteId }: { clienteId: string }) {
-  const [open, setOpen] = useState(false);
+export function EquipamentoDialog({
+  clienteId,
+  equipamento,
+  osId,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  hideTrigger = false,
+}: {
+  clienteId?: string;
+  equipamento?: Pick<Equipamento, "id" | "tipo" | "marca" | "modelo" | "numero_serie">;
+  osId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChangeProp ?? setOpenState;
   const [isPending, startTransition] = useTransition();
+  const isEdit = Boolean(equipamento);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       try {
-        await createEquipamento(clienteId, formData);
-        toast.success("Equipamento adicionado");
+        if (equipamento) {
+          if (!osId) throw new Error("osId é obrigatório para editar o equipamento");
+          await updateEquipamento(equipamento.id, osId, formData);
+          toast.success("Equipamento atualizado");
+        } else {
+          if (!clienteId) throw new Error("clienteId é obrigatório para cadastrar o equipamento");
+          await createEquipamento(clienteId, formData);
+          toast.success("Equipamento adicionado");
+        }
         setOpen(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao adicionar equipamento");
+        toast.error(error instanceof Error ? error.message : "Erro ao salvar equipamento");
       }
     });
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-primary">
-          <Plus className="size-4" />
-          Novo Equipamento
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          {isEdit ? (
+            <Button size="icon" variant="ghost" aria-label="Editar equipamento">
+              <Pencil className="size-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" className="text-primary">
+              <Plus className="size-4" />
+              Novo Equipamento
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo equipamento</DialogTitle>
+          <DialogTitle>{isEdit ? "Editar equipamento" : "Novo equipamento"}</DialogTitle>
         </DialogHeader>
         <form action={handleSubmit} className="flex flex-col gap-4">
           <div>
             <Label className="mb-1.5 block">Tipo</Label>
-            <Select name="tipo" required>
+            <Select name="tipo" required defaultValue={equipamento?.tipo}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
@@ -77,24 +110,29 @@ export function EquipamentoDialog({ clienteId }: { clienteId: string }) {
               <Label htmlFor="marca" className="mb-1.5 block">
                 Marca
               </Label>
-              <Input id="marca" name="marca" className="uppercase" />
+              <Input id="marca" name="marca" defaultValue={equipamento?.marca ?? ""} className="uppercase" />
             </div>
             <div>
               <Label htmlFor="modelo" className="mb-1.5 block">
                 Modelo
               </Label>
-              <Input id="modelo" name="modelo" className="uppercase" />
+              <Input id="modelo" name="modelo" defaultValue={equipamento?.modelo ?? ""} className="uppercase" />
             </div>
           </div>
           <div>
             <Label htmlFor="numero_serie" className="mb-1.5 block">
               Número de série
             </Label>
-            <Input id="numero_serie" name="numero_serie" className="uppercase" />
+            <Input
+              id="numero_serie"
+              name="numero_serie"
+              defaultValue={equipamento?.numero_serie ?? ""}
+              className="uppercase"
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Salvando..." : "Adicionar"}
+              {isPending ? "Salvando..." : isEdit ? "Salvar" : "Adicionar"}
             </Button>
           </DialogFooter>
         </form>
