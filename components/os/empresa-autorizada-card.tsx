@@ -21,6 +21,7 @@ export function EmpresaAutorizadaCard({
   referenciaAutorizada,
   produtoAutorizada,
   numeroSerieAutorizada,
+  numeroSerieEquipamento,
 }: {
   osId: string;
   empresasIniciais: EmpresaAutorizada[];
@@ -29,13 +30,16 @@ export function EmpresaAutorizadaCard({
   referenciaAutorizada: string | null;
   produtoAutorizada: string | null;
   numeroSerieAutorizada: string | null;
+  numeroSerieEquipamento: string | null;
 }) {
   const [empresas, setEmpresas] = useState(empresasIniciais);
   const [empresaId, setEmpresaId] = useState(empresaAutorizadaId ?? SEM_EMPRESA);
   const [numeroOs, setNumeroOs] = useState(numeroOsAutorizada ?? "");
   const [referencia, setReferencia] = useState(referenciaAutorizada ?? "");
   const [produto, setProduto] = useState(produtoAutorizada ?? "");
-  const [numeroSerie, setNumeroSerie] = useState(numeroSerieAutorizada ?? "");
+  // Já preenche com o número de série do equipamento (Dados do Equipamento):
+  // na autorizada é quase sempre o mesmo valor, evitando digitar 2x.
+  const [numeroSerie, setNumeroSerie] = useState(numeroSerieAutorizada ?? numeroSerieEquipamento ?? "");
   const [isPending, startTransition] = useTransition();
 
   function handleSalvar() {
