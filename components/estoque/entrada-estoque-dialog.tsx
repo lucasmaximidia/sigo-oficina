@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { createEntradaEstoque, type EntradaEstoqueParcelaInput } from "@/lib/actions";
 import { parseNfeXml, type NfeItemExtraido } from "@/lib/nfe-xml";
+import { LojaDialog } from "@/components/estoque/loja-dialog";
 import type { LojaParceira, Peca } from "@/types";
 
 interface ItemLinha {
@@ -64,6 +65,7 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const xmlInputRef = useRef<HTMLInputElement>(null);
+  const [lojaDialogOpen, setLojaDialogOpen] = useState(false);
 
   const [lojaId, setLojaId] = useState(estadoInicial.lojaId);
   const [numeroNf, setNumeroNf] = useState(estadoInicial.numeroNf);
@@ -343,6 +345,20 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
                   ))}
                 </SelectContent>
               </Select>
+              <button
+                type="button"
+                onClick={() => setLojaDialogOpen(true)}
+                className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Plus className="size-3.5" />
+                Cadastrar nova loja parceira
+              </button>
+              <LojaDialog
+                hideTrigger
+                open={lojaDialogOpen}
+                onOpenChange={setLojaDialogOpen}
+                onCreated={(id) => setLojaId(id)}
+              />
             </div>
             <div>
               <Label htmlFor="numero_nf" className="mb-1.5 block">
