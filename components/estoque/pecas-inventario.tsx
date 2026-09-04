@@ -76,9 +76,9 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
               return (
                 <TableRow key={peca.id}>
-                  <TableCell>
+                  <TableCell className="whitespace-normal">
                     <p className="font-medium text-foreground">{peca.nome}</p>
-                    {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
+                    {peca.codigo && <p className="whitespace-nowrap text-xs text-muted-foreground">COD: {peca.codigo}</p>}
                   </TableCell>
                   <TableCell>
                     <p className="text-foreground">{peca.quantidade} unid.</p>
