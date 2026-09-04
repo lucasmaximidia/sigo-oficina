@@ -126,7 +126,7 @@ export function GlobalSearch() {
             </div>
           </DialogHeader>
 
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="max-h-80 min-w-0 overflow-y-auto p-2">
             {query.trim().length >= 2 && !loading && resultados.length === 0 && (
               <p className="px-2 py-6 text-center text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
             )}
