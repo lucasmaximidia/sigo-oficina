@@ -742,16 +742,21 @@ export async function createEntradaEstoque(input: {
 export async function createLojaParceira(formData: FormData) {
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
-  const { error } = await supabase.from("lojas_parceiras").insert({
-    nome,
-    especialidade: strUp(formData, "especialidade"),
-    telefone: str(formData, "telefone"),
-    tempo_entrega: strUp(formData, "tempo_entrega"),
-    desconto_percentual: num(formData, "desconto_percentual"),
-    cnpj: str(formData, "cnpj"),
-  });
+  const { data, error } = await supabase
+    .from("lojas_parceiras")
+    .insert({
+      nome,
+      especialidade: strUp(formData, "especialidade"),
+      telefone: str(formData, "telefone"),
+      tempo_entrega: strUp(formData, "tempo_entrega"),
+      desconto_percentual: num(formData, "desconto_percentual"),
+      cnpj: str(formData, "cnpj"),
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
   revalidatePath("/estoque");
+  return data.id as string;
 }
 
 export async function updateLojaParceira(id: string, formData: FormData) {
