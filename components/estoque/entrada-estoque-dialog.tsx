@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { PackagePlus, Plus, Search, Trash2, X } from "lucide-react";
+import { FileUp, PackagePlus, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
@@ -18,6 +18,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { createEntradaEstoque, type EntradaEstoqueParcelaInput } from "@/lib/actions";
+import { parseNfeXml, type NfeItemExtraido } from "@/lib/nfe-xml";
+import { LojaDialog } from "@/components/estoque/loja-dialog";
 import type { LojaParceira, Peca } from "@/types";
 
 interface ItemLinha {
@@ -62,6 +64,8 @@ const estadoInicial = {
 export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; pecas: Peca[] }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const xmlInputRef = useRef<HTMLInputElement>(null);
+  const [lojaDialogOpen, setLojaDialogOpen] = useState(false);
 
   const [lojaId, setLojaId] = useState(estadoInicial.lojaId);
   const [numeroNf, setNumeroNf] = useState(estadoInicial.numeroNf);
@@ -128,6 +132,68 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
 
   function usarSubtotalItens() {
     handleValorTotal(subtotalItens);
+  }
+
+  function importarItensXml(itensXml: NfeItemExtraido[]) {
+    const novosItens: ItemLinha[] = itensXml.map((item, idx) => {
+      const pecaEncontrada =
+        (item.codigo && pecas.find((p) => p.codigo?.toUpperCase() === item.codigo)) ||
+        pecas.find((p) => p.nome.toUpperCase() === item.descricao);
+
+      if (pecaEncontrada) {
+        return {
+          key: `xml-${pecaEncontrada.id}-${idx}`,
+          pecaId: pecaEncontrada.id,
+          nomeExibicao: pecaEncontrada.nome,
+          quantidade: item.quantidade,
+          valorUnitario: item.valorUnitario,
+        };
+      }
+      return {
+        key: `xml-nova-${idx}-${Date.now()}`,
+        pecaId: null,
+        nomeExibicao: item.descricao,
+        novaPeca: { nome: item.descricao, codigo: item.codigo, categoria: null },
+        quantidade: item.quantidade,
+        valorUnitario: item.valorUnitario,
+      };
+    });
+    setItens((prev) => [...prev, ...novosItens]);
+  }
+
+  async function handleXmlSelecionado(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const texto = await file.text();
+      const nfe = parseNfeXml(texto);
+
+      if (!nfe || nfe.itens.length === 0) {
+        toast.error("Não foi possível ler os itens desse XML. Verifique se é o arquivo de NF-e correto.");
+        return;
+      }
+
+      const novaDataNf = nfe.dataNf ?? dataNf;
+      const novoValorTotal = nfe.valorTotal ?? valorTotal;
+      setDataNf(novaDataNf);
+      setValorTotal(novoValorTotal);
+      setParcelas(gerarParcelas(novaDataNf, novoValorTotal, numParcelas));
+      if (nfe.numeroNf) setNumeroNf(nfe.numeroNf);
+
+      if (nfe.fornecedorCnpj) {
+        const lojaEncontrada = lojas.find((l) => l.cnpj?.replace(/\D/g, "") === nfe.fornecedorCnpj);
+        if (lojaEncontrada) setLojaId(lojaEncontrada.id);
+      }
+
+      importarItensXml(nfe.itens);
+      toast.success(
+        `${nfe.itens.length} ${nfe.itens.length === 1 ? "item importado" : "itens importados"} do XML. Revise antes de confirmar.`
+      );
+    } catch {
+      toast.error("Erro ao ler o arquivo XML.");
+    }
   }
 
   function addItemExistente(peca: Peca) {
@@ -245,7 +311,25 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
           <DialogTitle>Entrada de mercadoria (NF)</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-input bg-secondary/50 p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Importar XML da NF-e</p>
+              <p className="text-xs text-muted-foreground">Preenche loja, número, data, valor e itens automaticamente.</p>
+            </div>
+            <Button type="button" variant="secondary" size="sm" onClick={() => xmlInputRef.current?.click()}>
+              <FileUp className="size-4" />
+              Anexar XML
+            </Button>
+            <input
+              ref={xmlInputRef}
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              onChange={handleXmlSelecionado}
+              className="hidden"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="mb-1.5 block">Loja parceira</Label>
@@ -261,6 +345,20 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
                   ))}
                 </SelectContent>
               </Select>
+              <button
+                type="button"
+                onClick={() => setLojaDialogOpen(true)}
+                className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Plus className="size-3.5" />
+                Cadastrar nova loja parceira
+              </button>
+              <LojaDialog
+                hideTrigger
+                open={lojaDialogOpen}
+                onOpenChange={setLojaDialogOpen}
+                onCreated={(id) => setLojaId(id)}
+              />
             </div>
             <div>
               <Label htmlFor="numero_nf" className="mb-1.5 block">

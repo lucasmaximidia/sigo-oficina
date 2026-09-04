@@ -204,6 +204,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                     referenciaAutorizada={os.referencia_autorizada}
                     produtoAutorizada={os.produto_autorizada}
                     numeroSerieAutorizada={os.numero_serie_autorizada}
+                    numeroSerieEquipamento={equipamento?.numero_serie ?? null}
                   />
                 ),
               },

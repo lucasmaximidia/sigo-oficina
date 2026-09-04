@@ -19,8 +19,22 @@ import {
 import { createLojaParceira, updateLojaParceira } from "@/lib/actions";
 import type { LojaParceira } from "@/types";
 
-export function LojaDialog({ loja }: { loja?: LojaParceira }) {
-  const [open, setOpen] = useState(false);
+export function LojaDialog({
+  loja,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  hideTrigger = false,
+  onCreated,
+}: {
+  loja?: LojaParceira;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  onCreated?: (id: string) => void;
+}) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChangeProp ?? setOpenState;
   const [isPending, startTransition] = useTransition();
   const isEdit = Boolean(loja);
 
@@ -31,8 +45,9 @@ export function LojaDialog({ loja }: { loja?: LojaParceira }) {
           await updateLojaParceira(loja.id, formData);
           toast.success("Loja parceira atualizada");
         } else {
-          await createLojaParceira(formData);
+          const id = await createLojaParceira(formData);
           toast.success("Loja parceira cadastrada");
+          onCreated?.(id);
         }
         setOpen(false);
       } catch (error) {
@@ -43,18 +58,20 @@ export function LojaDialog({ loja }: { loja?: LojaParceira }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {isEdit ? (
-          <Button type="button" variant="ghost" size="icon" aria-label="Editar loja parceira">
-            <Pencil className="size-4" />
-          </Button>
-        ) : (
-          <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
-            <Plus className="size-4" />
-            Nova loja parceira
-          </Button>
-        )}
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          {isEdit ? (
+            <Button type="button" variant="ghost" size="icon" aria-label="Editar loja parceira">
+              <Pencil className="size-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" className="w-full justify-start text-primary">
+              <Plus className="size-4" />
+              Nova loja parceira
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar loja parceira" : "Nova loja parceira"}</DialogTitle>

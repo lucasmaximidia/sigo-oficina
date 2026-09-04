@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Tag, Pencil, MoreVertical } from "lucide-react";
+import { toast } from "sonner";
+import { Search, Tag, Pencil, MoreVertical, Download, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -24,44 +25,198 @@ function statusPeca(quantidade: number, minimo: number) {
   return { label: "Adequado", variant: "success" as const };
 }
 
+const MARGEM_BAIXA_LIMITE = 20;
+
+type FiltroProblema = "baixo_critico" | "sem_venda" | "margem_baixa" | "prejuizo";
+
+const FILTROS: { id: FiltroProblema; label: string }[] = [
+  { id: "baixo_critico", label: "Estoque baixo/crítico" },
+  { id: "sem_venda", label: "Sem valor de venda" },
+  { id: "margem_baixa", label: `Margem baixa (< ${MARGEM_BAIXA_LIMITE}%)` },
+  { id: "prejuizo", label: "Vendendo com prejuízo" },
+];
+
+function pecaAtendeFiltro(peca: Peca, filtro: FiltroProblema) {
+  const lucro = peca.preco_venda - peca.preco_custo;
+  const margem = peca.preco_venda > 0 ? (lucro / peca.preco_venda) * 100 : 0;
+  switch (filtro) {
+    case "baixo_critico":
+      return peca.quantidade <= peca.quantidade_minima;
+    case "sem_venda":
+      return peca.preco_venda === 0;
+    case "margem_baixa":
+      return peca.preco_venda > 0 && margem < MARGEM_BAIXA_LIMITE;
+    case "prejuizo":
+      return lucro < 0;
+  }
+}
+
 export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaParceira[] }) {
   const [busca, setBusca] = useState("");
-  const [soBaixo, setSoBaixo] = useState(false);
+  const [filtrosAtivos, setFiltrosAtivos] = useState<Set<FiltroProblema>>(new Set());
+  const [lojaSelecionada, setLojaSelecionada] = useState("todas");
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [baixandoEtiquetas, setBaixandoEtiquetas] = useState(false);
+
+  function toggleFiltro(id: FiltroProblema) {
+    setFiltrosAtivos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   const pecasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return pecas.filter((peca) => {
-      if (soBaixo && peca.quantidade > peca.quantidade_minima) return false;
+      if (lojaSelecionada !== "todas" && peca.fornecedor_id !== lojaSelecionada) return false;
+      if (filtrosAtivos.size > 0 && ![...filtrosAtivos].some((filtro) => pecaAtendeFiltro(peca, filtro))) return false;
       if (!termo) return true;
       return peca.nome.toLowerCase().includes(termo) || (peca.codigo?.toLowerCase().includes(termo) ?? false);
     });
-  }, [pecas, busca, soBaixo]);
+  }, [pecas, busca, filtrosAtivos, lojaSelecionada]);
+
+  const todosVisiveisSelecionados =
+    pecasFiltradas.length > 0 && pecasFiltradas.every((peca) => selecionados.has(peca.id));
+  const algumVisivelSelecionado = pecasFiltradas.some((peca) => selecionados.has(peca.id));
+
+  function toggleSelecionado(id: string) {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleTodosVisiveis() {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (todosVisiveisSelecionados) {
+        pecasFiltradas.forEach((peca) => next.delete(peca.id));
+      } else {
+        pecasFiltradas.forEach((peca) => next.add(peca.id));
+      }
+      return next;
+    });
+  }
+
+  async function baixarEtiquetasSelecionadas() {
+    const ids = Array.from(selecionados);
+    if (ids.length === 0) return;
+
+    setBaixandoEtiquetas(true);
+    try {
+      const response = await fetch("/api/estoque/etiquetas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? "Erro ao gerar as etiquetas");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "etiquetas.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao baixar etiquetas");
+    } finally {
+      setBaixandoEtiquetas(false);
+    }
+  }
 
   return (
     <>
       <div className="flex flex-col gap-3 border-b border-border p-4 md:p-5 md:pt-0">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Buscar por nome ou código..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Buscar por nome ou código..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <Select value={lojaSelecionada} onValueChange={setLojaSelecionada}>
+            <SelectTrigger className="sm:w-56">
+              <SelectValue placeholder="Todas as lojas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as lojas</SelectItem>
+              {lojas.map((loja) => (
+                <SelectItem key={loja.id} value={loja.id}>
+                  {loja.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div className="flex items-center gap-2.5">
-          <Switch id="so-estoque-baixo" checked={soBaixo} onCheckedChange={setSoBaixo} />
-          <Label htmlFor="so-estoque-baixo" className="text-sm text-muted-foreground">
-            Mostrar só estoque baixo/crítico
-          </Label>
+        <div className="flex flex-wrap gap-2">
+          {FILTROS.map((filtro) => {
+            const ativo = filtrosAtivos.has(filtro.id);
+            return (
+              <button
+                key={filtro.id}
+                type="button"
+                onClick={() => toggleFiltro(filtro.id)}
+                aria-pressed={ativo}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  ativo
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-input bg-card text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                {filtro.label}
+              </button>
+            );
+          })}
         </div>
+
+        {selecionados.size > 0 && (
+          <div className="flex items-center gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2">
+            <p className="flex-1 text-sm font-medium text-foreground">
+              {selecionados.size} {selecionados.size === 1 ? "peça selecionada" : "peças selecionadas"}
+            </p>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setSelecionados(new Set())}>
+              <X className="size-3.5" />
+              Limpar
+            </Button>
+            <Button type="button" size="sm" onClick={baixarEtiquetasSelecionadas} disabled={baixandoEtiquetas}>
+              <Download className="size-4" />
+              {baixandoEtiquetas ? "Gerando..." : "Baixar etiquetas"}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8">
+                <Checkbox
+                  checked={todosVisiveisSelecionados ? true : algumVisivelSelecionado ? "indeterminate" : false}
+                  onCheckedChange={toggleTodosVisiveis}
+                  aria-label="Selecionar todas as peças"
+                />
+              </TableHead>
               <TableHead>Item / Código</TableHead>
               <TableHead>Estoque</TableHead>
               <TableHead>Custo / Venda</TableHead>
@@ -77,8 +232,15 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               return (
                 <TableRow key={peca.id}>
                   <TableCell>
+                    <Checkbox
+                      checked={selecionados.has(peca.id)}
+                      onCheckedChange={() => toggleSelecionado(peca.id)}
+                      aria-label={`Selecionar ${peca.nome}`}
+                    />
+                  </TableCell>
+                  <TableCell className="whitespace-normal">
                     <p className="font-medium text-foreground">{peca.nome}</p>
-                    {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
+                    {peca.codigo && <p className="whitespace-nowrap text-xs text-muted-foreground">COD: {peca.codigo}</p>}
                   </TableCell>
                   <TableCell>
                     <p className="text-foreground">{peca.quantidade} unid.</p>
@@ -129,7 +291,7 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
             })}
             {pecasFiltradas.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                   {pecas.length === 0 ? "Nenhuma peça cadastrada." : "Nenhuma peça encontrada."}
                 </TableCell>
               </TableRow>
@@ -143,7 +305,13 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
           const status = statusPeca(peca.quantidade, peca.quantidade_minima);
           const lucroUnitario = peca.preco_venda - peca.preco_custo;
           return (
-            <div key={peca.id} className="flex items-start justify-between gap-3 p-4">
+            <div key={peca.id} className="flex items-start gap-3 p-4">
+              <Checkbox
+                checked={selecionados.has(peca.id)}
+                onCheckedChange={() => toggleSelecionado(peca.id)}
+                aria-label={`Selecionar ${peca.nome}`}
+                className="mt-0.5 shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground">{peca.nome}</p>
                 {peca.codigo && <p className="text-xs text-muted-foreground">COD: {peca.codigo}</p>}
