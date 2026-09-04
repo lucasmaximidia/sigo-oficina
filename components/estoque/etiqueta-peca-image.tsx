@@ -13,6 +13,27 @@ function DivisorFino() {
   return <div style={{ display: "flex", height: 2, background: "#111111" }} />;
 }
 
+// Nomes de peça variam muito em tamanho; reduz a fonte progressivamente para
+// nomes longos caberem no cabeçalho sem estourar a etiqueta.
+function calcularFontSizeNome(nome: string): number {
+  const tamanho = nome.length;
+  if (tamanho <= 18) return 40;
+  if (tamanho <= 26) return 34;
+  if (tamanho <= 34) return 28;
+  if (tamanho <= 44) return 24;
+  return 20;
+}
+
+// Satori (motor de renderização do ImageResponse) não aplica -webkit-line-clamp,
+// então mesmo na menor fonte um nome muito longo estouraria a área do
+// cabeçalho — por isso o texto é truncado com reticências além deste limite.
+const LIMITE_CARACTERES_NOME = 130;
+
+function truncarNomeEtiqueta(nome: string): string {
+  if (nome.length <= LIMITE_CARACTERES_NOME) return nome;
+  return `${nome.slice(0, LIMITE_CARACTERES_NOME - 1).trimEnd()}…`;
+}
+
 export function EtiquetaPecaImage({
   logoUrl,
   nome,
@@ -52,14 +73,14 @@ export function EtiquetaPecaImage({
       >
         <span
           style={{
-            fontSize: 40,
+            fontSize: calcularFontSizeNome(nome),
             fontWeight: 700,
             lineHeight: 1.15,
             flex: 1,
             minWidth: 0,
           }}
         >
-          {nome}
+          {truncarNomeEtiqueta(nome)}
         </span>
         <div
           style={{

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
+import JSZip from "jszip";
 import { supabase } from "@/lib/supabase";
 import { carregarFontesEtiquetaPeca, renderEtiquetaPecaImageResponse, type PecaEtiquetaDados } from "@/lib/etiqueta-peca";
-import { EtiquetasPecasPdf } from "@/components/estoque/etiquetas-pecas-pdf";
+import { slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,20 +33,34 @@ export async function POST(request: Request) {
 
   const fonts = await carregarFontesEtiquetaPeca();
 
-  const imagensDataUri = await Promise.all(
+  const zip = new JSZip();
+  const nomesUsados = new Map<string, number>();
+
+  await Promise.all(
     pecasOrdenadas.map(async (peca) => {
       const imageResponse = renderEtiquetaPecaImageResponse(peca, config.logo_url, fonts);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
-      return `data:image/png;base64,${buffer.toString("base64")}`;
+
+      const base = nomeArquivoEtiqueta(peca);
+      const usos = nomesUsados.get(base) ?? 0;
+      nomesUsados.set(base, usos + 1);
+      const nomeArquivo = usos === 0 ? `${base}.png` : `${base}-${usos + 1}.png`;
+
+      zip.file(nomeArquivo, buffer);
     })
   );
 
-  const pdfBuffer = await renderToBuffer(EtiquetasPecasPdf({ imagensDataUri }));
+  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
-  return new NextResponse(new Uint8Array(pdfBuffer), {
+  return new NextResponse(new Uint8Array(zipBuffer), {
     headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="etiquetas.pdf"`,
+      "Content-Type": "application/zip",
+      "Content-Disposition": `attachment; filename="etiquetas.zip"`,
     },
   });
+}
+
+function nomeArquivoEtiqueta(peca: PecaEtiquetaDados): string {
+  const base = peca.codigo?.trim() || peca.nome;
+  return slugify(base) || "etiqueta";
 }

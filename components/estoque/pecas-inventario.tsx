@@ -128,7 +128,7 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "etiquetas.pdf";
+      link.download = "etiquetas.zip";
       document.body.appendChild(link);
       link.click();
       link.remove();
