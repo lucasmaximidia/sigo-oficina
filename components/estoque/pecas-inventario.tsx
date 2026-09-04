@@ -5,8 +5,6 @@ import { Search, Tag, Pencil, MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -24,19 +22,57 @@ function statusPeca(quantidade: number, minimo: number) {
   return { label: "Adequado", variant: "success" as const };
 }
 
+const MARGEM_BAIXA_LIMITE = 20;
+
+type FiltroProblema = "baixo_critico" | "sem_venda" | "margem_baixa" | "prejuizo";
+
+const FILTROS: { id: FiltroProblema; label: string }[] = [
+  { id: "baixo_critico", label: "Estoque baixo/crítico" },
+  { id: "sem_venda", label: "Sem valor de venda" },
+  { id: "margem_baixa", label: `Margem baixa (< ${MARGEM_BAIXA_LIMITE}%)` },
+  { id: "prejuizo", label: "Vendendo com prejuízo" },
+];
+
+function pecaAtendeFiltro(peca: Peca, filtro: FiltroProblema) {
+  const lucro = peca.preco_venda - peca.preco_custo;
+  const margem = peca.preco_venda > 0 ? (lucro / peca.preco_venda) * 100 : 0;
+  switch (filtro) {
+    case "baixo_critico":
+      return peca.quantidade <= peca.quantidade_minima;
+    case "sem_venda":
+      return peca.preco_venda === 0;
+    case "margem_baixa":
+      return peca.preco_venda > 0 && margem < MARGEM_BAIXA_LIMITE;
+    case "prejuizo":
+      return lucro < 0;
+  }
+}
+
 export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaParceira[] }) {
   const [busca, setBusca] = useState("");
-  const [soBaixo, setSoBaixo] = useState(false);
+  const [filtrosAtivos, setFiltrosAtivos] = useState<Set<FiltroProblema>>(new Set());
   const [editandoId, setEditandoId] = useState<string | null>(null);
+
+  function toggleFiltro(id: FiltroProblema) {
+    setFiltrosAtivos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   const pecasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return pecas.filter((peca) => {
-      if (soBaixo && peca.quantidade > peca.quantidade_minima) return false;
+      if (filtrosAtivos.size > 0 && ![...filtrosAtivos].some((filtro) => pecaAtendeFiltro(peca, filtro))) return false;
       if (!termo) return true;
       return peca.nome.toLowerCase().includes(termo) || (peca.codigo?.toLowerCase().includes(termo) ?? false);
     });
-  }, [pecas, busca, soBaixo]);
+  }, [pecas, busca, filtrosAtivos]);
 
   return (
     <>
@@ -50,11 +86,26 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
             onChange={(e) => setBusca(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2.5">
-          <Switch id="so-estoque-baixo" checked={soBaixo} onCheckedChange={setSoBaixo} />
-          <Label htmlFor="so-estoque-baixo" className="text-sm text-muted-foreground">
-            Mostrar só estoque baixo/crítico
-          </Label>
+        <div className="flex flex-wrap gap-2">
+          {FILTROS.map((filtro) => {
+            const ativo = filtrosAtivos.has(filtro.id);
+            return (
+              <button
+                key={filtro.id}
+                type="button"
+                onClick={() => toggleFiltro(filtro.id)}
+                aria-pressed={ativo}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  ativo
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-input bg-card text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                {filtro.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
