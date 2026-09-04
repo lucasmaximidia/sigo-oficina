@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -53,6 +54,7 @@ function pecaAtendeFiltro(peca: Peca, filtro: FiltroProblema) {
 export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaParceira[] }) {
   const [busca, setBusca] = useState("");
   const [filtrosAtivos, setFiltrosAtivos] = useState<Set<FiltroProblema>>(new Set());
+  const [lojaSelecionada, setLojaSelecionada] = useState("todas");
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [baixandoEtiquetas, setBaixandoEtiquetas] = useState(false);
@@ -72,11 +74,12 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
   const pecasFiltradas = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return pecas.filter((peca) => {
+      if (lojaSelecionada !== "todas" && peca.fornecedor_id !== lojaSelecionada) return false;
       if (filtrosAtivos.size > 0 && ![...filtrosAtivos].some((filtro) => pecaAtendeFiltro(peca, filtro))) return false;
       if (!termo) return true;
       return peca.nome.toLowerCase().includes(termo) || (peca.codigo?.toLowerCase().includes(termo) ?? false);
     });
-  }, [pecas, busca, filtrosAtivos]);
+  }, [pecas, busca, filtrosAtivos, lojaSelecionada]);
 
   const todosVisiveisSelecionados =
     pecasFiltradas.length > 0 && pecasFiltradas.every((peca) => selecionados.has(peca.id));
@@ -140,14 +143,29 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
   return (
     <>
       <div className="flex flex-col gap-3 border-b border-border p-4 md:p-5 md:pt-0">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Buscar por nome ou código..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-          />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Buscar por nome ou código..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+          <Select value={lojaSelecionada} onValueChange={setLojaSelecionada}>
+            <SelectTrigger className="sm:w-56">
+              <SelectValue placeholder="Todas as lojas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as lojas</SelectItem>
+              {lojas.map((loja) => (
+                <SelectItem key={loja.id} value={loja.id}>
+                  {loja.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-wrap gap-2">
           {FILTROS.map((filtro) => {
