@@ -123,7 +123,7 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
         const itens = ordens.filter(coluna.match);
         const emDrag = dragOverKey === coluna.key;
         return (
-          <div key={coluna.key} className="flex h-full min-w-[190px] flex-1 flex-col lg:min-w-[210px]">
+          <div key={coluna.key} className="flex h-full min-w-[140px] flex-1 flex-col lg:min-w-[155px]">
             <div className="mb-2.5 flex shrink-0 items-center gap-2 px-0.5">
               <span className={cn("size-2 rounded-full", coluna.dotClass)} />
               <p className="text-xs font-bold text-foreground">{coluna.label}</p>
@@ -170,8 +170,8 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                     </div>
                     <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
                     <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
-                    {os.aguardandoRepasseAutorizada && os.empresaAutorizadaNome && (
-                      <span className="w-fit truncate rounded-full bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info">
+                    {os.empresaAutorizadaNome && (
+                      <span className="w-fit truncate rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-medium text-warning">
                         {os.empresaAutorizadaNome}
                       </span>
                     )}
