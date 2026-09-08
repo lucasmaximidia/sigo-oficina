@@ -1564,6 +1564,13 @@ export async function removeOrcamentoItem(itemId: string, orcamentoId: string) {
   revalidatePath(`/orcamentos/${orcamentoId}`);
 }
 
+export async function deleteOrcamento(id: string) {
+  const { error } = await supabase.from("orcamentos").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/orcamentos");
+  revalidatePath("/dashboard");
+}
+
 export async function resetarSistema() {
   const tabelas = [
     "os_itens",
