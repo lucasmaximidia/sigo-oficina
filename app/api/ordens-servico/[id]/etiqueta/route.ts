@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { EtiquetaOsImage, ETIQUETA_LARGURA, ETIQUETA_ALTURA } from "@/components/ordens-servico/etiqueta-image";
+import { EtiquetaOsImage, ETIQUETA_LARGURA } from "@/components/ordens-servico/etiqueta-image";
+import { normalizarEtiquetaConfig, ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
 import { formatDate, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -46,12 +47,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       )
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("configuracoes").select("etiqueta_logo_url").eq("id", 1).single(),
+    supabase.from("configuracoes").select("etiqueta_logo_url, etiqueta_os_config").eq("id", 1).single(),
   ]);
 
   if (!os || !config) {
     return NextResponse.json({ error: "Ordem de serviço não encontrada" }, { status: 404 });
   }
+
+  const campoConfig = normalizarEtiquetaConfig("os", config.etiqueta_os_config);
 
   const equipamento = os.equipamentos;
   const equipamentoDescricao = equipamento
@@ -70,6 +73,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new ImageResponse(
     EtiquetaOsImage({
       config,
+      campoConfig,
       numero: os.numero,
       clienteNome: os.clientes?.nome ?? "Cliente não informado",
       clienteTelefone: os.clientes?.telefone ?? null,
@@ -79,7 +83,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }),
     {
       width: ETIQUETA_LARGURA,
-      height: ETIQUETA_ALTURA,
+      height: campoConfig.alturaMm * ETIQUETA_PX_POR_MM,
       fonts: [
         { name: "Montserrat", data: montserratRegular, weight: 400, style: "normal" },
         { name: "Montserrat", data: montserratBold, weight: 700, style: "normal" },

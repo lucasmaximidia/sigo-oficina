@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
-import { EtiquetaPecaImage, ETIQUETA_PECA_LARGURA, ETIQUETA_PECA_ALTURA } from "@/components/estoque/etiqueta-peca-image";
+import { EtiquetaPecaImage, ETIQUETA_PECA_LARGURA } from "@/components/estoque/etiqueta-peca-image";
+import { ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
+import type { EtiquetaTipoConfig } from "@/types";
 
 export interface PecaEtiquetaDados {
   nome: string;
@@ -42,6 +44,7 @@ export function renderEtiquetaPecaImageResponse(
   peca: PecaEtiquetaDados,
   logoUrl: string | null,
   fonts: Awaited<ReturnType<typeof carregarFontesEtiquetaPeca>>,
+  config: EtiquetaTipoConfig,
   headers?: Record<string, string>
 ) {
   return new ImageResponse(
@@ -50,10 +53,11 @@ export function renderEtiquetaPecaImageResponse(
       nome: peca.nome,
       codigo: peca.codigo,
       precoVenda: peca.preco_venda,
+      config,
     }),
     {
       width: ETIQUETA_PECA_LARGURA,
-      height: ETIQUETA_PECA_ALTURA,
+      height: config.alturaMm * ETIQUETA_PX_POR_MM,
       fonts,
       headers,
     }

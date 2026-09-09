@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 import { supabase } from "@/lib/supabase";
 import { carregarFontesEtiquetaPeca, renderEtiquetaPecaImageResponse, type PecaEtiquetaDados } from "@/lib/etiqueta-peca";
+import { normalizarEtiquetaConfig } from "@/lib/etiqueta-config";
 import { slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
       .from("pecas")
       .select<string, PecaEtiquetaDados & { id: string }>("id, nome, codigo, preco_venda")
       .in("id", ids),
-    supabase.from("configuracoes").select("logo_url").eq("id", 1).single(),
+    supabase.from("configuracoes").select("logo_url, etiqueta_peca_config").eq("id", 1).single(),
   ]);
 
   if (!pecas || pecas.length === 0 || !config) {
@@ -32,13 +33,14 @@ export async function POST(request: Request) {
   const pecasOrdenadas = ids.map((id) => pecasPorId.get(id)).filter((peca) => peca !== undefined);
 
   const fonts = await carregarFontesEtiquetaPeca();
+  const etiquetaConfig = normalizarEtiquetaConfig("peca", config.etiqueta_peca_config);
 
   const zip = new JSZip();
   const nomesUsados = new Map<string, number>();
 
   await Promise.all(
     pecasOrdenadas.map(async (peca) => {
-      const imageResponse = renderEtiquetaPecaImageResponse(peca, config.logo_url, fonts);
+      const imageResponse = renderEtiquetaPecaImageResponse(peca, config.logo_url, fonts, etiquetaConfig);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
       const base = nomeArquivoEtiqueta(peca);

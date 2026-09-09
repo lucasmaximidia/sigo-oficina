@@ -27,6 +27,23 @@ export type FreteStatus = "pendente" | "pago";
 export type FreteTipo = "buscar" | "entrega";
 export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 
+export type EtiquetaTipo = "peca" | "os" | "autorizada";
+export type EtiquetaAlinhamento = "left" | "center" | "right";
+export type EtiquetaTamanhoFonte = "pequena" | "media" | "grande";
+
+export interface EtiquetaCampoConfig {
+  id: string;
+  visivel: boolean;
+  alinhamento: EtiquetaAlinhamento;
+  tamanhoFonte: EtiquetaTamanhoFonte;
+}
+
+export interface EtiquetaTipoConfig {
+  alturaMm: number;
+  mostrarLogo: boolean;
+  campos: EtiquetaCampoConfig[];
+}
+
 // Observação: os campos Row/Insert/Update abaixo são escritos como literais de
 // objeto inline (não interfaces nomeadas) de propósito — é o mesmo formato que
 // `supabase gen types typescript` produz, e é o formato que o supabase-js
@@ -856,6 +873,9 @@ export interface Database {
           garantia_assinatura_digital: boolean;
           garantia_qrcode: boolean;
           etiqueta_logo_url: string | null;
+          etiqueta_peca_config: EtiquetaTipoConfig;
+          etiqueta_os_config: EtiquetaTipoConfig;
+          etiqueta_autorizada_config: EtiquetaTipoConfig;
           dashboard_mostrar_stats: boolean;
           dashboard_mostrar_agenda: boolean;
           dashboard_mostrar_os_paradas: boolean;
@@ -884,6 +904,9 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_logo_url?: string | null;
+          etiqueta_peca_config?: EtiquetaTipoConfig;
+          etiqueta_os_config?: EtiquetaTipoConfig;
+          etiqueta_autorizada_config?: EtiquetaTipoConfig;
           dashboard_mostrar_stats?: boolean;
           dashboard_mostrar_agenda?: boolean;
           dashboard_mostrar_os_paradas?: boolean;
@@ -912,6 +935,9 @@ export interface Database {
           garantia_assinatura_digital?: boolean;
           garantia_qrcode?: boolean;
           etiqueta_logo_url?: string | null;
+          etiqueta_peca_config?: EtiquetaTipoConfig;
+          etiqueta_os_config?: EtiquetaTipoConfig;
+          etiqueta_autorizada_config?: EtiquetaTipoConfig;
           dashboard_mostrar_stats?: boolean;
           dashboard_mostrar_agenda?: boolean;
           dashboard_mostrar_os_paradas?: boolean;

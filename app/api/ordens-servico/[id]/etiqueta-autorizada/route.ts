@@ -1,11 +1,8 @@
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import {
-  EtiquetaAutorizadaImage,
-  ETIQUETA_AUTORIZADA_LARGURA,
-  ETIQUETA_AUTORIZADA_ALTURA,
-} from "@/components/ordens-servico/etiqueta-autorizada-image";
+import { EtiquetaAutorizadaImage, ETIQUETA_AUTORIZADA_LARGURA } from "@/components/ordens-servico/etiqueta-autorizada-image";
+import { normalizarEtiquetaConfig, ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
 import { formatDate, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -54,7 +51,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       )
       .eq("id", id)
       .maybeSingle(),
-    supabase.from("configuracoes").select("etiqueta_logo_url").eq("id", 1).single(),
+    supabase.from("configuracoes").select("etiqueta_logo_url, etiqueta_autorizada_config").eq("id", 1).single(),
   ]);
 
   if (!os || !config) {
@@ -63,6 +60,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!os.empresas_autorizadas) {
     return NextResponse.json({ error: "Esta OS não está vinculada a uma empresa autorizada" }, { status: 400 });
   }
+
+  const campoConfig = normalizarEtiquetaConfig("autorizada", config.etiqueta_autorizada_config);
 
   const equipamento = os.equipamentos;
   const produto =
@@ -82,6 +81,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   return new ImageResponse(
     EtiquetaAutorizadaImage({
       config,
+      campoConfig,
       empresaNome: os.empresas_autorizadas.nome,
       clienteNome: os.clientes?.nome ?? "Cliente não informado",
       clienteTelefone: os.clientes?.telefone ?? null,
@@ -93,7 +93,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }),
     {
       width: ETIQUETA_AUTORIZADA_LARGURA,
-      height: ETIQUETA_AUTORIZADA_ALTURA,
+      height: campoConfig.alturaMm * ETIQUETA_PX_POR_MM,
       fonts: [
         { name: "Montserrat", data: montserratRegular, weight: 400, style: "normal" },
         { name: "Montserrat", data: montserratBold, weight: 700, style: "normal" },
