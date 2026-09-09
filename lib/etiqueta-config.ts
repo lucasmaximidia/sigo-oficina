@@ -1,11 +1,4 @@
-import type {
-  EtiquetaAlinhamento,
-  EtiquetaCampoConfig,
-  EtiquetaTamanhoFonte,
-  EtiquetaTamanhoLogo,
-  EtiquetaTipo,
-  EtiquetaTipoConfig,
-} from "@/types";
+import type { EtiquetaAlinhamento, EtiquetaCampoConfig, EtiquetaTamanhoFonte, EtiquetaTipo, EtiquetaTipoConfig } from "@/types";
 
 // A impressora térmica usada é sempre 50mm de largura — só a altura da
 // etiqueta varia, então as opções abaixo cobrem os tamanhos mais comuns.
@@ -22,16 +15,9 @@ export const TAMANHOS_FONTE_PX: Record<EtiquetaTipo, Record<EtiquetaTamanhoFonte
   autorizada: { pequena: 22, media: 28, grande: 36 },
 };
 
-// Altura (em px) da área da logo, por tipo de etiqueta — a largura é sempre
-// a largura total da etiqueta, então uma logo mais larga que alta se ajusta
-// sozinha (object-fit: contain). Os valores "media"/"grande" abaixo
-// reproduzem exatamente o tamanho fixo que cada etiqueta já usava antes
-// dessa configuração existir.
-export const TAMANHOS_LOGO_PX: Record<EtiquetaTipo, Record<EtiquetaTamanhoLogo, number>> = {
-  peca: { pequena: 48, media: 72, grande: 100 },
-  os: { pequena: 140, media: 190, grande: 240 },
-  autorizada: { pequena: 90, media: 150, grande: 180 },
-};
+// Faixa aceita para a altura da logo, controlada em pixels pelo usuário.
+export const LOGO_ALTURA_PX_MIN = 20;
+export const LOGO_ALTURA_PX_MAX = 400;
 
 export interface EtiquetaCampoDefinicao {
   id: string;
@@ -73,16 +59,18 @@ function campoConfigPadrao(
   id: string,
   alinhamento: EtiquetaAlinhamento,
   tamanhoFonte: EtiquetaTamanhoFonte,
-  compartilharLinha = false
+  compartilharLinha = false,
+  mostrarDivisorDepois = false
 ): EtiquetaCampoConfig {
-  return { id, visivel: true, alinhamento, tamanhoFonte, compartilharLinha };
+  return { id, visivel: true, alinhamento, tamanhoFonte, compartilharLinha, mostrarDivisorDepois };
 }
 
 export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   peca: {
     alturaMm: 30,
     mostrarLogo: true,
-    tamanhoLogo: "media",
+    logoAlturaPx: 72,
+    mostrarDivisorCabecalho: false,
     campos: [
       campoConfigPadrao("nome", "left", "grande"),
       campoConfigPadrao("codigo", "left", "pequena"),
@@ -92,7 +80,8 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   os: {
     alturaMm: 80,
     mostrarLogo: true,
-    tamanhoLogo: "grande",
+    logoAlturaPx: 240,
+    mostrarDivisorCabecalho: false,
     campos: [
       campoConfigPadrao("cliente_nome", "center", "grande"),
       campoConfigPadrao("cliente_telefone", "center", "media"),
@@ -105,7 +94,8 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   autorizada: {
     alturaMm: 80,
     mostrarLogo: true,
-    tamanhoLogo: "media",
+    logoAlturaPx: 150,
+    mostrarDivisorCabecalho: false,
     campos: [
       campoConfigPadrao("cliente_nome", "center", "media"),
       campoConfigPadrao("cliente_telefone", "center", "pequena"),
@@ -128,14 +118,19 @@ export function normalizarEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTip
   const catalogo = new Set(CAMPOS_POR_TIPO[tipo].map((c) => c.id));
   const existentes = (config.campos ?? [])
     .filter((c) => catalogo.has(c.id))
-    .map((c) => ({ ...c, compartilharLinha: c.compartilharLinha ?? false }));
+    .map((c) => ({
+      ...c,
+      compartilharLinha: c.compartilharLinha ?? false,
+      mostrarDivisorDepois: c.mostrarDivisorDepois ?? false,
+    }));
   const idsExistentes = new Set(existentes.map((c) => c.id));
   const faltantes = padrao.campos.filter((c) => !idsExistentes.has(c.id));
 
   return {
     alturaMm: config.alturaMm || padrao.alturaMm,
     mostrarLogo: config.mostrarLogo ?? true,
-    tamanhoLogo: config.tamanhoLogo ?? padrao.tamanhoLogo,
+    logoAlturaPx: config.logoAlturaPx || padrao.logoAlturaPx,
+    mostrarDivisorCabecalho: config.mostrarDivisorCabecalho ?? padrao.mostrarDivisorCabecalho,
     campos: [...existentes, ...faltantes],
   };
 }

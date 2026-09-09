@@ -2,22 +2,23 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronUp, ChevronDown, Columns2, Link2, Save } from "lucide-react";
+import { ChevronUp, ChevronDown, Columns2, Link2, Save, SeparatorHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EtiquetaPreview } from "./etiqueta-preview";
 import { updateEtiquetaConfig } from "@/lib/actions";
-import { ALTURAS_DISPONIVEIS_MM, CAMPOS_POR_TIPO, ETIQUETA_LARGURA_MM, ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
-import type {
-  EtiquetaAlinhamento,
-  EtiquetaCampoConfig,
-  EtiquetaTamanhoFonte,
-  EtiquetaTamanhoLogo,
-  EtiquetaTipo,
-  EtiquetaTipoConfig,
-} from "@/types";
+import {
+  ALTURAS_DISPONIVEIS_MM,
+  CAMPOS_POR_TIPO,
+  ETIQUETA_LARGURA_MM,
+  ETIQUETA_PX_POR_MM,
+  LOGO_ALTURA_PX_MAX,
+  LOGO_ALTURA_PX_MIN,
+} from "@/lib/etiqueta-config";
+import type { EtiquetaAlinhamento, EtiquetaCampoConfig, EtiquetaTamanhoFonte, EtiquetaTipo, EtiquetaTipoConfig } from "@/types";
 
 const ALINHAMENTO_LABEL: Record<EtiquetaAlinhamento, string> = {
   left: "Esquerda",
@@ -31,11 +32,9 @@ const TAMANHO_FONTE_LABEL: Record<EtiquetaTamanhoFonte, string> = {
   grande: "Grande",
 };
 
-const TAMANHO_LOGO_LABEL: Record<EtiquetaTamanhoLogo, string> = {
-  pequena: "Pequena",
-  media: "Média",
-  grande: "Grande",
-};
+function clampLogoAltura(valor: number) {
+  return Math.min(LOGO_ALTURA_PX_MAX, Math.max(LOGO_ALTURA_PX_MIN, valor));
+}
 
 export function EtiquetaConfigForm({
   tipo,
@@ -95,24 +94,29 @@ export function EtiquetaConfigForm({
 
           {config.mostrarLogo && (
             <div className="flex items-center gap-2">
-              <Label className="text-sm text-muted-foreground">Tamanho da logo</Label>
-              <Select
-                value={config.tamanhoLogo}
-                onValueChange={(v) => setConfig((prev) => ({ ...prev, tamanhoLogo: v as EtiquetaTamanhoLogo }))}
-              >
-                <SelectTrigger className="h-9 w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TAMANHO_LOGO_LABEL).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm text-muted-foreground">Altura da logo</Label>
+              <div className="flex items-center gap-1.5">
+                <NumericInput
+                  decimal={false}
+                  value={config.logoAlturaPx}
+                  onValueChange={(v) => setConfig((prev) => ({ ...prev, logoAlturaPx: clampLogoAltura(v) }))}
+                  className="h-9 w-20"
+                />
+                <span className="font-mono text-xs text-muted-foreground">px</span>
+              </div>
             </div>
           )}
+
+          <div className="flex items-center gap-2.5">
+            <Switch
+              id={`divisor-cabecalho-${tipo}`}
+              checked={config.mostrarDivisorCabecalho}
+              onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, mostrarDivisorCabecalho: checked }))}
+            />
+            <Label htmlFor={`divisor-cabecalho-${tipo}`} className="text-sm text-muted-foreground">
+              Linha após o cabeçalho
+            </Label>
+          </div>
         </div>
 
         <div className="max-w-xs">
@@ -146,7 +150,8 @@ export function EtiquetaConfigForm({
           </div>
           <p className="text-xs text-muted-foreground">
             Use <Columns2 className="inline size-3.5 align-text-bottom" /> para colocar um campo na mesma linha do
-            próximo (lado a lado).
+            próximo (lado a lado), e <SeparatorHorizontal className="inline size-3.5 align-text-bottom" /> para
+            adicionar uma linha divisória depois dele.
           </p>
           {config.campos.map((campo, index) => (
             <div
@@ -207,6 +212,23 @@ export function EtiquetaConfigForm({
                   }`}
                 >
                   <Columns2 className="size-4" />
+                </button>
+
+                <button
+                  type="button"
+                  aria-label={
+                    campo.mostrarDivisorDepois ? "Remover linha divisória depois deste campo" : "Adicionar linha divisória depois deste campo"
+                  }
+                  aria-pressed={campo.mostrarDivisorDepois}
+                  title="Linha divisória depois deste campo"
+                  onClick={() => atualizarCampo(campo.id, { mostrarDivisorDepois: !campo.mostrarDivisorDepois })}
+                  className={`flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                    campo.mostrarDivisorDepois
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <SeparatorHorizontal className="size-4" />
                 </button>
               </div>
 

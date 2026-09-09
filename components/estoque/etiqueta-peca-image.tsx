@@ -1,6 +1,6 @@
 import { IconCaixa } from "@/components/ordens-servico/etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
-import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX, TAMANHOS_LOGO_PX } from "@/lib/etiqueta-config";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_PECA_LARGURA = 500;
@@ -43,7 +43,7 @@ export function EtiquetaPecaImage({
 }) {
   const alturaTotal = config.alturaMm * ETIQUETA_PX_POR_MM;
   const camposVisiveis = config.campos.filter((c) => c.visivel);
-  const logoAlturaPx = TAMANHOS_LOGO_PX.peca[config.tamanhoLogo];
+  const logoAlturaPx = config.logoAlturaPx;
 
   return (
     <div
@@ -81,6 +81,8 @@ export function EtiquetaPecaImage({
         </div>
       )}
 
+      {config.mostrarDivisorCabecalho && <EtiquetaDivisorFino />}
+
       <div
         style={{
           display: "flex",
@@ -93,16 +95,23 @@ export function EtiquetaPecaImage({
         }}
       >
         {agruparCamposEmLinhas(camposVisiveis).map((linha) => (
-          <EtiquetaLinha key={linha.map((c) => c.id).join("+")}>
-            {linha.map((campo) => (
-              <EtiquetaCampoLinha
-                key={campo.id}
-                valor={valorDoCampo(campo.id, nome, codigo, precoVenda)}
-                alinhamento={campo.alinhamento}
-                fontSizePx={TAMANHOS_FONTE_PX.peca[campo.tamanhoFonte]}
-              />
-            ))}
-          </EtiquetaLinha>
+          <div key={linha.map((c) => c.id).join("+")} style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+            <EtiquetaLinha>
+              {linha.map((campo) => (
+                <EtiquetaCampoLinha
+                  key={campo.id}
+                  valor={valorDoCampo(campo.id, nome, codigo, precoVenda)}
+                  alinhamento={campo.alinhamento}
+                  fontSizePx={TAMANHOS_FONTE_PX.peca[campo.tamanhoFonte]}
+                />
+              ))}
+            </EtiquetaLinha>
+            {linha[0].mostrarDivisorDepois && (
+              <div style={{ display: "flex", marginTop: 8 }}>
+                <EtiquetaDivisorFino />
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>

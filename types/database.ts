@@ -30,7 +30,6 @@ export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
 export type EtiquetaAlinhamento = "left" | "center" | "right";
 export type EtiquetaTamanhoFonte = "pequena" | "media" | "grande";
-export type EtiquetaTamanhoLogo = "pequena" | "media" | "grande";
 
 export interface EtiquetaCampoConfig {
   id: string;
@@ -40,12 +39,21 @@ export interface EtiquetaCampoConfig {
   // Quando true, esse campo compartilha a linha com o próximo campo visível
   // (lado a lado, em vez de um abaixo do outro) — ex.: Data e Nº da O.S.
   compartilharLinha: boolean;
+  // Quando true, desenha uma linha fina depois deste campo (ou da linha
+  // toda, se compartilhada com o próximo), separando-o do campo seguinte.
+  mostrarDivisorDepois: boolean;
 }
 
 export interface EtiquetaTipoConfig {
   alturaMm: number;
   mostrarLogo: boolean;
-  tamanhoLogo: EtiquetaTamanhoLogo;
+  // Altura da logo em pixels, controlada diretamente pelo usuário (a
+  // largura acompanha a largura total da etiqueta, então uma logo mais
+  // larga que alta se ajusta sozinha via object-fit: contain).
+  logoAlturaPx: number;
+  // Linha fina opcional separando o cabeçalho (logo/nome da empresa) do
+  // corpo da etiqueta.
+  mostrarDivisorCabecalho: boolean;
   campos: EtiquetaCampoConfig[];
 }
 

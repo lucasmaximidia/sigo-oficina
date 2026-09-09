@@ -1,6 +1,6 @@
 import { IconLavadora } from "./etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
-import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX, TAMANHOS_LOGO_PX } from "@/lib/etiqueta-config";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_LARGURA = 500;
@@ -64,7 +64,7 @@ export function EtiquetaOsImage({
   const dados = { numeroOs, clienteNome, clienteTelefone, problema, equipamentoDescricao, dataEntrada };
   const camposVisiveis = campoConfig.campos.filter((c) => c.visivel && (c.id !== "cliente_telefone" || clienteTelefone));
   const alturaTotal = campoConfig.alturaMm * ETIQUETA_PX_POR_MM;
-  const logoAlturaPx = TAMANHOS_LOGO_PX.os[campoConfig.tamanhoLogo];
+  const logoAlturaPx = campoConfig.logoAlturaPx;
 
   return (
     <div
@@ -103,6 +103,8 @@ export function EtiquetaOsImage({
         </div>
       )}
 
+      {campoConfig.mostrarDivisorCabecalho && <EtiquetaDivisorFino />}
+
       <div
         style={{
           display: "flex",
@@ -115,17 +117,24 @@ export function EtiquetaOsImage({
         }}
       >
         {agruparCamposEmLinhas(camposVisiveis).map((linha) => (
-          <EtiquetaLinha key={linha.map((c) => c.id).join("+")}>
-            {linha.map((campo) => (
-              <EtiquetaCampoLinha
-                key={campo.id}
-                label={LABEL_DO_CAMPO[campo.id]}
-                valor={valorDoCampo(campo.id, dados)}
-                alinhamento={campo.alinhamento}
-                fontSizePx={TAMANHOS_FONTE_PX.os[campo.tamanhoFonte]}
-              />
-            ))}
-          </EtiquetaLinha>
+          <div key={linha.map((c) => c.id).join("+")} style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+            <EtiquetaLinha>
+              {linha.map((campo) => (
+                <EtiquetaCampoLinha
+                  key={campo.id}
+                  label={LABEL_DO_CAMPO[campo.id]}
+                  valor={valorDoCampo(campo.id, dados)}
+                  alinhamento={campo.alinhamento}
+                  fontSizePx={TAMANHOS_FONTE_PX.os[campo.tamanhoFonte]}
+                />
+              ))}
+            </EtiquetaLinha>
+            {linha[0].mostrarDivisorDepois && (
+              <div style={{ display: "flex", marginTop: 10 }}>
+                <EtiquetaDivisorFino />
+              </div>
+            )}
+          </div>
         ))}
       </div>
     </div>

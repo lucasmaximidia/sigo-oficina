@@ -49,3 +49,9 @@ export function EtiquetaCampoLinha({
 export function EtiquetaLinha({ children }: { children: ReactNode }) {
   return <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: 16 }}>{children}</div>;
 }
+
+// Linha fina opcional, usada para separar o cabeçalho do corpo ou dois
+// campos entre si — sempre por escolha do usuário na configuração.
+export function EtiquetaDivisorFino() {
+  return <div style={{ display: "flex", height: 1, background: "#dddddd", flexShrink: 0, width: "100%" }} />;
+}
