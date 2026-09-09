@@ -13,6 +13,8 @@ import { updateEtiquetaConfig } from "@/lib/actions";
 import {
   ALTURAS_DISPONIVEIS_MM,
   CAMPOS_POR_TIPO,
+  ESPACAMENTO_CAMPO_PX_MAX,
+  ESPACAMENTO_CAMPO_PX_MIN,
   ETIQUETA_LARGURA_MM,
   ETIQUETA_PX_POR_MM,
   LOGO_ALTURA_PX_MAX,
@@ -34,6 +36,10 @@ const TAMANHO_FONTE_LABEL: Record<EtiquetaTamanhoFonte, string> = {
 
 function clampLogoAltura(valor: number) {
   return Math.min(LOGO_ALTURA_PX_MAX, Math.max(LOGO_ALTURA_PX_MIN, valor));
+}
+
+function clampEspacamento(valor: number) {
+  return Math.min(ESPACAMENTO_CAMPO_PX_MAX, Math.max(ESPACAMENTO_CAMPO_PX_MIN, valor));
 }
 
 export function EtiquetaConfigForm({
@@ -150,8 +156,9 @@ export function EtiquetaConfigForm({
           </div>
           <p className="text-xs text-muted-foreground">
             Use <Columns2 className="inline size-3.5 align-text-bottom" /> para colocar um campo na mesma linha do
-            próximo (lado a lado), e <SeparatorHorizontal className="inline size-3.5 align-text-bottom" /> para
-            adicionar uma linha divisória depois dele.
+            próximo (lado a lado), <SeparatorHorizontal className="inline size-3.5 align-text-bottom" /> para
+            adicionar uma linha divisória depois dele, e o campo &quot;px&quot; para controlar o espaço até o
+            próximo campo visível.
           </p>
           {config.campos.map((campo, index) => (
             <div
@@ -232,12 +239,12 @@ export function EtiquetaConfigForm({
                 </button>
               </div>
 
-              <div className="mt-2.5 flex items-center gap-2 pl-[3.75rem]">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2 pl-[3.75rem]">
                 <Select
                   value={campo.alinhamento}
                   onValueChange={(v) => atualizarCampo(campo.id, { alinhamento: v as EtiquetaAlinhamento })}
                 >
-                  <SelectTrigger className="h-9 flex-1">
+                  <SelectTrigger className="h-9 min-w-[6.5rem] flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -253,7 +260,7 @@ export function EtiquetaConfigForm({
                   value={campo.tamanhoFonte}
                   onValueChange={(v) => atualizarCampo(campo.id, { tamanhoFonte: v as EtiquetaTamanhoFonte })}
                 >
-                  <SelectTrigger className="h-9 flex-1">
+                  <SelectTrigger className="h-9 min-w-[6.5rem] flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -264,6 +271,19 @@ export function EtiquetaConfigForm({
                     ))}
                   </SelectContent>
                 </Select>
+
+                <div
+                  className="flex items-center gap-1.5"
+                  title="Espaço até o próximo campo visível (não se aplica se este for o último visível)"
+                >
+                  <NumericInput
+                    decimal={false}
+                    value={campo.espacamentoDepoisPx}
+                    onValueChange={(v) => atualizarCampo(campo.id, { espacamentoDepoisPx: clampEspacamento(v) })}
+                    className="h-9 w-16"
+                  />
+                  <span className="font-mono text-xs text-muted-foreground">px</span>
+                </div>
               </div>
 
               {campo.compartilharLinha && (

@@ -19,6 +19,13 @@ export const TAMANHOS_FONTE_PX: Record<EtiquetaTipo, Record<EtiquetaTamanhoFonte
 export const LOGO_ALTURA_PX_MIN = 20;
 export const LOGO_ALTURA_PX_MAX = 400;
 
+// Faixa aceita para o espaçamento entre campos, controlado em pixels pelo
+// usuário — o espaço ocupado pelo conjunto de campos visíveis varia com
+// esses valores, e o que resta é distribuído como margem ao redor do bloco
+// (a altura total continua fixa, definida pelo tamanho da etiqueta).
+export const ESPACAMENTO_CAMPO_PX_MIN = 0;
+export const ESPACAMENTO_CAMPO_PX_MAX = 200;
+
 export interface EtiquetaCampoDefinicao {
   id: string;
   label: string;
@@ -59,10 +66,11 @@ function campoConfigPadrao(
   id: string,
   alinhamento: EtiquetaAlinhamento,
   tamanhoFonte: EtiquetaTamanhoFonte,
+  espacamentoDepoisPx: number,
   compartilharLinha = false,
   mostrarDivisorDepois = false
 ): EtiquetaCampoConfig {
-  return { id, visivel: true, alinhamento, tamanhoFonte, compartilharLinha, mostrarDivisorDepois };
+  return { id, visivel: true, alinhamento, tamanhoFonte, compartilharLinha, mostrarDivisorDepois, espacamentoDepoisPx };
 }
 
 export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
@@ -72,9 +80,9 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
     logoAlturaPx: 72,
     mostrarDivisorCabecalho: false,
     campos: [
-      campoConfigPadrao("nome", "left", "grande"),
-      campoConfigPadrao("codigo", "left", "pequena"),
-      campoConfigPadrao("preco_venda", "center", "grande"),
+      campoConfigPadrao("nome", "left", "grande", 12),
+      campoConfigPadrao("codigo", "left", "pequena", 12),
+      campoConfigPadrao("preco_venda", "center", "grande", 12),
     ],
   },
   os: {
@@ -83,12 +91,12 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
     logoAlturaPx: 240,
     mostrarDivisorCabecalho: false,
     campos: [
-      campoConfigPadrao("cliente_nome", "center", "grande"),
-      campoConfigPadrao("cliente_telefone", "center", "media"),
-      campoConfigPadrao("equipamento", "center", "media"),
-      campoConfigPadrao("defeito", "center", "media"),
-      campoConfigPadrao("data_entrada", "left", "pequena", true),
-      campoConfigPadrao("numero_os", "left", "pequena"),
+      campoConfigPadrao("cliente_nome", "center", "grande", 18),
+      campoConfigPadrao("cliente_telefone", "center", "media", 18),
+      campoConfigPadrao("equipamento", "center", "media", 18),
+      campoConfigPadrao("defeito", "center", "media", 18),
+      campoConfigPadrao("data_entrada", "left", "pequena", 18, true),
+      campoConfigPadrao("numero_os", "left", "pequena", 18),
     ],
   },
   autorizada: {
@@ -97,13 +105,13 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
     logoAlturaPx: 150,
     mostrarDivisorCabecalho: false,
     campos: [
-      campoConfigPadrao("cliente_nome", "center", "media"),
-      campoConfigPadrao("cliente_telefone", "center", "pequena"),
-      campoConfigPadrao("produto", "center", "media"),
-      campoConfigPadrao("numero_serie", "left", "media"),
-      campoConfigPadrao("referencia", "left", "media"),
-      campoConfigPadrao("numero_os_autorizada", "left", "pequena", true),
-      campoConfigPadrao("data_entrada", "left", "pequena"),
+      campoConfigPadrao("cliente_nome", "center", "media", 18),
+      campoConfigPadrao("cliente_telefone", "center", "pequena", 18),
+      campoConfigPadrao("produto", "center", "media", 18),
+      campoConfigPadrao("numero_serie", "left", "media", 18),
+      campoConfigPadrao("referencia", "left", "media", 18),
+      campoConfigPadrao("numero_os_autorizada", "left", "pequena", 18, true),
+      campoConfigPadrao("data_entrada", "left", "pequena", 18),
     ],
   },
 };
@@ -116,12 +124,14 @@ export function normalizarEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTip
   if (!config) return padrao;
 
   const catalogo = new Set(CAMPOS_POR_TIPO[tipo].map((c) => c.id));
+  const espacamentoPadraoPorId = new Map(padrao.campos.map((c) => [c.id, c.espacamentoDepoisPx]));
   const existentes = (config.campos ?? [])
     .filter((c) => catalogo.has(c.id))
     .map((c) => ({
       ...c,
       compartilharLinha: c.compartilharLinha ?? false,
       mostrarDivisorDepois: c.mostrarDivisorDepois ?? false,
+      espacamentoDepoisPx: c.espacamentoDepoisPx ?? espacamentoPadraoPorId.get(c.id) ?? 18,
     }));
   const idsExistentes = new Set(existentes.map((c) => c.id));
   const faltantes = padrao.campos.filter((c) => !idsExistentes.has(c.id));

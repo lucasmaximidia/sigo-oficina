@@ -42,6 +42,9 @@ export interface EtiquetaCampoConfig {
   // Quando true, desenha uma linha fina depois deste campo (ou da linha
   // toda, se compartilhada com o próximo), separando-o do campo seguinte.
   mostrarDivisorDepois: boolean;
+  // Espaço em pixels entre este campo (ou linha, se compartilhada) e o
+  // próximo campo visível — ignorado quando este é o último campo visível.
+  espacamentoDepoisPx: number;
 }
 
 export interface EtiquetaTipoConfig {
