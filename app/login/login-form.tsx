@@ -24,7 +24,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <Card className="border-border/80 shadow-lg">
-      <CardContent className="p-6">
+      <CardContent className="p-6 md:pt-6">
         <form action={handleSubmit} className="flex flex-col gap-4">
           {redirectTo && <input type="hidden" name="redirectTo" value={redirectTo} />}
           <div>
@@ -56,6 +56,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
                 type={mostrarSenha ? "text" : "password"}
                 autoComplete="current-password"
                 required
+                autoUppercase={false}
                 className="pl-10 pr-10"
               />
               <button
