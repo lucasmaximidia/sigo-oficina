@@ -14,12 +14,12 @@ export default async function LoginPage({
       <div className="pointer-events-none absolute -bottom-32 -right-24 size-80 rounded-full bg-action/15 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <div className="mb-7 flex flex-col items-center text-center">
-          <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <Wrench className="size-7" strokeWidth={2.25} />
           </div>
           <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">SIGO Oficina</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Entre com sua conta para continuar</p>
+          <p className="mt-2 text-sm text-muted-foreground">Entre com sua conta para continuar</p>
         </div>
         <LoginForm redirectTo={redirect} />
       </div>
