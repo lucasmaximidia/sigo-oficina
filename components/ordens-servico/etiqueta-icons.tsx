@@ -46,17 +46,6 @@ export function IconCaixa({ size = 20, color = "#ffffff" }: IconProps) {
   );
 }
 
-export function IconCalendario({ size = 20, color = "#ffffff" }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="5" width="18" height="16" rx="2" stroke={color} strokeWidth={2.2} />
-      <line x1="3" y1="10" x2="21" y2="10" stroke={color} strokeWidth={2.2} />
-      <line x1="8" y1="2.5" x2="8" y2="6.5" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
-      <line x1="16" y1="2.5" x2="16" y2="6.5" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function IconLavadora({ size = 20, color = "#ffffff" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -67,17 +56,6 @@ export function IconLavadora({ size = 20, color = "#ffffff" }: IconProps) {
       <circle cx="12" cy="14.5" r="5.3" stroke={color} strokeWidth={1.8} />
       <circle cx="12" cy="14.5" r="2.4" stroke={color} strokeWidth={1.6} />
       <path d="M12 12.1v2.4l1.8 1.3" stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function IconDocumento({ size = 20, color = "#ffffff" }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M6 2h9l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke={color} strokeWidth={2.2} strokeLinejoin="round" />
-      <path d="M15 2v5h5" stroke={color} strokeWidth={2.2} strokeLinejoin="round" />
-      <line x1="8" y1="13" x2="16" y2="13" stroke={color} strokeWidth={2} strokeLinecap="round" />
-      <line x1="8" y1="17" x2="16" y2="17" stroke={color} strokeWidth={2} strokeLinecap="round" />
     </svg>
   );
 }

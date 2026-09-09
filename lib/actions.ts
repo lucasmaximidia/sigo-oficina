@@ -17,6 +17,8 @@ import type {
   FreteStatus,
   FreteTipo,
   RetiradaTipo,
+  EtiquetaTipo,
+  EtiquetaTipoConfig,
 } from "@/types";
 
 function str(fd: FormData, key: string) {
@@ -94,6 +96,24 @@ export async function createEquipamento(clienteId: string, formData: FormData) {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/clientes");
+}
+
+export async function updateEquipamento(id: string, osId: string, formData: FormData) {
+  const tipo = strUp(formData, "tipo");
+  if (!tipo) throw new Error("Tipo é obrigatório");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("equipamentos")
+    .update({
+      tipo,
+      marca: strUp(formData, "marca"),
+      modelo: strUp(formData, "modelo"),
+      numero_serie: strUp(formData, "numero_serie"),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+  revalidatePath(`/ordens-servico/${osId}`);
 }
 
 // ---------- Ordens de Serviço ----------
@@ -1535,6 +1555,19 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function updateEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTipoConfig) {
+  const update =
+    tipo === "peca"
+      ? { etiqueta_peca_config: config }
+      : tipo === "os"
+        ? { etiqueta_os_config: config }
+        : { etiqueta_autorizada_config: config };
+  const supabase = await createClient();
+  const { error } = await supabase.from("configuracoes").update(update).eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes/etiquetas");
+}
+
 // ---------- Orçamentos ----------
 export async function createOrcamento(formData: FormData) {
   const supabase = await createClient();
@@ -1614,6 +1647,14 @@ export async function removeOrcamentoItem(itemId: string, orcamentoId: string) {
   const { error } = await supabase.from("orcamento_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
   revalidatePath(`/orcamentos/${orcamentoId}`);
+}
+
+export async function deleteOrcamento(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("orcamentos").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/orcamentos");
+  revalidatePath("/dashboard");
 }
 
 export async function resetarSistema() {
