@@ -59,7 +59,7 @@ export default async function LixeiraPage() {
 
       {vazia && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground">
+          <CardContent className="flex flex-col items-center gap-2 py-10 text-center text-muted-foreground md:py-10">
             <Trash2 className="size-6" />
             <p className="text-sm">A lixeira está vazia.</p>
           </CardContent>

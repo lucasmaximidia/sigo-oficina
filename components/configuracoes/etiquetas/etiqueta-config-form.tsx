@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronUp, ChevronDown, Save } from "lucide-react";
+import { ChevronUp, ChevronDown, Columns2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -103,6 +103,10 @@ export function EtiquetaConfigForm({
 
         <div className="flex flex-col gap-2">
           <Label className="block">Campos da etiqueta</Label>
+          <p className="text-xs text-muted-foreground">
+            Use o botão <Columns2 className="inline size-3.5 align-text-bottom" /> para colocar um campo na mesma
+            linha do próximo (lado a lado).
+          </p>
           {config.campos.map((campo, index) => (
             <div key={campo.id} className="flex flex-wrap items-center gap-2.5 rounded-xl border border-border p-3">
               <div className="flex flex-col">
@@ -165,6 +169,24 @@ export function EtiquetaConfigForm({
                   ))}
                 </SelectContent>
               </Select>
+
+              <button
+                type="button"
+                aria-label={
+                  campo.compartilharLinha ? "Não dividir linha com o próximo campo" : "Dividir linha com o próximo campo"
+                }
+                aria-pressed={campo.compartilharLinha}
+                title="Colocar na mesma linha do próximo campo"
+                disabled={index === config.campos.length - 1}
+                onClick={() => atualizarCampo(campo.id, { compartilharLinha: !campo.compartilharLinha })}
+                className={`flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors disabled:pointer-events-none disabled:opacity-30 ${
+                  campo.compartilharLinha
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Columns2 className="size-4" />
+              </button>
             </div>
           ))}
         </div>

@@ -1,6 +1,6 @@
 import { IconLavadora } from "./etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaDivisorFino } from "@/components/etiquetas/etiqueta-campo";
-import { ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_LARGURA = 500;
@@ -94,9 +94,7 @@ export function EtiquetaOsImage({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={config.etiqueta_logo_url}
-              width={ETIQUETA_LARGURA}
-              height={ALTURA_CABECALHO}
-              style={{ objectFit: "contain" }}
+              style={{ width: ETIQUETA_LARGURA, height: ALTURA_CABECALHO, objectFit: "contain" }}
               alt=""
             />
           ) : (
@@ -118,14 +116,18 @@ export function EtiquetaOsImage({
           minHeight: 0,
         }}
       >
-        {camposVisiveis.map((campo) => (
-          <EtiquetaCampoLinha
-            key={campo.id}
-            label={LABEL_DO_CAMPO[campo.id]}
-            valor={valorDoCampo(campo.id, dados)}
-            alinhamento={campo.alinhamento}
-            fontSizePx={TAMANHOS_FONTE_PX.os[campo.tamanhoFonte]}
-          />
+        {agruparCamposEmLinhas(camposVisiveis).map((linha) => (
+          <EtiquetaLinha key={linha.map((c) => c.id).join("+")}>
+            {linha.map((campo) => (
+              <EtiquetaCampoLinha
+                key={campo.id}
+                label={LABEL_DO_CAMPO[campo.id]}
+                valor={valorDoCampo(campo.id, dados)}
+                alinhamento={campo.alinhamento}
+                fontSizePx={TAMANHOS_FONTE_PX.os[campo.tamanhoFonte]}
+              />
+            ))}
+          </EtiquetaLinha>
         ))}
       </div>
     </div>

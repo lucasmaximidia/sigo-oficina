@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { EtiquetaAlinhamento } from "@/types";
 
 function alignItemsPara(alinhamento: EtiquetaAlinhamento) {
@@ -11,7 +12,9 @@ function textAlignPara(alinhamento: EtiquetaAlinhamento) {
 // Linha genérica de um campo de etiqueta: rótulo pequeno opcional + valor em
 // destaque, alinhados conforme a configuração. Compartilhada pelas 3
 // etiquetas (peça, OS e autorizada) para que a config de alinhamento/tamanho
-// de fonte se comporte de forma idêntica nas três.
+// de fonte se comporte de forma idêntica nas três. Usa flex:1 (em vez de
+// width:100%) para poder ocupar metade da linha quando compartilhada com
+// outro campo — veja EtiquetaLinha.
 export function EtiquetaCampoLinha({
   label,
   valor,
@@ -30,13 +33,21 @@ export function EtiquetaCampoLinha({
         flexDirection: "column",
         alignItems: alignItemsPara(alinhamento),
         textAlign: textAlignPara(alinhamento),
-        width: "100%",
+        flex: 1,
+        minWidth: 0,
       }}
     >
       {label && <span style={{ fontSize: 16, color: "#333333" }}>{label}</span>}
       <span style={{ fontSize: fontSizePx, fontWeight: 700, color: "#111111", lineHeight: 1.2 }}>{valor}</span>
     </div>
   );
+}
+
+// Uma linha da etiqueta: um único EtiquetaCampoLinha (ocupa a linha toda) ou
+// dois lado a lado (cada um com a metade), quando o campo está configurado
+// para compartilhar a linha com o próximo.
+export function EtiquetaLinha({ children }: { children: ReactNode }) {
+  return <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: 16 }}>{children}</div>;
 }
 
 export function EtiquetaDivisorFino() {

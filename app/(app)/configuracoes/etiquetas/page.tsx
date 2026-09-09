@@ -48,7 +48,7 @@ export default async function ConfiguracoesEtiquetasPage() {
         </Card>
 
         <Card>
-          <CardContent className="pt-5">
+          <CardContent className="pt-5 md:pt-5">
             <Tabs defaultValue="peca">
               <TabsList>
                 {TIPOS.map((tipo) => (

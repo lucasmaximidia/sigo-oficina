@@ -51,8 +51,13 @@ export const ETIQUETA_TIPO_LABEL: Record<EtiquetaTipo, string> = {
   autorizada: "OS de Autorizada",
 };
 
-function campoConfigPadrao(id: string, alinhamento: EtiquetaAlinhamento, tamanhoFonte: EtiquetaTamanhoFonte): EtiquetaCampoConfig {
-  return { id, visivel: true, alinhamento, tamanhoFonte };
+function campoConfigPadrao(
+  id: string,
+  alinhamento: EtiquetaAlinhamento,
+  tamanhoFonte: EtiquetaTamanhoFonte,
+  compartilharLinha = false
+): EtiquetaCampoConfig {
+  return { id, visivel: true, alinhamento, tamanhoFonte, compartilharLinha };
 }
 
 export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
@@ -73,7 +78,7 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
       campoConfigPadrao("cliente_telefone", "center", "media"),
       campoConfigPadrao("equipamento", "center", "media"),
       campoConfigPadrao("defeito", "center", "media"),
-      campoConfigPadrao("data_entrada", "left", "pequena"),
+      campoConfigPadrao("data_entrada", "left", "pequena", true),
       campoConfigPadrao("numero_os", "left", "pequena"),
     ],
   },
@@ -86,7 +91,7 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
       campoConfigPadrao("produto", "center", "media"),
       campoConfigPadrao("numero_serie", "left", "media"),
       campoConfigPadrao("referencia", "left", "media"),
-      campoConfigPadrao("numero_os_autorizada", "left", "pequena"),
+      campoConfigPadrao("numero_os_autorizada", "left", "pequena", true),
       campoConfigPadrao("data_entrada", "left", "pequena"),
     ],
   },
@@ -100,7 +105,9 @@ export function normalizarEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTip
   if (!config) return padrao;
 
   const catalogo = new Set(CAMPOS_POR_TIPO[tipo].map((c) => c.id));
-  const existentes = (config.campos ?? []).filter((c) => catalogo.has(c.id));
+  const existentes = (config.campos ?? [])
+    .filter((c) => catalogo.has(c.id))
+    .map((c) => ({ ...c, compartilharLinha: c.compartilharLinha ?? false }));
   const idsExistentes = new Set(existentes.map((c) => c.id));
   const faltantes = padrao.campos.filter((c) => !idsExistentes.has(c.id));
 
@@ -109,4 +116,22 @@ export function normalizarEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTip
     mostrarLogo: config.mostrarLogo ?? true,
     campos: [...existentes, ...faltantes],
   };
+}
+
+// Agrupa os campos visíveis em linhas: um campo com compartilharLinha=true
+// forma uma linha só com o próximo campo visível (lado a lado), em vez de
+// uma linha por campo.
+export function agruparCamposEmLinhas(camposVisiveis: EtiquetaCampoConfig[]): EtiquetaCampoConfig[][] {
+  const linhas: EtiquetaCampoConfig[][] = [];
+  for (let i = 0; i < camposVisiveis.length; i++) {
+    const atual = camposVisiveis[i];
+    const proximo = camposVisiveis[i + 1];
+    if (atual.compartilharLinha && proximo) {
+      linhas.push([atual, proximo]);
+      i++;
+    } else {
+      linhas.push([atual]);
+    }
+  }
+  return linhas;
 }
