@@ -49,7 +49,3 @@ export function EtiquetaCampoLinha({
 export function EtiquetaLinha({ children }: { children: ReactNode }) {
   return <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: 16 }}>{children}</div>;
 }
-
-export function EtiquetaDivisorFino() {
-  return <div style={{ display: "flex", height: 2, background: "#111111", flexShrink: 0 }} />;
-}

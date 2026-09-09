@@ -1,5 +1,5 @@
 import { IconCaixa } from "@/components/ordens-servico/etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
 import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { EtiquetaTipoConfig } from "@/types";
 
@@ -78,8 +78,6 @@ export function EtiquetaPecaImage({
         </div>
       )}
 
-      <EtiquetaDivisorFino />
-
       <div
         style={{
           display: "flex",
@@ -87,7 +85,7 @@ export function EtiquetaPecaImage({
           flex: 1,
           justifyContent: "space-around",
           width: "100%",
-          padding: "8px 24px",
+          padding: "16px 24px",
           minHeight: 0,
         }}
       >

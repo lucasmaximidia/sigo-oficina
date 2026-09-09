@@ -1,5 +1,5 @@
 import { IconLavadora } from "./etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
 import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
@@ -113,8 +113,6 @@ export function EtiquetaAutorizadaImage({
         </span>
       </div>
 
-      <EtiquetaDivisorFino />
-
       <div
         style={{
           display: "flex",
@@ -122,7 +120,7 @@ export function EtiquetaAutorizadaImage({
           flex: 1,
           justifyContent: "space-around",
           width: "100%",
-          padding: "12px 24px",
+          padding: "20px 24px",
           minHeight: 0,
         }}
       >
