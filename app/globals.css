@@ -183,3 +183,14 @@ body {
 .dark ::-webkit-scrollbar-thumb {
   background: #37444c;
 }
+
+/* O autofill do Chrome pinta o campo com um azul próprio, ignorando a cor de
+   fundo do input — a transição gigante impede o flash dessa cor antes do
+   box-shadow (que finge um fundo sólido) assumir. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-foreground);
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px var(--color-card) inset;
+}
