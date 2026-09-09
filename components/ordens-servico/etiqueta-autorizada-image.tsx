@@ -124,14 +124,21 @@ export function EtiquetaAutorizadaImage({
           flexDirection: "column",
           flex: 1,
           justifyContent: "center",
-          gap: 18,
           width: "100%",
           padding: "20px 24px",
           minHeight: 0,
         }}
       >
-        {agruparCamposEmLinhas(camposVisiveis).map((linha) => (
-          <div key={linha.map((c) => c.id).join("+")} style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        {agruparCamposEmLinhas(camposVisiveis).map((linha, index, linhas) => (
+          <div
+            key={linha.map((c) => c.id).join("+")}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              marginBottom: index < linhas.length - 1 ? linha[0].espacamentoDepoisPx : 0,
+            }}
+          >
             <EtiquetaLinha>
               {linha.map((campo) => (
                 <EtiquetaCampoLinha
