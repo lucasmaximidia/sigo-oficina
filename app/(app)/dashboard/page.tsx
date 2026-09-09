@@ -14,7 +14,7 @@ import {
   FileText,
   LayoutGrid,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { TarefasCard } from "@/components/dashboard/tarefas-card";
@@ -48,6 +48,7 @@ interface AgendaResumoRow {
 }
 
 export default async function DashboardPage() {
+  const supabase = await createClient();
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
   const amanha = new Date(hoje);

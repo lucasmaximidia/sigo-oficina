@@ -13,7 +13,7 @@ import {
   PiggyBank,
   Wrench,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,7 @@ interface OsAutorizadaPendenteRow {
 export const dynamic = "force-dynamic";
 
 export default async function FinanceiroPage() {
+  const supabase = await createClient();
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
   const em7dias = new Date(hoje);

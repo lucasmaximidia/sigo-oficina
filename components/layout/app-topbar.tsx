@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Menu, Plus } from "lucide-react";
+import { Menu, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Brand } from "./brand";
 import { SidebarNav } from "./sidebar-nav";
 import { GlobalSearch } from "./global-search";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificacoesBell, type NotificacaoConta, type NotificacaoPeca } from "./notificacoes-bell";
+import { logout } from "@/lib/auth-actions";
 
 export function AppTopbar({
   logoUrl,
@@ -22,6 +29,7 @@ export function AppTopbar({
   notificacoesPecas: NotificacaoPeca[];
 }) {
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border bg-card/95 px-4 backdrop-blur supports-backdrop-filter:bg-card/80 md:px-6">
@@ -46,10 +54,25 @@ export function AppTopbar({
             Novo Agendamento
           </Link>
         </Button>
-        <Avatar className="ml-1">
-          {logoUrl && <AvatarImage src={logoUrl} alt="Logo da empresa" className="object-cover" />}
-          <AvatarFallback>SO</AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label="Menu da conta" className="ml-1 cursor-pointer rounded-full">
+              <Avatar>
+                {logoUrl && <AvatarImage src={logoUrl} alt="Logo da empresa" className="object-cover" />}
+                <AvatarFallback>SO</AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              disabled={isPending}
+              onSelect={() => startTransition(() => logout())}
+            >
+              <LogOut className="size-4" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>

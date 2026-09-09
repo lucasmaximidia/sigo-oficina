@@ -1,10 +1,11 @@
 import { ImageResponse } from "next/og";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const supabase = await createClient();
   const { data: config } = await supabase.from("configuracoes").select("logo_url").eq("id", 1).single();
 
   return new ImageResponse(

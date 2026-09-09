@@ -1100,7 +1100,21 @@ export interface Database {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      verificar_garantia: {
+        Args: { p_os_id: string };
+        Returns: {
+          numero: number;
+          equipamento_tipo: string | null;
+          equipamento_marca: string | null;
+          data_finalizacao: string;
+          data_expiracao: string;
+          status_garantia: GarantiaStatus;
+          nome_empresa: string;
+          logo_url: string | null;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

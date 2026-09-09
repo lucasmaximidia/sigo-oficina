@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, User, FileText, Package, Zap, Calculator } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrcamentoStatusMenu } from "@/components/orcamentos/orcamento-status-menu";
 import { OrcamentoItensList } from "@/components/orcamentos/orcamento-itens-list";
@@ -17,6 +17,7 @@ interface OrcamentoDetalheRow extends Orcamento {
 }
 
 export default async function OrcamentoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
   const { id } = await params;
 
   const [{ data: orcamento }, { data: itens }, { data: pecas }] = await Promise.all([

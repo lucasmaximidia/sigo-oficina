@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
@@ -8,6 +8,7 @@ import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/noti
 import { dataLembreteVencimento } from "@/lib/utils";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
   const limiteLembreteStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 2)

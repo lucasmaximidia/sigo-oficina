@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 const TIPOS: EtiquetaTipo[] = ["peca", "os", "autorizada"];
 
 export default async function ConfiguracoesEtiquetasPage() {
+  const supabase = await createClient();
   const { data: config } = await supabase
     .from("configuracoes")
     .select("etiqueta_logo_url, etiqueta_peca_config, etiqueta_os_config, etiqueta_autorizada_config")

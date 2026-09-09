@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, ClipboardList, Mail, MapPin, Phone, Search } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +49,7 @@ export default async function ClientesPage({
 }: {
   searchParams: Promise<{ id?: string; q?: string }>;
 }) {
+  const supabase = await createClient();
   const params = await searchParams;
 
   const clientesQuery = supabase.from("clientes").select("id, nome, telefone, cpf_cnpj").order("nome", { ascending: true });

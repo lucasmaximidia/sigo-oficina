@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Trash2, Wallet2, Receipt, ShoppingCart, HandCoins, PiggyBank } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +10,7 @@ import { formatCurrency, formatDateTime } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function LixeiraPage() {
+  const supabase = await createClient();
   const [{ data: contas }, { data: despesas }, { data: vendas }, { data: retiradas }, { data: ajustes }] = await Promise.all([
     supabase
       .from("financeiro_contas")

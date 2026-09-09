@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { OrcamentoStatusTabs } from "@/components/orcamentos/status-tabs";
@@ -25,6 +25,7 @@ export default async function OrcamentosPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const supabase = await createClient();
   const params = await searchParams;
   const statusFiltro = (params.status as OrcamentoStatus | undefined) ?? "todos";
 

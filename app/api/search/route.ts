@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +12,7 @@ export interface SearchResultado {
 }
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   const url = new URL(request.url);
   const q = url.searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json({ resultados: [] });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { RelatorioPdf, type RelatorioLinha } from "@/components/financeiro/relatorio-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 
@@ -21,6 +21,7 @@ interface OsRelatorioRow {
 }
 
 export async function GET(request: Request) {
+  const supabase = await createClient();
   const url = new URL(request.url);
   const inicio = url.searchParams.get("inicio");
   const fim = url.searchParams.get("fim");

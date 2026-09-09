@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, AlertTriangle, History, Settings } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export default async function GarantiasPage({
 }: {
   searchParams: Promise<{ filtro?: string }>;
 }) {
+  const supabase = await createClient();
   const params = await searchParams;
   const filtro = (params.filtro as GarantiaStatus | undefined) ?? "todas";
 

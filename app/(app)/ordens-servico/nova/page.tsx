@@ -1,10 +1,11 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { NovaOsForm } from "@/components/os/nova-os-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function NovaOsPage() {
+  const supabase = await createClient();
   const { data: clientes } = await supabase
     .from("clientes")
     .select("id, nome, telefone")
