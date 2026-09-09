@@ -1,4 +1,11 @@
-import type { EtiquetaAlinhamento, EtiquetaCampoConfig, EtiquetaTamanhoFonte, EtiquetaTipo, EtiquetaTipoConfig } from "@/types";
+import type {
+  EtiquetaAlinhamento,
+  EtiquetaCampoConfig,
+  EtiquetaTamanhoFonte,
+  EtiquetaTamanhoLogo,
+  EtiquetaTipo,
+  EtiquetaTipoConfig,
+} from "@/types";
 
 // A impressora térmica usada é sempre 50mm de largura — só a altura da
 // etiqueta varia, então as opções abaixo cobrem os tamanhos mais comuns.
@@ -13,6 +20,17 @@ export const TAMANHOS_FONTE_PX: Record<EtiquetaTipo, Record<EtiquetaTamanhoFonte
   peca: { pequena: 24, media: 32, grande: 40 },
   os: { pequena: 26, media: 34, grande: 44 },
   autorizada: { pequena: 22, media: 28, grande: 36 },
+};
+
+// Altura (em px) da área da logo, por tipo de etiqueta — a largura é sempre
+// a largura total da etiqueta, então uma logo mais larga que alta se ajusta
+// sozinha (object-fit: contain). Os valores "media"/"grande" abaixo
+// reproduzem exatamente o tamanho fixo que cada etiqueta já usava antes
+// dessa configuração existir.
+export const TAMANHOS_LOGO_PX: Record<EtiquetaTipo, Record<EtiquetaTamanhoLogo, number>> = {
+  peca: { pequena: 48, media: 72, grande: 100 },
+  os: { pequena: 140, media: 190, grande: 240 },
+  autorizada: { pequena: 90, media: 150, grande: 180 },
 };
 
 export interface EtiquetaCampoDefinicao {
@@ -64,6 +82,7 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   peca: {
     alturaMm: 30,
     mostrarLogo: true,
+    tamanhoLogo: "media",
     campos: [
       campoConfigPadrao("nome", "left", "grande"),
       campoConfigPadrao("codigo", "left", "pequena"),
@@ -73,6 +92,7 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   os: {
     alturaMm: 80,
     mostrarLogo: true,
+    tamanhoLogo: "grande",
     campos: [
       campoConfigPadrao("cliente_nome", "center", "grande"),
       campoConfigPadrao("cliente_telefone", "center", "media"),
@@ -85,6 +105,7 @@ export const CONFIG_PADRAO: Record<EtiquetaTipo, EtiquetaTipoConfig> = {
   autorizada: {
     alturaMm: 80,
     mostrarLogo: true,
+    tamanhoLogo: "media",
     campos: [
       campoConfigPadrao("cliente_nome", "center", "media"),
       campoConfigPadrao("cliente_telefone", "center", "pequena"),
@@ -114,6 +135,7 @@ export function normalizarEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTip
   return {
     alturaMm: config.alturaMm || padrao.alturaMm,
     mostrarLogo: config.mostrarLogo ?? true,
+    tamanhoLogo: config.tamanhoLogo ?? padrao.tamanhoLogo,
     campos: [...existentes, ...faltantes],
   };
 }

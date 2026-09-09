@@ -10,7 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EtiquetaPreview } from "./etiqueta-preview";
 import { updateEtiquetaConfig } from "@/lib/actions";
 import { ALTURAS_DISPONIVEIS_MM, CAMPOS_POR_TIPO, ETIQUETA_LARGURA_MM, ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
-import type { EtiquetaAlinhamento, EtiquetaCampoConfig, EtiquetaTamanhoFonte, EtiquetaTipo, EtiquetaTipoConfig } from "@/types";
+import type {
+  EtiquetaAlinhamento,
+  EtiquetaCampoConfig,
+  EtiquetaTamanhoFonte,
+  EtiquetaTamanhoLogo,
+  EtiquetaTipo,
+  EtiquetaTipoConfig,
+} from "@/types";
 
 const ALINHAMENTO_LABEL: Record<EtiquetaAlinhamento, string> = {
   left: "Esquerda",
@@ -19,6 +26,12 @@ const ALINHAMENTO_LABEL: Record<EtiquetaAlinhamento, string> = {
 };
 
 const TAMANHO_FONTE_LABEL: Record<EtiquetaTamanhoFonte, string> = {
+  pequena: "Pequena",
+  media: "Média",
+  grande: "Grande",
+};
+
+const TAMANHO_LOGO_LABEL: Record<EtiquetaTamanhoLogo, string> = {
   pequena: "Pequena",
   media: "Média",
   grande: "Grande",
@@ -68,15 +81,38 @@ export function EtiquetaConfigForm({
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2.5">
-          <Switch
-            id={`mostrar-logo-${tipo}`}
-            checked={config.mostrarLogo}
-            onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, mostrarLogo: checked }))}
-          />
-          <Label htmlFor={`mostrar-logo-${tipo}`} className="text-sm text-muted-foreground">
-            Mostrar logo no topo da etiqueta
-          </Label>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          <div className="flex items-center gap-2.5">
+            <Switch
+              id={`mostrar-logo-${tipo}`}
+              checked={config.mostrarLogo}
+              onCheckedChange={(checked) => setConfig((prev) => ({ ...prev, mostrarLogo: checked }))}
+            />
+            <Label htmlFor={`mostrar-logo-${tipo}`} className="text-sm text-muted-foreground">
+              Mostrar logo no topo da etiqueta
+            </Label>
+          </div>
+
+          {config.mostrarLogo && (
+            <div className="flex items-center gap-2">
+              <Label className="text-sm text-muted-foreground">Tamanho da logo</Label>
+              <Select
+                value={config.tamanhoLogo}
+                onValueChange={(v) => setConfig((prev) => ({ ...prev, tamanhoLogo: v as EtiquetaTamanhoLogo }))}
+              >
+                <SelectTrigger className="h-9 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(TAMANHO_LOGO_LABEL).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="max-w-xs">
@@ -232,25 +268,42 @@ export function EtiquetaConfigForm({
           </span>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pré-visualização ao vivo</p>
         </div>
-        <div className="sticky top-4 w-full rounded-[1.75rem] bg-[#12141f] p-5 shadow-xl">
-          <div className="mb-4 flex items-center justify-between px-1">
-            <div className="flex gap-1.5">
-              <span className="size-2 rounded-full bg-white/15" />
-              <span className="size-2 rounded-full bg-white/15" />
-              <span className="size-2 rounded-full bg-success" />
+
+        <div className="sticky top-4 w-full max-w-[410px]">
+          {/* Corpo da impressora térmica */}
+          <div className="relative z-10 rounded-t-[1.5rem] rounded-b-md bg-gradient-to-b from-[#2b2f4a] to-[#14172a] px-5 pt-4 pb-6 shadow-xl">
+            <div className="mb-3 flex items-center justify-between px-1">
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-success/60" />
+                  <span className="relative inline-flex size-2 rounded-full bg-success" />
+                </span>
+                <span className="font-mono text-[10px] tracking-wider text-white/50">PRONTA</span>
+              </div>
+              <span className="font-mono text-[10px] tracking-wider text-white/40">TERM-50MM</span>
             </div>
-            <span className="font-mono text-[10px] tracking-wider text-white/40">TERM-50MM</span>
+            {/* fenda de saída do papel — mesma largura da etiqueta (500px a 75% = 375px) */}
+            <div className="mx-auto h-2.5 w-[376px] rounded-full bg-black/60 shadow-[inset_0_2px_5px_rgba(0,0,0,0.7)]" />
           </div>
-          <div className="flex justify-center rounded-2xl bg-white/[0.04] p-6">
-            <div style={{ transform: "scale(0.75)", transformOrigin: "top center" }}>
+
+          {/* Etiqueta "saindo" da fenda */}
+          <div className="relative z-0 -mt-3 flex justify-center px-4 pb-1">
+            <div
+              style={{
+                transform: "scale(0.75)",
+                transformOrigin: "top center",
+                filter: "drop-shadow(0 10px 18px rgba(20, 23, 42, 0.35))",
+              }}
+            >
               <EtiquetaPreview tipo={tipo} config={config} logoUrl={logoUrl} />
             </div>
           </div>
-          <p className="mt-4 text-center font-mono text-[10px] tracking-wider text-white/35">
-            {ETIQUETA_LARGURA_MM}×{config.alturaMm}mm · {ETIQUETA_LARGURA_MM * ETIQUETA_PX_POR_MM}×
-            {config.alturaMm * ETIQUETA_PX_POR_MM}px
-          </p>
         </div>
+
+        <p className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
+          {ETIQUETA_LARGURA_MM}×{config.alturaMm}mm · {ETIQUETA_LARGURA_MM * ETIQUETA_PX_POR_MM}×
+          {config.alturaMm * ETIQUETA_PX_POR_MM}px
+        </p>
       </div>
     </div>
   );

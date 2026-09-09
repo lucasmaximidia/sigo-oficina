@@ -30,6 +30,7 @@ export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
 export type EtiquetaAlinhamento = "left" | "center" | "right";
 export type EtiquetaTamanhoFonte = "pequena" | "media" | "grande";
+export type EtiquetaTamanhoLogo = "pequena" | "media" | "grande";
 
 export interface EtiquetaCampoConfig {
   id: string;
@@ -44,6 +45,7 @@ export interface EtiquetaCampoConfig {
 export interface EtiquetaTipoConfig {
   alturaMm: number;
   mostrarLogo: boolean;
+  tamanhoLogo: EtiquetaTamanhoLogo;
   campos: EtiquetaCampoConfig[];
 }
 
