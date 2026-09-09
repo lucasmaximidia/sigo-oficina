@@ -283,16 +283,19 @@ export function EtiquetaConfigForm({
               <span className="font-mono text-[10px] tracking-wider text-white/40">TERM-50MM</span>
             </div>
             {/* fenda de saída do papel — mesma largura da etiqueta (500px a 75% = 375px) */}
-            <div className="mx-auto h-2.5 w-[376px] rounded-full bg-black/60 shadow-[inset_0_2px_5px_rgba(0,0,0,0.7)]" />
+            <div className="relative mx-auto h-2.5 w-[376px] rounded-full bg-black/60 shadow-[inset_0_2px_5px_rgba(0,0,0,0.7)]">
+              {/* ponta do papel, já visível saindo pela fenda */}
+              <div className="absolute inset-x-3 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/90" />
+            </div>
           </div>
 
-          {/* Etiqueta "saindo" da fenda */}
-          <div className="relative z-0 -mt-3 flex justify-center px-4 pb-1">
+          {/* Etiqueta bem separada da impressora, "solta" abaixo da fenda */}
+          <div className="relative z-0 flex justify-center px-4 pt-5 pb-1">
             <div
               style={{
                 transform: "scale(0.75)",
                 transformOrigin: "top center",
-                filter: "drop-shadow(0 10px 18px rgba(20, 23, 42, 0.35))",
+                filter: "drop-shadow(0 14px 22px rgba(20, 23, 42, 0.4))",
               }}
             >
               <EtiquetaPreview tipo={tipo} config={config} logoUrl={logoUrl} />
