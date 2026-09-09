@@ -32,7 +32,7 @@ export function BackupTotalButton() {
 
   return (
     <Card>
-      <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 md:py-4">
         <div className="flex items-center gap-2.5">
           <DatabaseBackup className="size-4.5 shrink-0 text-primary" />
           <div>

@@ -1,6 +1,6 @@
 import { IconCaixa } from "@/components/ordens-servico/etiqueta-icons";
-import { EtiquetaCampoLinha, EtiquetaDivisorFino } from "@/components/etiquetas/etiqueta-campo";
-import { ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
 import type { EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_PECA_LARGURA = 500;
@@ -71,7 +71,7 @@ export function EtiquetaPecaImage({
         >
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} width={72} height={72} style={{ objectFit: "contain" }} alt="" />
+            <img src={logoUrl} style={{ width: 72, height: 72, objectFit: "contain" }} alt="" />
           ) : (
             <IconCaixa size={56} color="#cccccc" />
           )}
@@ -91,13 +91,17 @@ export function EtiquetaPecaImage({
           minHeight: 0,
         }}
       >
-        {camposVisiveis.map((campo) => (
-          <EtiquetaCampoLinha
-            key={campo.id}
-            valor={valorDoCampo(campo.id, nome, codigo, precoVenda)}
-            alinhamento={campo.alinhamento}
-            fontSizePx={TAMANHOS_FONTE_PX.peca[campo.tamanhoFonte]}
-          />
+        {agruparCamposEmLinhas(camposVisiveis).map((linha) => (
+          <EtiquetaLinha key={linha.map((c) => c.id).join("+")}>
+            {linha.map((campo) => (
+              <EtiquetaCampoLinha
+                key={campo.id}
+                valor={valorDoCampo(campo.id, nome, codigo, precoVenda)}
+                alinhamento={campo.alinhamento}
+                fontSizePx={TAMANHOS_FONTE_PX.peca[campo.tamanhoFonte]}
+              />
+            ))}
+          </EtiquetaLinha>
         ))}
       </div>
     </div>

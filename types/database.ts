@@ -36,6 +36,9 @@ export interface EtiquetaCampoConfig {
   visivel: boolean;
   alinhamento: EtiquetaAlinhamento;
   tamanhoFonte: EtiquetaTamanhoFonte;
+  // Quando true, esse campo compartilha a linha com o próximo campo visível
+  // (lado a lado, em vez de um abaixo do outro) — ex.: Data e Nº da O.S.
+  compartilharLinha: boolean;
 }
 
 export interface EtiquetaTipoConfig {

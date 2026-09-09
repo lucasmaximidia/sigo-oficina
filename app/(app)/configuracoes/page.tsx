@@ -22,7 +22,7 @@ export default async function ConfiguracoesPage() {
         {config && <DashboardForm config={config} />}
         <Card>
           <Link href="/configuracoes/etiquetas">
-            <CardContent className="flex items-center justify-between gap-3 py-4">
+            <CardContent className="flex items-center justify-between gap-3 py-4 md:py-4">
               <div className="flex items-center gap-2.5">
                 <Tag className="size-4.5 text-primary" />
                 <div>
@@ -38,7 +38,7 @@ export default async function ConfiguracoesPage() {
         </Card>
         <Card>
           <Link href="/configuracoes/lixeira">
-            <CardContent className="flex items-center justify-between gap-3 py-4">
+            <CardContent className="flex items-center justify-between gap-3 py-4 md:py-4">
               <div className="flex items-center gap-2.5">
                 <Trash2 className="size-4.5 text-primary" />
                 <div>
