@@ -110,7 +110,7 @@ export function EtiquetaOsImage({
           display: "flex",
           flexDirection: "column",
           flex: 1,
-          justifyContent: "center",
+          justifyContent: "flex-start",
           width: "100%",
           padding: "20px 24px",
           minHeight: 0,
