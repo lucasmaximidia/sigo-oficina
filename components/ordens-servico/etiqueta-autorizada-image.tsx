@@ -1,35 +1,54 @@
-import { IconCalendario, IconDocumento, IconLavadora } from "./etiqueta-icons";
-import type { Configuracao } from "@/types";
+import { IconLavadora } from "./etiqueta-icons";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino } from "@/components/etiquetas/etiqueta-campo";
+import { ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_AUTORIZADA_LARGURA = 500;
-export const ETIQUETA_AUTORIZADA_ALTURA = 800;
-
-// Grid fixo: cada zona tem uma altura exata e a soma bate certinho com
-// ETIQUETA_AUTORIZADA_ALTURA, preenchendo a etiqueta de ponta a ponta sem sobra.
 const ALTURA_CABECALHO = 188;
-const ALTURA_CLIENTE = 164;
-const ALTURA_PRODUTO = 128;
-const ALTURA_SERIE_REFERENCIA = 200;
-const ALTURA_OS_DATA = 120;
 
-function CampoData({ icon, label, valor }: { icon: React.ReactNode; label: string; valor: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0, gap: 6 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {icon}
-        <span style={{ fontSize: 20, color: "#333333" }}>{label}</span>
-      </div>
-      <span style={{ fontSize: 28, fontWeight: 700, color: "#111111", lineHeight: 1.15 }}>{valor}</span>
-    </div>
-  );
+function valorDoCampo(
+  id: string,
+  dados: {
+    clienteNome: string;
+    clienteTelefone: string | null;
+    produto: string;
+    numeroSerie: string;
+    referencia: string;
+    numeroOsAutorizada: string;
+    dataEntrada: string;
+  }
+): string {
+  switch (id) {
+    case "cliente_nome":
+      return dados.clienteNome;
+    case "cliente_telefone":
+      return dados.clienteTelefone ?? "";
+    case "produto":
+      return dados.produto;
+    case "numero_serie":
+      return dados.numeroSerie || "—";
+    case "referencia":
+      return dados.referencia || "—";
+    case "numero_os_autorizada":
+      return dados.numeroOsAutorizada || "—";
+    case "data_entrada":
+      return dados.dataEntrada;
+    default:
+      return "";
+  }
 }
 
-function DivisorFino() {
-  return <div style={{ display: "flex", height: 2, background: "#111111" }} />;
-}
+const LABEL_DO_CAMPO: Record<string, string> = {
+  produto: "Produto",
+  numero_serie: "Nº de Série",
+  referencia: "Referência",
+  numero_os_autorizada: "Nº OS Autorizada",
+  data_entrada: "Data Entrada",
+};
 
 export function EtiquetaAutorizadaImage({
   config,
+  campoConfig,
   empresaNome,
   clienteNome,
   clienteTelefone,
@@ -40,6 +59,7 @@ export function EtiquetaAutorizadaImage({
   dataEntrada,
 }: {
   config: Pick<Configuracao, "etiqueta_logo_url">;
+  campoConfig: EtiquetaTipoConfig;
   empresaNome: string;
   clienteNome: string;
   clienteTelefone: string | null;
@@ -49,11 +69,15 @@ export function EtiquetaAutorizadaImage({
   numeroOsAutorizada: string;
   dataEntrada: string;
 }) {
+  const dados = { clienteNome, clienteTelefone, produto, numeroSerie, referencia, numeroOsAutorizada, dataEntrada };
+  const camposVisiveis = campoConfig.campos.filter((c) => c.visivel && (c.id !== "cliente_telefone" || clienteTelefone));
+  const alturaTotal = campoConfig.alturaMm * ETIQUETA_PX_POR_MM;
+
   return (
     <div
       style={{
         width: ETIQUETA_AUTORIZADA_LARGURA,
-        height: ETIQUETA_AUTORIZADA_ALTURA,
+        height: alturaTotal,
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
@@ -61,7 +85,6 @@ export function EtiquetaAutorizadaImage({
         color: "#111111",
       }}
     >
-      {/* 1. Cabeçalho: logo + nome da empresa autorizada */}
       <div
         style={{
           display: "flex",
@@ -69,116 +92,51 @@ export function EtiquetaAutorizadaImage({
           alignItems: "center",
           justifyContent: "center",
           width: "100%",
-          height: ALTURA_CABECALHO,
+          height: campoConfig.mostrarLogo ? ALTURA_CABECALHO : ALTURA_CABECALHO - 150,
           overflow: "hidden",
+          flexShrink: 0,
         }}
       >
-        {config.etiqueta_logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={config.etiqueta_logo_url}
-            width={ETIQUETA_AUTORIZADA_LARGURA}
-            height={150}
-            style={{ objectFit: "contain" }}
-            alt=""
-          />
-        ) : (
-          <IconLavadora size={70} color="#cccccc" />
-        )}
+        {campoConfig.mostrarLogo &&
+          (config.etiqueta_logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={config.etiqueta_logo_url}
+              width={ETIQUETA_AUTORIZADA_LARGURA}
+              height={150}
+              style={{ objectFit: "contain" }}
+              alt=""
+            />
+          ) : (
+            <IconLavadora size={70} color="#cccccc" />
+          ))}
         <span style={{ fontSize: 25, fontWeight: 700, color: "#111111", marginTop: 4 }}>
           AUTORIZADA {empresaNome}
         </span>
       </div>
 
-      {/* 2. Cliente */}
+      <EtiquetaDivisorFino />
+
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
+          flex: 1,
+          justifyContent: "space-around",
           width: "100%",
-          height: ALTURA_CLIENTE,
-          padding: "0 20px",
+          padding: "12px 24px",
+          minHeight: 0,
         }}
       >
-        <DivisorFino />
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 14 }}>
-          <span style={{ fontSize: 20, color: "#333333" }}>Cliente</span>
-          <span style={{ fontSize: 34, fontWeight: 700, marginTop: 4 }}>{clienteNome}</span>
-          {clienteTelefone && (
-            <span style={{ fontSize: 25, color: "#333333", marginTop: 4 }}>{clienteTelefone}</span>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Produto */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          width: "100%",
-          height: ALTURA_PRODUTO,
-          padding: "0 20px",
-        }}
-      >
-        <span style={{ fontSize: 20, color: "#333333" }}>Produto</span>
-        <span style={{ fontSize: 28, fontWeight: 700, marginTop: 6, lineHeight: 1.25 }}>{produto}</span>
-      </div>
-
-      {/* 4. Nº de série e Referência */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          height: ALTURA_SERIE_REFERENCIA,
-          padding: "0 20px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            border: "2px solid #111111",
-            borderRadius: 12,
-            padding: "16px 20px",
-            gap: 14,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 20, color: "#333333" }}>Nº de Série</span>
-            <span style={{ fontSize: 30, fontWeight: 700, marginTop: 2 }}>{numeroSerie || "—"}</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 20, color: "#333333" }}>Referência</span>
-            <span style={{ fontSize: 30, fontWeight: 700, marginTop: 2 }}>{referencia || "—"}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Nº OS da Autorizada e Data de entrada */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          width: "100%",
-          height: ALTURA_OS_DATA,
-          padding: "0 20px",
-        }}
-      >
-        <DivisorFino />
-        <div style={{ display: "flex", alignItems: "flex-start", width: "100%", gap: 16, marginTop: 18 }}>
-          <CampoData icon={<IconDocumento size={22} color="#111111" />} label="Nº OS Autorizada:" valor={numeroOsAutorizada || "—"} />
-          <CampoData icon={<IconCalendario size={22} color="#111111" />} label="Data Entrada:" valor={dataEntrada} />
-        </div>
+        {camposVisiveis.map((campo) => (
+          <EtiquetaCampoLinha
+            key={campo.id}
+            label={LABEL_DO_CAMPO[campo.id]}
+            valor={valorDoCampo(campo.id, dados)}
+            alinhamento={campo.alinhamento}
+            fontSizePx={TAMANHOS_FONTE_PX.autorizada[campo.tamanhoFonte]}
+          />
+        ))}
       </div>
     </div>
   );

@@ -17,6 +17,8 @@ import type {
   FreteStatus,
   FreteTipo,
   RetiradaTipo,
+  EtiquetaTipo,
+  EtiquetaTipoConfig,
 } from "@/types";
 
 function str(fd: FormData, key: string) {
@@ -1486,6 +1488,18 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/configuracoes");
   revalidatePath("/dashboard");
+}
+
+export async function updateEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTipoConfig) {
+  const update =
+    tipo === "peca"
+      ? { etiqueta_peca_config: config }
+      : tipo === "os"
+        ? { etiqueta_os_config: config }
+        : { etiqueta_autorizada_config: config };
+  const { error } = await supabase.from("configuracoes").update(update).eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes/etiquetas");
 }
 
 // ---------- Orçamentos ----------

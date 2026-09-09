@@ -1,32 +1,15 @@
 import { IconCaixa } from "@/components/ordens-servico/etiqueta-icons";
+import { EtiquetaCampoLinha, EtiquetaDivisorFino } from "@/components/etiquetas/etiqueta-campo";
+import { ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import type { EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_PECA_LARGURA = 500;
-export const ETIQUETA_PECA_ALTURA = 300;
 
-// Grid fixo: cada zona tem uma altura exata e a soma bate certinho com
-// ETIQUETA_PECA_ALTURA, preenchendo a etiqueta de ponta a ponta sem sobra.
-const ALTURA_CABECALHO = 130;
-const ALTURA_CODIGO = 70;
-const ALTURA_PRECO = 100;
-
-function DivisorFino() {
-  return <div style={{ display: "flex", height: 2, background: "#111111" }} />;
-}
-
-// Nomes de peça variam muito em tamanho; reduz a fonte progressivamente para
-// nomes longos caberem no cabeçalho sem estourar a etiqueta.
-function calcularFontSizeNome(nome: string): number {
-  const tamanho = nome.length;
-  if (tamanho <= 18) return 40;
-  if (tamanho <= 26) return 34;
-  if (tamanho <= 34) return 28;
-  if (tamanho <= 44) return 24;
-  return 20;
-}
+const ALTURA_CABECALHO = 100;
 
 // Satori (motor de renderização do ImageResponse) não aplica -webkit-line-clamp,
-// então mesmo na menor fonte um nome muito longo estouraria a área do
-// cabeçalho — por isso o texto é truncado com reticências além deste limite.
+// então mesmo na menor fonte um nome muito longo estouraria a área da
+// etiqueta — por isso o texto é truncado com reticências além deste limite.
 const LIMITE_CARACTERES_NOME = 130;
 
 function truncarNomeEtiqueta(nome: string): string {
@@ -34,24 +17,40 @@ function truncarNomeEtiqueta(nome: string): string {
   return `${nome.slice(0, LIMITE_CARACTERES_NOME - 1).trimEnd()}…`;
 }
 
+function valorDoCampo(id: string, nome: string, codigo: string | null, precoVenda: number): string {
+  switch (id) {
+    case "nome":
+      return truncarNomeEtiqueta(nome);
+    case "codigo":
+      return codigo ? `Cód: ${codigo}` : "Sem código";
+    case "preco_venda":
+      return `R$ ${precoVenda.toFixed(2).replace(".", ",")}`;
+    default:
+      return "";
+  }
+}
+
 export function EtiquetaPecaImage({
   logoUrl,
   nome,
   codigo,
   precoVenda,
+  config,
 }: {
   logoUrl: string | null;
   nome: string;
   codigo: string | null;
   precoVenda: number;
+  config: EtiquetaTipoConfig;
 }) {
-  const [reais, centavos] = precoVenda.toFixed(2).split(".");
+  const alturaTotal = config.alturaMm * ETIQUETA_PX_POR_MM;
+  const camposVisiveis = config.campos.filter((c) => c.visivel);
 
   return (
     <div
       style={{
         width: ETIQUETA_PECA_LARGURA,
-        height: ETIQUETA_PECA_ALTURA,
+        height: alturaTotal,
         display: "flex",
         flexDirection: "column",
         background: "#ffffff",
@@ -59,36 +58,14 @@ export function EtiquetaPecaImage({
         color: "#111111",
       }}
     >
-      {/* 1. Cabeçalho: nome do produto + logo da empresa (ou ícone padrão) */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          height: ALTURA_CABECALHO,
-          padding: "0 24px",
-          gap: 16,
-        }}
-      >
-        <span
-          style={{
-            fontSize: calcularFontSizeNome(nome),
-            fontWeight: 700,
-            lineHeight: 1.15,
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
-          {truncarNomeEtiqueta(nome)}
-        </span>
+      {config.mostrarLogo && (
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 72,
-            height: 72,
+            width: "100%",
+            height: ALTURA_CABECALHO,
             flexShrink: 0,
           }}
         >
@@ -99,42 +76,29 @@ export function EtiquetaPecaImage({
             <IconCaixa size={56} color="#cccccc" />
           )}
         </div>
-      </div>
+      )}
 
-      {/* 2. Código do produto */}
+      <EtiquetaDivisorFino />
+
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          flex: 1,
+          justifyContent: "space-around",
           width: "100%",
-          height: ALTURA_CODIGO,
-          padding: "0 24px",
+          padding: "8px 24px",
+          minHeight: 0,
         }}
       >
-        <DivisorFino />
-        <span style={{ fontSize: 24, color: "#333333", marginTop: 12 }}>
-          {codigo ? `Cód: ${codigo}` : "Sem código"}
-        </span>
-      </div>
-
-      {/* 3. Preço de venda */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: ALTURA_PRECO,
-          padding: "0 24px",
-        }}
-      >
-        <DivisorFino />
-        <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <span style={{ fontSize: 32, fontWeight: 700, marginBottom: 4 }}>R$</span>
-          <span style={{ fontSize: 60, fontWeight: 700, lineHeight: 1 }}>
-            {reais},{centavos}
-          </span>
-        </div>
+        {camposVisiveis.map((campo) => (
+          <EtiquetaCampoLinha
+            key={campo.id}
+            valor={valorDoCampo(campo.id, nome, codigo, precoVenda)}
+            alinhamento={campo.alinhamento}
+            fontSizePx={TAMANHOS_FONTE_PX.peca[campo.tamanhoFonte]}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { carregarFontesEtiquetaPeca, renderEtiquetaPecaImageResponse, type PecaEtiquetaDados } from "@/lib/etiqueta-peca";
+import { normalizarEtiquetaConfig } from "@/lib/etiqueta-config";
 import { slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -11,7 +12,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const [{ data: peca }, { data: config }] = await Promise.all([
     supabase.from("pecas").select<string, PecaEtiquetaDados>("nome, codigo, preco_venda").eq("id", id).maybeSingle(),
-    supabase.from("configuracoes").select("logo_url").eq("id", 1).single(),
+    supabase.from("configuracoes").select("logo_url, etiqueta_peca_config").eq("id", 1).single(),
   ]);
 
   if (!peca || !config) {
@@ -21,8 +22,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const fonts = await carregarFontesEtiquetaPeca();
   const nomeSlug = slugify(peca.nome) || "peca";
   const nomeArquivo = `etiqueta-${nomeSlug}.png`;
+  const etiquetaConfig = normalizarEtiquetaConfig("peca", config.etiqueta_peca_config);
 
-  return renderEtiquetaPecaImageResponse(peca, config.logo_url, fonts, {
+  return renderEtiquetaPecaImageResponse(peca, config.logo_url, fonts, etiquetaConfig, {
     "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
   });
 }
