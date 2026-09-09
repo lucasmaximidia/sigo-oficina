@@ -1,10 +1,9 @@
 import { IconLavadora } from "./etiqueta-icons";
 import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
-import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX, TAMANHOS_LOGO_PX } from "@/lib/etiqueta-config";
 import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_LARGURA = 500;
-const ALTURA_CABECALHO = 240;
 
 function valorDoCampo(
   id: string,
@@ -65,6 +64,7 @@ export function EtiquetaOsImage({
   const dados = { numeroOs, clienteNome, clienteTelefone, problema, equipamentoDescricao, dataEntrada };
   const camposVisiveis = campoConfig.campos.filter((c) => c.visivel && (c.id !== "cliente_telefone" || clienteTelefone));
   const alturaTotal = campoConfig.alturaMm * ETIQUETA_PX_POR_MM;
+  const logoAlturaPx = TAMANHOS_LOGO_PX.os[campoConfig.tamanhoLogo];
 
   return (
     <div
@@ -85,7 +85,7 @@ export function EtiquetaOsImage({
             alignItems: "center",
             justifyContent: "center",
             width: "100%",
-            height: ALTURA_CABECALHO,
+            height: logoAlturaPx,
             overflow: "hidden",
             flexShrink: 0,
           }}
@@ -94,7 +94,7 @@ export function EtiquetaOsImage({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={config.etiqueta_logo_url}
-              style={{ width: ETIQUETA_LARGURA, height: ALTURA_CABECALHO, objectFit: "contain" }}
+              style={{ width: ETIQUETA_LARGURA, height: logoAlturaPx, objectFit: "contain" }}
               alt=""
             />
           ) : (

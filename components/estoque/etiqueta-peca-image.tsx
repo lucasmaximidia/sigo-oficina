@@ -1,11 +1,9 @@
 import { IconCaixa } from "@/components/ordens-servico/etiqueta-icons";
 import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
-import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX, TAMANHOS_LOGO_PX } from "@/lib/etiqueta-config";
 import type { EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_PECA_LARGURA = 500;
-
-const ALTURA_CABECALHO = 100;
 
 // Satori (motor de renderização do ImageResponse) não aplica -webkit-line-clamp,
 // então mesmo na menor fonte um nome muito longo estouraria a área da
@@ -45,6 +43,7 @@ export function EtiquetaPecaImage({
 }) {
   const alturaTotal = config.alturaMm * ETIQUETA_PX_POR_MM;
   const camposVisiveis = config.campos.filter((c) => c.visivel);
+  const logoAlturaPx = TAMANHOS_LOGO_PX.peca[config.tamanhoLogo];
 
   return (
     <div
@@ -65,13 +64,17 @@ export function EtiquetaPecaImage({
             alignItems: "center",
             justifyContent: "center",
             width: "100%",
-            height: ALTURA_CABECALHO,
+            height: logoAlturaPx,
             flexShrink: 0,
           }}
         >
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} style={{ width: 72, height: 72, objectFit: "contain" }} alt="" />
+            <img
+              src={logoUrl}
+              style={{ width: ETIQUETA_PECA_LARGURA, height: logoAlturaPx, objectFit: "contain" }}
+              alt=""
+            />
           ) : (
             <IconCaixa size={56} color="#cccccc" />
           )}

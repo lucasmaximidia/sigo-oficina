@@ -1,10 +1,12 @@
 import { IconLavadora } from "./etiqueta-icons";
 import { EtiquetaCampoLinha, EtiquetaLinha } from "@/components/etiquetas/etiqueta-campo";
-import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX } from "@/lib/etiqueta-config";
+import { agruparCamposEmLinhas, ETIQUETA_PX_POR_MM, TAMANHOS_FONTE_PX, TAMANHOS_LOGO_PX } from "@/lib/etiqueta-config";
 import type { Configuracao, EtiquetaTipoConfig } from "@/types";
 
 export const ETIQUETA_AUTORIZADA_LARGURA = 500;
-const ALTURA_CABECALHO = 188;
+// Espaço reservado para o texto "AUTORIZADA {empresa}", que sempre aparece
+// abaixo da logo (ou sozinho, quando a logo está desativada).
+const ALTURA_TEXTO_EMPRESA = 38;
 
 function valorDoCampo(
   id: string,
@@ -72,6 +74,7 @@ export function EtiquetaAutorizadaImage({
   const dados = { clienteNome, clienteTelefone, produto, numeroSerie, referencia, numeroOsAutorizada, dataEntrada };
   const camposVisiveis = campoConfig.campos.filter((c) => c.visivel && (c.id !== "cliente_telefone" || clienteTelefone));
   const alturaTotal = campoConfig.alturaMm * ETIQUETA_PX_POR_MM;
+  const logoAlturaPx = TAMANHOS_LOGO_PX.autorizada[campoConfig.tamanhoLogo];
 
   return (
     <div
@@ -92,7 +95,7 @@ export function EtiquetaAutorizadaImage({
           alignItems: "center",
           justifyContent: "center",
           width: "100%",
-          height: campoConfig.mostrarLogo ? ALTURA_CABECALHO : ALTURA_CABECALHO - 150,
+          height: (campoConfig.mostrarLogo ? logoAlturaPx : 0) + ALTURA_TEXTO_EMPRESA,
           overflow: "hidden",
           flexShrink: 0,
         }}
@@ -102,7 +105,7 @@ export function EtiquetaAutorizadaImage({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={config.etiqueta_logo_url}
-              style={{ width: ETIQUETA_AUTORIZADA_LARGURA, height: 150, objectFit: "contain" }}
+              style={{ width: ETIQUETA_AUTORIZADA_LARGURA, height: logoAlturaPx, objectFit: "contain" }}
               alt=""
             />
           ) : (
