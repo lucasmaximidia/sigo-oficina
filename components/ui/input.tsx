@@ -1,8 +1,16 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-function Input({ className, type, onChange, ...props }: React.ComponentProps<"input">) {
-  const autoUppercase = type === undefined || type === "text";
+function Input({
+  className,
+  type,
+  onChange,
+  autoUppercase: autoUppercaseProp,
+  ...props
+}: React.ComponentProps<"input"> & { autoUppercase?: boolean }) {
+  // Campos de senha alternam entre type="password" e "text" (botão de
+  // mostrar/ocultar) — sem essa opção, o texto virava maiúsculo ao exibir.
+  const autoUppercase = autoUppercaseProp ?? (type === undefined || type === "text");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (autoUppercase) {
