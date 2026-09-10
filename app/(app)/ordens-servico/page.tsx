@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ResponsiveList } from "@/components/ui/responsive-list";
+import { TableCell, TableHead } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
 import type { FormaPagamento, OsStatus, OsUrgencia } from "@/types";
@@ -231,72 +232,58 @@ export default async function OrdensServicoPage({
       </div>
 
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10"></TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Equipamento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data Entrada</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(ordens ?? []).map((os) => {
-                const cliente = Array.isArray(os.clientes) ? os.clientes[0] : os.clientes;
-                const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
-                const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
-                const statusInfo = osStatusMap[os.status as OsStatus];
-                return (
-                  <OsTableRow key={os.id} href={`/ordens-servico/${os.id}`}>
-                    <TableCell>
-                      <span className={`inline-block size-2.5 rounded-full ${urgencia.dotClass}`} />
-                    </TableCell>
-                    <TableCell className="font-semibold text-primary">
-                      #OS-{String(os.numero).padStart(4, "0")}
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-foreground">{cliente?.nome ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">{cliente?.telefone ?? ""}</p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-foreground">{equipamento?.tipo ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {[equipamento?.marca, equipamento?.modelo].filter(Boolean).join(" ")}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                        {os.empresas_autorizadas && <Badge variant="info">{os.empresas_autorizadas.nome}</Badge>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(os.data_entrada)}</TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </OsTableRow>
-                );
-              })}
-              {(ordens ?? []).length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <EmptyState
-                      icon={<ClipboardList className="size-5" />}
-                      title="Nenhuma ordem de serviço encontrada"
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {(ordens ?? []).map((os) => {
+        <ResponsiveList
+          items={ordens ?? []}
+          colSpan={7}
+          empty={<EmptyState icon={<ClipboardList className="size-5" />} title="Nenhuma ordem de serviço encontrada" />}
+          header={
+            <>
+              <TableHead className="w-10"></TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Equipamento</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Data Entrada</TableHead>
+              <TableHead className="w-10"></TableHead>
+            </>
+          }
+          renderRow={(os) => {
+            const cliente = Array.isArray(os.clientes) ? os.clientes[0] : os.clientes;
+            const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
+            const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
+            const statusInfo = osStatusMap[os.status as OsStatus];
+            return (
+              <OsTableRow key={os.id} href={`/ordens-servico/${os.id}`}>
+                <TableCell>
+                  <span className={`inline-block size-2.5 rounded-full ${urgencia.dotClass}`} />
+                </TableCell>
+                <TableCell className="font-semibold text-primary">
+                  #OS-{String(os.numero).padStart(4, "0")}
+                </TableCell>
+                <TableCell>
+                  <p className="font-medium text-foreground">{cliente?.nome ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">{cliente?.telefone ?? ""}</p>
+                </TableCell>
+                <TableCell>
+                  <p className="font-medium text-foreground">{equipamento?.tipo ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {[equipamento?.marca, equipamento?.modelo].filter(Boolean).join(" ")}
+                  </p>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                    {os.empresas_autorizadas && <Badge variant="info">{os.empresas_autorizadas.nome}</Badge>}
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(os.data_entrada)}</TableCell>
+                <TableCell>
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </TableCell>
+              </OsTableRow>
+            );
+          }}
+          renderCard={(os) => {
             const cliente = Array.isArray(os.clientes) ? os.clientes[0] : os.clientes;
             const equipamento = Array.isArray(os.equipamentos) ? os.equipamentos[0] : os.equipamentos;
             const urgencia = urgenciaMap[os.urgencia as OsUrgencia];
@@ -320,11 +307,8 @@ export default async function OrdensServicoPage({
                 </div>
               </Link>
             );
-          })}
-          {(ordens ?? []).length === 0 && (
-            <EmptyState icon={<ClipboardList className="size-5" />} title="Nenhuma ordem de serviço encontrada" />
-          )}
-        </div>
+          }}
+        />
 
         {total > 0 && (
           <div className="flex flex-col items-center justify-between gap-3 border-t border-border p-4 sm:flex-row">

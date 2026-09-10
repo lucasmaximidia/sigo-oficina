@@ -5,8 +5,9 @@ import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
@@ -54,56 +55,47 @@ export function OrcamentosLista({ orcamentos }: { orcamentos: OrcamentoListItem[
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Válido até</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-10"></TableHead>
+        <ResponsiveList
+          items={orcamentosFiltrados}
+          colSpan={6}
+          empty={
+            <EmptyState
+              icon={<FileText className="size-5" />}
+              title={orcamentos.length === 0 ? "Nenhum orçamento criado ainda" : "Nenhum orçamento encontrado"}
+            />
+          }
+          header={
+            <>
+              <TableHead>ID</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Válido até</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-10"></TableHead>
+            </>
+          }
+          renderRow={(orc) => {
+            const statusInfo = orcamentoStatusMap[orc.statusExibido];
+            return (
+              <TableRow key={orc.id}>
+                <TableCell className="font-semibold text-primary">
+                  <Link href={`/orcamentos/${orc.id}`}>#ORC-{String(orc.numero).padStart(4, "0")}</Link>
+                </TableCell>
+                <TableCell className="font-medium text-foreground">{orc.clienteNome}</TableCell>
+                <TableCell className="font-medium text-foreground">{formatCurrency(orc.total)}</TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(orc.dataValidade)}</TableCell>
+                <TableCell>
+                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Link href={`/orcamentos/${orc.id}`}>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </Link>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orcamentosFiltrados.map((orc) => {
-                const statusInfo = orcamentoStatusMap[orc.statusExibido];
-                return (
-                  <TableRow key={orc.id}>
-                    <TableCell className="font-semibold text-primary">
-                      <Link href={`/orcamentos/${orc.id}`}>#ORC-{String(orc.numero).padStart(4, "0")}</Link>
-                    </TableCell>
-                    <TableCell className="font-medium text-foreground">{orc.clienteNome}</TableCell>
-                    <TableCell className="font-medium text-foreground">{formatCurrency(orc.total)}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(orc.dataValidade)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/orcamentos/${orc.id}`}>
-                        <ChevronRight className="size-4 text-muted-foreground" />
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {orcamentosFiltrados.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <EmptyState
-                      icon={<FileText className="size-5" />}
-                      title={orcamentos.length === 0 ? "Nenhum orçamento criado ainda" : "Nenhum orçamento encontrado"}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {orcamentosFiltrados.map((orc) => {
+            );
+          }}
+          renderCard={(orc) => {
             const statusInfo = orcamentoStatusMap[orc.statusExibido];
             return (
               <Link
@@ -122,14 +114,8 @@ export function OrcamentosLista({ orcamentos }: { orcamentos: OrcamentoListItem[
                 </div>
               </Link>
             );
-          })}
-          {orcamentosFiltrados.length === 0 && (
-            <EmptyState
-              icon={<FileText className="size-5" />}
-              title={orcamentos.length === 0 ? "Nenhum orçamento criado ainda" : "Nenhum orçamento encontrado"}
-            />
-          )}
-        </div>
+          }}
+        />
       </Card>
     </>
   );

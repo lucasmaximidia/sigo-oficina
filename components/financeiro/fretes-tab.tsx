@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Truck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -45,72 +46,63 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>OS</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Prestador</TableHead>
-                <TableHead>Cobrado do cliente</TableHead>
-                <TableHead>Pago ao prestador</TableHead>
-                <TableHead>Margem</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
+        <ResponsiveList
+          items={fretesFiltrados}
+          colSpan={8}
+          empty={
+            <EmptyState
+              icon={<Truck className="size-5" />}
+              title={fretes.length === 0 ? "Nenhum frete registrado ainda" : "Nenhum frete no período selecionado"}
+              description={
+                fretes.length === 0 ? 'Eles aparecem aqui quando você define a origem "Frete" numa OS.' : undefined
+              }
+            />
+          }
+          header={
+            <>
+              <TableHead>OS</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Prestador</TableHead>
+              <TableHead>Cobrado do cliente</TableHead>
+              <TableHead>Pago ao prestador</TableHead>
+              <TableHead>Margem</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Ações</TableHead>
+            </>
+          }
+          renderRow={(frete) => {
+            const statusInfo = freteStatusMap[frete.status];
+            const tipoInfo = freteTipoMap[frete.tipo];
+            const cobrado = frete.ordens_servico?.valor_frete ?? 0;
+            const margem = cobrado - frete.valor_custo;
+            return (
+              <TableRow key={frete.id}>
+                <TableCell className="font-semibold text-primary">
+                  {frete.ordens_servico && (
+                    <Link href={`/ordens-servico/${frete.os_id}`}>
+                      #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
+                    </Link>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
+                </TableCell>
+                <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
+                <TableCell className="font-medium text-foreground">{formatCurrency(frete.valor_custo)}</TableCell>
+                <TableCell className={margem >= 0 ? "text-success" : "text-destructive"}>
+                  {formatCurrency(margem)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fretesFiltrados.map((frete) => {
-                const statusInfo = freteStatusMap[frete.status];
-                const tipoInfo = freteTipoMap[frete.tipo];
-                const cobrado = frete.ordens_servico?.valor_frete ?? 0;
-                const margem = cobrado - frete.valor_custo;
-                return (
-                  <TableRow key={frete.id}>
-                    <TableCell className="font-semibold text-primary">
-                      {frete.ordens_servico && (
-                        <Link href={`/ordens-servico/${frete.os_id}`}>
-                          #OS-{String(frete.ordens_servico.numero).padStart(4, "0")}
-                        </Link>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-foreground">{frete.prestadores_frete?.nome ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatCurrency(cobrado)}</TableCell>
-                    <TableCell className="font-medium text-foreground">{formatCurrency(frete.valor_custo)}</TableCell>
-                    <TableCell className={margem >= 0 ? "text-success" : "text-destructive"}>
-                      {formatCurrency(margem)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {fretesFiltrados.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <EmptyState
-                      icon={<Truck className="size-5" />}
-                      title={fretes.length === 0 ? "Nenhum frete registrado ainda" : "Nenhum frete no período selecionado"}
-                      description={
-                        fretes.length === 0 ? 'Eles aparecem aqui quando você define a origem "Frete" numa OS.' : undefined
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {fretesFiltrados.map((frete) => {
+            );
+          }}
+          renderCard={(frete) => {
             const statusInfo = freteStatusMap[frete.status];
             const tipoInfo = freteTipoMap[frete.tipo];
             const cobrado = frete.ordens_servico?.valor_frete ?? 0;
@@ -138,15 +130,8 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
                 {frete.status === "pendente" && <MarcarFretePagoButton freteId={frete.id} osId={frete.os_id} />}
               </div>
             );
-          })}
-          {fretesFiltrados.length === 0 && (
-            <EmptyState
-              icon={<Truck className="size-5" />}
-              title={fretes.length === 0 ? "Nenhum frete registrado ainda" : "Nenhum frete no período selecionado"}
-              description={fretes.length === 0 ? 'Eles aparecem aqui quando você define a origem "Frete" numa OS.' : undefined}
-            />
-          )}
-        </div>
+          }}
+        />
       </Card>
     </>
   );

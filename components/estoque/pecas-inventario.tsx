@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -207,105 +208,96 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
         )}
       </div>
 
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">
+      <ResponsiveList
+        items={pecasFiltradas}
+        colSpan={6}
+        empty={
+          <EmptyState
+            icon={<PackageSearch className="size-5" />}
+            title={pecas.length === 0 ? "Nenhuma peça cadastrada" : "Nenhuma peça encontrada"}
+          />
+        }
+        header={
+          <>
+            <TableHead className="w-8">
+              <Checkbox
+                checked={todosVisiveisSelecionados ? true : algumVisivelSelecionado ? "indeterminate" : false}
+                onCheckedChange={toggleTodosVisiveis}
+                aria-label="Selecionar todas as peças"
+              />
+            </TableHead>
+            <TableHead>Item / Código</TableHead>
+            <TableHead>Estoque</TableHead>
+            <TableHead>Custo / Venda</TableHead>
+            <TableHead>Lucro Unitário</TableHead>
+            <TableHead className="w-10">Ações</TableHead>
+          </>
+        }
+        renderRow={(peca) => {
+          const status = statusPeca(peca.quantidade, peca.quantidade_minima);
+          const lucroUnitario = peca.preco_venda - peca.preco_custo;
+          const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
+          return (
+            <TableRow key={peca.id}>
+              <TableCell>
                 <Checkbox
-                  checked={todosVisiveisSelecionados ? true : algumVisivelSelecionado ? "indeterminate" : false}
-                  onCheckedChange={toggleTodosVisiveis}
-                  aria-label="Selecionar todas as peças"
+                  checked={selecionados.has(peca.id)}
+                  onCheckedChange={() => toggleSelecionado(peca.id)}
+                  aria-label={`Selecionar ${peca.nome}`}
                 />
-              </TableHead>
-              <TableHead>Item / Código</TableHead>
-              <TableHead>Estoque</TableHead>
-              <TableHead>Custo / Venda</TableHead>
-              <TableHead>Lucro Unitário</TableHead>
-              <TableHead className="w-10">Ações</TableHead>
+              </TableCell>
+              <TableCell className="whitespace-normal">
+                <p className="font-medium text-foreground">{peca.nome}</p>
+                {peca.codigo && <p className="whitespace-nowrap text-xs text-muted-foreground">COD: {peca.codigo}</p>}
+              </TableCell>
+              <TableCell>
+                <p className="text-foreground">{peca.quantidade} unid.</p>
+                <Badge variant={status.variant} className="mt-1">
+                  {status.label}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <p className="text-xs text-muted-foreground">Custo: {formatCurrency(peca.preco_custo)}</p>
+                <p className="text-foreground">Venda: {formatCurrency(peca.preco_venda)}</p>
+              </TableCell>
+              <TableCell>
+                <p className={cn("font-medium", lucroUnitario >= 0 ? "text-success" : "text-destructive")}>
+                  {formatCurrency(lucroUnitario)}
+                </p>
+                <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" aria-label="Mais ações">
+                      <MoreVertical className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
+                        <Tag className="size-4" />
+                        Baixar etiqueta
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setEditandoId(peca.id)}>
+                      <Pencil className="size-4" />
+                      Editar peça
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <PecaDialog
+                  peca={peca}
+                  lojas={lojas}
+                  hideTrigger
+                  open={editandoId === peca.id}
+                  onOpenChange={(value) => setEditandoId(value ? peca.id : null)}
+                />
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pecasFiltradas.map((peca) => {
-              const status = statusPeca(peca.quantidade, peca.quantidade_minima);
-              const lucroUnitario = peca.preco_venda - peca.preco_custo;
-              const margem = peca.preco_venda > 0 ? (lucroUnitario / peca.preco_venda) * 100 : 0;
-              return (
-                <TableRow key={peca.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selecionados.has(peca.id)}
-                      onCheckedChange={() => toggleSelecionado(peca.id)}
-                      aria-label={`Selecionar ${peca.nome}`}
-                    />
-                  </TableCell>
-                  <TableCell className="whitespace-normal">
-                    <p className="font-medium text-foreground">{peca.nome}</p>
-                    {peca.codigo && <p className="whitespace-nowrap text-xs text-muted-foreground">COD: {peca.codigo}</p>}
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-foreground">{peca.quantidade} unid.</p>
-                    <Badge variant={status.variant} className="mt-1">
-                      {status.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-xs text-muted-foreground">Custo: {formatCurrency(peca.preco_custo)}</p>
-                    <p className="text-foreground">Venda: {formatCurrency(peca.preco_venda)}</p>
-                  </TableCell>
-                  <TableCell>
-                    <p className={cn("font-medium", lucroUnitario >= 0 ? "text-success" : "text-destructive")}>
-                      {formatCurrency(lucroUnitario)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{margem.toFixed(0)}% de margem</p>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost" aria-label="Mais ações">
-                          <MoreVertical className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <a href={`/api/estoque/${peca.id}/etiqueta`} target="_blank" rel="noopener noreferrer">
-                            <Tag className="size-4" />
-                            Baixar etiqueta
-                          </a>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setEditandoId(peca.id)}>
-                          <Pencil className="size-4" />
-                          Editar peça
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <PecaDialog
-                      peca={peca}
-                      lojas={lojas}
-                      hideTrigger
-                      open={editandoId === peca.id}
-                      onOpenChange={(value) => setEditandoId(value ? peca.id : null)}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-            {pecasFiltradas.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6}>
-                  <EmptyState
-                    icon={<PackageSearch className="size-5" />}
-                    title={pecas.length === 0 ? "Nenhuma peça cadastrada" : "Nenhuma peça encontrada"}
-                  />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex flex-col divide-y divide-border md:hidden">
-        {pecasFiltradas.map((peca) => {
+          );
+        }}
+        renderCard={(peca) => {
           const status = statusPeca(peca.quantidade, peca.quantidade_minima);
           const lucroUnitario = peca.preco_venda - peca.preco_custo;
           return (
@@ -340,14 +332,8 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
               </div>
             </div>
           );
-        })}
-        {pecasFiltradas.length === 0 && (
-          <EmptyState
-            icon={<PackageSearch className="size-5" />}
-            title={pecas.length === 0 ? "Nenhuma peça cadastrada" : "Nenhuma peça encontrada"}
-          />
-        )}
-      </div>
+        }}
+      />
     </>
   );
 }
