@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Caveat } from "next/font/google";
 import {
   Wrench,
   ShieldCheck,
@@ -25,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { formatPhoneBR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+const caveat = Caveat({ subsets: ["latin"], weight: ["700"] });
 
 const HERO_FEATURES = [
   { icon: Wrench, label: "Conserto de Lavadoras" },
@@ -246,6 +249,10 @@ export default async function LandingPage() {
                   </Link>
                 </Button>
               </div>
+
+              <p className={`${caveat.className} mt-6 -rotate-2 text-2xl text-primary`}>
+                Qualidade que faz a diferença
+              </p>
             </div>
           </div>
 
