@@ -6,9 +6,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
 
 // Rotas acessíveis sem login: a tela de login, o site institucional público
-// (raiz), a consulta de garantia por telefone e a verificação pública de
-// garantia (acessada pelo cliente via QR code) — nenhuma exige conta no sistema.
-const ROTAS_PUBLICAS = ["/login", "/", "/garantias/verificar", "/garantias/consultar"];
+// (raiz + assets estáticos em /site), a consulta de garantia por telefone e
+// a verificação pública de garantia (acessada pelo cliente via QR code) —
+// nenhuma exige conta no sistema.
+const ROTAS_PUBLICAS = ["/login", "/", "/site", "/garantias/verificar", "/garantias/consultar"];
 
 function isRotaPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`));
