@@ -8,9 +8,6 @@ import {
   Award,
   PackageCheck,
   BadgeCheck,
-  WashingMachine,
-  Wind,
-  Utensils,
   Search,
   UserCog,
   CalendarCheck,
@@ -46,19 +43,19 @@ const FEATURE_STRIP = [
 
 const SERVICOS = [
   {
-    icon: Wind,
+    image: "/site/produto-lava-e-seca.webp",
     label: "Lava e Seca",
     description: "Diagnóstico e reparo de todos os modelos, com peças originais e garantia.",
     tone: "action" as const,
   },
   {
-    icon: WashingMachine,
+    image: "/site/produto-maquina-lavar.webp",
     label: "Máquina de Lavar",
     description: "Conserto, manutenção preventiva e corretiva para diversas marcas.",
     tone: "primary" as const,
   },
   {
-    icon: Utensils,
+    image: "/site/produto-lava-loucas.webp",
     label: "Lava Louças",
     description: "Assistência especializada para deixar sua lava-louças funcionando perfeitamente.",
     tone: "success" as const,
@@ -95,17 +92,17 @@ const DIFERENCIAIS = [
 ];
 
 const MARCAS = [
-  "Brastemp",
-  "Consul",
-  "Electrolux",
-  "LG",
-  "Panasonic",
-  "Midea",
-  "Mueller",
-  "GE",
-  "Continental",
-  "Suggar",
-  "Colormaq",
+  { nome: "Brastemp", logo: "/site/marcas/brastemp.png" },
+  { nome: "Consul", logo: "/site/marcas/consul.png" },
+  { nome: "Electrolux", logo: "/site/marcas/electrolux.png" },
+  { nome: "LG", logo: null },
+  { nome: "Panasonic", logo: null },
+  { nome: "Midea", logo: null },
+  { nome: "Mueller", logo: null },
+  { nome: "GE", logo: "/site/marcas/ge.png" },
+  { nome: "Continental", logo: "/site/marcas/continental.png" },
+  { nome: "Suggar", logo: "/site/marcas/suggar.png" },
+  { nome: "Colormaq", logo: "/site/marcas/colormaq.png" },
 ];
 
 const TONE_CLASSES = {
@@ -165,19 +162,21 @@ export default async function LandingPage() {
             <Button asChild variant="ghost" size="sm" className="hidden rounded-full sm:inline-flex">
               <Link href="/garantias/consultar">Consultar garantia</Link>
             </Button>
-            {whatsappHref ? (
-              <Button asChild size="sm" className="rounded-full">
+            {whatsappHref && (
+              <Button asChild size="sm" className="hidden rounded-full sm:inline-flex">
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                   <CalendarCheck className="size-4" />
-                  <span className="hidden sm:inline">Agendar Atendimento</span>
-                  <span className="sm:hidden">Agendar</span>
+                  Agendar Atendimento
                 </a>
               </Button>
-            ) : (
-              <Button asChild variant="secondary" size="sm" className="rounded-full">
-                <Link href="/login">Entrar</Link>
-              </Button>
             )}
+            <Button
+              asChild
+              size="sm"
+              className="rounded-full bg-primary-hover text-action hover:bg-primary"
+            >
+              <Link href="/login">Entrar</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -186,13 +185,19 @@ export default async function LandingPage() {
         <section className="relative overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/site/banner-servicos.webp"
+            src="/site/banner-fundo.webp"
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full origin-right scale-150 object-cover object-right"
+            className="absolute inset-0 h-full w-full origin-right scale-110 object-cover object-right"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background from-50% to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background from-40% to-transparent" />
           <div className="absolute inset-0 bg-background/10 dark:bg-background/40" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/site/logo-mark.png"
+            alt={nomeEmpresa}
+            className="absolute top-6 right-6 hidden h-20 w-auto drop-shadow-lg sm:block md:top-8 md:right-10 md:h-28"
+          />
 
           <div className="relative mx-auto max-w-6xl px-4 py-14 md:px-6 md:py-20">
             <div className="max-w-xl">
@@ -284,15 +289,16 @@ export default async function LandingPage() {
             </div>
 
             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {SERVICOS.map(({ icon: Icon, label, description, tone }) => {
+              {SERVICOS.map(({ image, label, description, tone }) => {
                 const t = TONE_CLASSES[tone];
                 const saibaMaisHref = whatsappHref
                   ? `${whatsappHref}?text=${encodeURIComponent(`Olá! Gostaria de saber mais sobre o conserto de ${label}.`)}`
                   : "/garantias/consultar";
                 return (
                   <div key={label} className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
-                    <div className={`flex size-14 shrink-0 items-center justify-center rounded-xl ${t.bg} text-white`}>
-                      <Icon className="size-7" />
+                    <div className="flex size-20 shrink-0 items-center justify-center rounded-xl border border-border bg-white p-1.5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={image} alt={label} className="h-full w-full object-contain" />
                     </div>
                     <div>
                       <p className="text-base font-semibold text-foreground">{label}</p>
@@ -352,15 +358,25 @@ export default async function LandingPage() {
         <section id="marcas" className="py-16">
           <div className="mx-auto max-w-4xl px-4 md:px-6">
             <h2 className="text-center font-display text-3xl font-bold text-foreground">Marcas que atendemos</h2>
-            <div className="mt-8 flex flex-wrap justify-center gap-2.5">
-              {MARCAS.map((marca) => (
-                <span
-                  key={marca}
-                  className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground shadow-sm"
-                >
-                  {marca}
-                </span>
-              ))}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              {MARCAS.map(({ nome, logo }) =>
+                logo ? (
+                  <div
+                    key={nome}
+                    className="flex h-14 w-32 items-center justify-center rounded-xl border border-border bg-card p-2.5 shadow-sm"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logo} alt={nome} className="h-full w-full object-contain" />
+                  </div>
+                ) : (
+                  <span
+                    key={nome}
+                    className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground shadow-sm"
+                  >
+                    {nome}
+                  </span>
+                )
+              )}
             </div>
           </div>
         </section>
