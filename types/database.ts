@@ -1130,6 +1130,28 @@ export interface Database {
           logo_url: string | null;
         }[];
       };
+      dados_publicos_empresa: {
+        Args: Record<string, never>;
+        Returns: {
+          nome_empresa: string;
+          telefone: string | null;
+          endereco: string | null;
+          logo_url: string | null;
+          garantia_prazo_dias: number;
+        }[];
+      };
+      consultar_garantias_por_telefone: {
+        Args: { p_telefone: string };
+        Returns: {
+          os_id: string;
+          numero: number;
+          equipamento_tipo: string | null;
+          equipamento_marca: string | null;
+          data_finalizacao: string;
+          data_expiracao: string;
+          status_garantia: GarantiaStatus;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
