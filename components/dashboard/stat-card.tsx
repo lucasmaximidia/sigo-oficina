@@ -17,17 +17,26 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl p-4 shadow-sm md:p-5",
-        tone === "danger" && "bg-destructive/10",
-        tone === "success" && "bg-success/10",
-        tone === "default" && "bg-accent",
-        tone === "highlight" && "border-2 border-primary/50 bg-primary/10"
+        "relative overflow-hidden rounded-xl p-4 shadow-sm md:p-5",
+        tone === "danger" && "bg-gradient-to-br from-destructive/15 to-destructive/5",
+        tone === "success" && "bg-gradient-to-br from-success/15 to-success/5",
+        tone === "default" && "bg-gradient-to-br from-accent to-accent/40",
+        tone === "highlight" && "border-2 border-primary/50 bg-gradient-to-br from-primary/20 to-primary/5"
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div
+        className={cn(
+          "pointer-events-none absolute -top-8 -right-8 size-28 rounded-full blur-2xl",
+          tone === "danger" && "bg-destructive/20",
+          tone === "success" && "bg-success/20",
+          tone === "default" && "bg-primary/15",
+          tone === "highlight" && "bg-primary/25"
+        )}
+      />
+      <div className="relative flex items-center gap-2.5">
         <div
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-card/70",
+            "flex size-9 shrink-0 items-center justify-center rounded-lg bg-card/80 shadow-sm",
             tone === "danger" && "text-destructive",
             tone === "success" && "text-success",
             tone === "default" && "text-primary",
@@ -50,7 +59,7 @@ export function StatCard({
       </div>
       <p
         className={cn(
-          "mt-3 font-display text-3xl font-bold",
+          "relative mt-3 font-display text-3xl font-bold",
           tone === "danger" && "text-destructive",
           tone === "success" && "text-success",
           tone === "default" && "text-foreground",
@@ -59,7 +68,7 @@ export function StatCard({
       >
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="relative mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
