@@ -11,6 +11,17 @@ import {
   WashingMachine,
   Wind,
   Utensils,
+  Search,
+  UserCog,
+  CalendarCheck,
+  Clock,
+  Users,
+  ThumbsUp,
+  Gem,
+  Target,
+  HeartHandshake,
+  Home,
+  ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -18,10 +29,48 @@ import { formatPhoneBR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+const HERO_FEATURES = [
+  { icon: Wrench, label: "Conserto de Lavadoras" },
+  { icon: Search, label: "Diagnóstico Preciso" },
+  { icon: UserCog, label: "Técnicos Especializados" },
+  { icon: PackageCheck, label: "Peças Originais" },
+  { icon: CalendarCheck, label: "Atendimento Agendado" },
+  { icon: ShieldCheck, label: "Serviço com Garantia" },
+];
+
+const FEATURE_STRIP = [
+  { icon: Clock, title: "Atendimento com horário agendado", description: "Mais comodidade e menos espera." },
+  { icon: ShieldCheck, title: "Serviço com garantia", description: "Segurança para o seu dia a dia." },
+  { icon: Users, title: "Equipe especializada", description: "Profissionais capacitados e experientes." },
+];
+
 const SERVICOS = [
-  { icon: WashingMachine, label: "Máquina de Lavar", tone: "primary" as const },
-  { icon: Wind, label: "Lava e Seca", tone: "action" as const },
-  { icon: Utensils, label: "Lava Louças", tone: "success" as const },
+  {
+    icon: Wind,
+    label: "Lava e Seca",
+    description: "Diagnóstico e reparo de todos os modelos, com peças originais e garantia.",
+    tone: "action" as const,
+  },
+  {
+    icon: WashingMachine,
+    label: "Máquina de Lavar",
+    description: "Conserto, manutenção preventiva e corretiva para diversas marcas.",
+    tone: "primary" as const,
+  },
+  {
+    icon: Utensils,
+    label: "Lava Louças",
+    description: "Assistência especializada para deixar sua lava-louças funcionando perfeitamente.",
+    tone: "success" as const,
+  },
+];
+
+const VALORES = [
+  { icon: Gem, label: "Qualidade" },
+  { icon: ThumbsUp, label: "Confiança" },
+  { icon: Award, label: "Experiência" },
+  { icon: HeartHandshake, label: "Atendimento Humanizado" },
+  { icon: Target, label: "Solução Completa" },
 ];
 
 const DIFERENCIAIS = [
@@ -78,7 +127,7 @@ export default async function LandingPage() {
   return (
     <div className="h-dvh overflow-y-auto overscroll-contain bg-background">
       <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 md:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
           <div className="flex items-center gap-2.5">
             {data?.logo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -88,16 +137,48 @@ export default async function LandingPage() {
                 <Wrench className="size-5" strokeWidth={2.25} />
               </div>
             )}
-            <p className="font-display text-base font-bold text-foreground">{nomeEmpresa}</p>
+            <div className="leading-tight">
+              <p className="font-display text-base font-bold text-foreground">{nomeEmpresa}</p>
+              <p className="hidden text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase sm:block">
+                Assistência técnica especializada
+              </p>
+            </div>
           </div>
-          <nav className="flex items-center gap-2">
+          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground lg:flex">
+            <a href="#" className="text-primary">
+              Início
+            </a>
+            <a href="#servicos" className="hover:text-foreground">
+              Serviços
+            </a>
+            <a href="#marcas" className="hover:text-foreground">
+              Marcas
+            </a>
+            <a href="#sobre" className="hover:text-foreground">
+              Sobre Nós
+            </a>
+            <a href="#contato" className="hover:text-foreground">
+              Contato
+            </a>
+          </nav>
+          <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm" className="hidden rounded-full sm:inline-flex">
               <Link href="/garantias/consultar">Consultar garantia</Link>
             </Button>
-            <Button asChild variant="secondary" size="sm" className="rounded-full">
-              <Link href="/login">Entrar</Link>
-            </Button>
-          </nav>
+            {whatsappHref ? (
+              <Button asChild size="sm" className="rounded-full">
+                <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                  <CalendarCheck className="size-4" />
+                  <span className="hidden sm:inline">Agendar Atendimento</span>
+                  <span className="sm:hidden">Agendar</span>
+                </a>
+              </Button>
+            ) : (
+              <Button asChild variant="secondary" size="sm" className="rounded-full">
+                <Link href="/login">Entrar</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -108,83 +189,149 @@ export default async function LandingPage() {
             src="/site/banner-servicos.webp"
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-[0.07] blur-sm dark:opacity-[0.05]"
+            className="absolute inset-0 h-full w-full origin-right scale-150 object-cover object-right"
           />
-          <div className="pointer-events-none absolute inset-0 bg-background/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background from-50% to-transparent" />
+          <div className="absolute inset-0 bg-background/10 dark:bg-background/40" />
 
-          <div className="pointer-events-none absolute -top-40 -left-32 size-96 rounded-full bg-primary/25 blur-3xl" />
-          <div className="pointer-events-none absolute top-20 right-0 size-72 rounded-full bg-action/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-32 left-1/4 size-80 rounded-full bg-success/15 blur-3xl" />
+          <div className="relative mx-auto max-w-6xl px-4 py-14 md:px-6 md:py-20">
+            <div className="max-w-xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
+                <ShieldCheck className="size-3.5" />
+                {garantiaDias} dias de garantia em todos os serviços
+              </span>
+              <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+                Seu eletrodoméstico
+                <br />
+                <span className="text-primary">em boas mãos.</span>
+              </h1>
+              <p className="mt-4 text-base text-muted-foreground md:text-lg">
+                Assistência técnica especializada com qualidade, agilidade e confiança.
+              </p>
 
-          <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center md:py-24">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
-              <ShieldCheck className="size-3.5" />
-              {garantiaDias} dias de garantia em todos os serviços
-            </span>
-            <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-foreground md:text-6xl">
-              Conserto de eletrodomésticos com quem você confia
-            </h1>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-              A {nomeEmpresa} cuida do seu equipamento com diagnóstico honesto, peças de qualidade e prazo de
-              entrega combinado com você.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {whatsappHref && (
-                <Button asChild size="lg" className="rounded-full px-7">
-                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="size-4.5" />
-                    Chamar no WhatsApp
-                  </a>
+              <div className="mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {HERO_FEATURES.map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Icon className="size-4.5" />
+                    </div>
+                    <p className="text-xs leading-tight font-medium text-foreground">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-7 flex items-center gap-2.5 text-sm text-muted-foreground">
+                <span className="h-px w-8 bg-primary" />
+                Do defeito à solução, sem complicação!
+              </div>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                {whatsappHref && (
+                  <Button asChild size="lg" className="rounded-full px-7">
+                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="size-4.5" />
+                      Chamar no WhatsApp
+                    </a>
+                  </Button>
+                )}
+                <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
+                  <Link href="/garantias/consultar">
+                    <ShieldCheck className="size-4.5" />
+                    Consultar minha garantia
+                  </Link>
                 </Button>
-              )}
-              <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
-                <Link href="/garantias/consultar">
-                  <ShieldCheck className="size-4.5" />
-                  Consultar minha garantia
-                </Link>
-              </Button>
+              </div>
             </div>
+          </div>
 
-            <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground sm:gap-8">
-              <span className="inline-flex items-center gap-1.5">
-                <Award className="size-4 text-action" />
-                30+ anos de tradição
-              </span>
-              <span className="h-4 w-px bg-border" />
-              <span className="inline-flex items-center gap-1.5">
-                <PackageCheck className="size-4 text-primary" />
-                Peças originais
-              </span>
+          <div className="relative mx-auto hidden max-w-6xl justify-end px-4 pb-8 md:flex md:px-6">
+            <div className="flex max-w-xs items-center gap-3 rounded-2xl bg-card/95 px-4 py-3 shadow-lg ring-1 ring-border backdrop-blur">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <Home className="size-5" />
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                Sua rotina não pode parar. <span className="text-muted-foreground">Nós cuidamos do resto.</span>
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-border bg-secondary/40 py-16">
-          <div className="mx-auto max-w-3xl px-4 md:px-6">
-            <h2 className="text-center font-display text-3xl font-bold text-foreground">O que a gente conserta</h2>
+        <section className="border-t border-border bg-secondary/40 py-10">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 sm:grid-cols-3 md:px-6">
+            {FEATURE_STRIP.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="flex items-center gap-3">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="size-5" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-foreground">{title}</p>
+                  <p className="text-xs text-muted-foreground">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="servicos" className="py-16">
+          <div className="mx-auto max-w-6xl px-4 md:px-6">
+            <div className="text-center">
+              <h2 className="font-display text-3xl font-bold text-foreground">
+                Nossos <span className="text-primary">Serviços</span>
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Manutenção e conserto de eletrodomésticos com excelência.
+              </p>
+            </div>
+
             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {SERVICOS.map(({ icon: Icon, label, tone }) => {
+              {SERVICOS.map(({ icon: Icon, label, description, tone }) => {
                 const t = TONE_CLASSES[tone];
+                const saibaMaisHref = whatsappHref
+                  ? `${whatsappHref}?text=${encodeURIComponent(`Olá! Gostaria de saber mais sobre o conserto de ${label}.`)}`
+                  : "/garantias/consultar";
                 return (
-                  <div
-                    key={label}
-                    className="relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm"
-                  >
-                    <div className={`pointer-events-none absolute -top-6 -right-6 size-20 rounded-full ${t.glow} blur-2xl`} />
-                    <div className={`relative flex size-14 items-center justify-center rounded-2xl ${t.bg} text-white shadow-md`}>
+                  <div key={label} className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <div className={`flex size-14 shrink-0 items-center justify-center rounded-xl ${t.bg} text-white`}>
                       <Icon className="size-7" />
                     </div>
-                    <p className="relative text-sm font-semibold text-foreground">{label}</p>
+                    <div>
+                      <p className="text-base font-semibold text-foreground">{label}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+                      <a
+                        href={saibaMaisHref}
+                        target={whatsappHref ? "_blank" : undefined}
+                        rel={whatsappHref ? "noopener noreferrer" : undefined}
+                        className={`mt-2 inline-flex items-center gap-1 text-sm font-semibold ${t.text} hover:underline`}
+                      >
+                        Saiba mais
+                        <ArrowRight className="size-3.5" />
+                      </a>
+                    </div>
                   </div>
                 );
               })}
             </div>
+
+            <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3">
+              {VALORES.map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Icon className="size-4.5 text-primary" />
+                  {label}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="py-16">
+        <section id="sobre" className="border-t border-border bg-secondary/40 py-16">
           <div className="mx-auto max-w-6xl px-4 md:px-6">
-            <h2 className="text-center font-display text-3xl font-bold text-foreground">Por que escolher a gente</h2>
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-display text-3xl font-bold text-foreground">Por que escolher a gente</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                A {nomeEmpresa} é uma assistência técnica especializada em eletrodomésticos, com mais de 30 anos de
+                tradição cuidando dos equipamentos da sua casa com honestidade e capricho.
+              </p>
+            </div>
             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
               {DIFERENCIAIS.map(({ icon: Icon, title, description, tone }) => {
                 const t = TONE_CLASSES[tone];
@@ -202,7 +349,7 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        <section className="border-t border-border bg-secondary/40 py-16">
+        <section id="marcas" className="py-16">
           <div className="mx-auto max-w-4xl px-4 md:px-6">
             <h2 className="text-center font-display text-3xl font-bold text-foreground">Marcas que atendemos</h2>
             <div className="mt-8 flex flex-wrap justify-center gap-2.5">
@@ -236,7 +383,7 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-10">
+      <footer id="contato" className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 text-center md:px-6">
           <div className="flex items-center gap-2.5">
             {data?.logo_url ? (
