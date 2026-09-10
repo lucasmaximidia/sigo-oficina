@@ -30,6 +30,20 @@ const DIFERENCIAIS = [
   { icon: BadgeCheck, title: "Qualidade", description: "Atenção aos detalhes em cada reparo, do diagnóstico à entrega." },
 ];
 
+const MARCAS = [
+  "Brastemp",
+  "Consul",
+  "Electrolux",
+  "LG",
+  "Panasonic",
+  "Midea",
+  "Mueller",
+  "GE",
+  "Continental",
+  "Suggar",
+  "Colormaq",
+];
+
 export default async function LandingPage() {
   const supabase = await createClient();
   const { data } = await supabase.rpc("dados_publicos_empresa").maybeSingle();
@@ -45,9 +59,14 @@ export default async function LandingPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 md:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Wrench className="size-5" strokeWidth={2.25} />
-            </div>
+            {data?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={data.logo_url} alt={nomeEmpresa} className="h-9 w-auto object-contain" />
+            ) : (
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <Wrench className="size-5" strokeWidth={2.25} />
+              </div>
+            )}
             <p className="font-display text-base font-bold text-foreground">{nomeEmpresa}</p>
           </div>
           <nav className="flex items-center gap-2">
@@ -66,33 +85,40 @@ export default async function LandingPage() {
           <div className="pointer-events-none absolute -top-32 -left-24 size-80 rounded-full bg-primary/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -right-24 size-80 rounded-full bg-action/15 blur-3xl" />
 
-          <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 py-16 text-center md:py-24">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
-              <ShieldCheck className="size-3.5" />
-              {garantiaDias} dias de garantia em todos os serviços
-            </span>
-            <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-foreground md:text-5xl">
-              Conserto de eletrodomésticos com quem você confia
-            </h1>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-              A {nomeEmpresa} cuida do seu equipamento com diagnóstico honesto, peças de qualidade e prazo de entrega
-              combinado com você.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              {whatsappHref && (
-                <Button asChild size="lg">
-                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="size-4.5" />
-                    Chamar no WhatsApp
-                  </a>
+          <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
+                <ShieldCheck className="size-3.5" />
+                {garantiaDias} dias de garantia em todos os serviços
+              </span>
+              <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+                Conserto de eletrodomésticos com quem você confia
+              </h1>
+              <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
+                A {nomeEmpresa} cuida do seu equipamento com diagnóstico honesto, peças de qualidade e prazo de
+                entrega combinado com você.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                {whatsappHref && (
+                  <Button asChild size="lg">
+                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="size-4.5" />
+                      Chamar no WhatsApp
+                    </a>
+                  </Button>
+                )}
+                <Button asChild variant="secondary" size="lg">
+                  <Link href="/garantias/consultar">
+                    <ShieldCheck className="size-4.5" />
+                    Consultar minha garantia
+                  </Link>
                 </Button>
-              )}
-              <Button asChild variant="secondary" size="lg">
-                <Link href="/garantias/consultar">
-                  <ShieldCheck className="size-4.5" />
-                  Consultar minha garantia
-                </Link>
-              </Button>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/site/banner-servicos.webp" alt="Serviços da oficina" className="h-full w-full object-cover" />
             </div>
           </div>
         </section>
@@ -133,6 +159,22 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        <section className="border-t border-border bg-secondary/40 py-14">
+          <div className="mx-auto max-w-4xl px-4 md:px-6">
+            <h2 className="text-center font-display text-2xl font-bold text-foreground">Marcas que atendemos</h2>
+            <div className="mt-6 flex flex-wrap justify-center gap-2.5">
+              {MARCAS.map((marca) => (
+                <span
+                  key={marca}
+                  className="rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground shadow-sm"
+                >
+                  {marca}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="border-t border-border bg-primary py-14 text-primary-foreground">
           <div className="mx-auto flex max-w-4xl flex-col items-center px-4 text-center">
             <ShieldCheck className="size-9" />
@@ -150,9 +192,14 @@ export default async function LandingPage() {
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 text-center md:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Wrench className="size-4" strokeWidth={2.25} />
-            </div>
+            {data?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={data.logo_url} alt={nomeEmpresa} className="h-8 w-auto object-contain" />
+            ) : (
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Wrench className="size-4" strokeWidth={2.25} />
+              </div>
+            )}
             <p className="text-sm font-bold text-foreground">{nomeEmpresa}</p>
           </div>
           <div className="flex flex-col items-center gap-1.5 text-sm text-muted-foreground sm:flex-row sm:gap-5">
