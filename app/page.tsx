@@ -19,15 +19,30 @@ import { formatPhoneBR } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const SERVICOS = [
-  { icon: WashingMachine, label: "Máquina de Lavar" },
-  { icon: Wind, label: "Lava e Seca" },
-  { icon: Utensils, label: "Lava Louças" },
+  { icon: WashingMachine, label: "Máquina de Lavar", tone: "primary" as const },
+  { icon: Wind, label: "Lava e Seca", tone: "action" as const },
+  { icon: Utensils, label: "Lava Louças", tone: "success" as const },
 ];
 
 const DIFERENCIAIS = [
-  { icon: PackageCheck, title: "Peças originais", description: "Sem economia na qualidade do reparo — usamos peças originais." },
-  { icon: Award, title: "Mais de 30 anos de tradição", description: "Décadas de experiência consertando eletrodomésticos na região." },
-  { icon: BadgeCheck, title: "Qualidade", description: "Atenção aos detalhes em cada reparo, do diagnóstico à entrega." },
+  {
+    icon: PackageCheck,
+    title: "Peças originais",
+    description: "Sem economia na qualidade do reparo — usamos peças originais.",
+    tone: "primary" as const,
+  },
+  {
+    icon: Award,
+    title: "Mais de 30 anos de tradição",
+    description: "Décadas de experiência consertando eletrodomésticos na região.",
+    tone: "action" as const,
+  },
+  {
+    icon: BadgeCheck,
+    title: "Qualidade",
+    description: "Atenção aos detalhes em cada reparo, do diagnóstico à entrega.",
+    tone: "success" as const,
+  },
 ];
 
 const MARCAS = [
@@ -44,6 +59,12 @@ const MARCAS = [
   "Colormaq",
 ];
 
+const TONE_CLASSES = {
+  primary: { bg: "bg-primary", soft: "bg-primary/10", text: "text-primary", glow: "bg-primary/25" },
+  action: { bg: "bg-action", soft: "bg-action/10", text: "text-action", glow: "bg-action/25" },
+  success: { bg: "bg-success", soft: "bg-success/10", text: "text-success", glow: "bg-success/25" },
+};
+
 export default async function LandingPage() {
   const supabase = await createClient();
   const { data } = await supabase.rpc("dados_publicos_empresa").maybeSingle();
@@ -56,7 +77,7 @@ export default async function LandingPage() {
 
   return (
     <div className="h-dvh overflow-y-auto overscroll-contain bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 md:px-6">
           <div className="flex items-center gap-2.5">
             {data?.logo_url ? (
@@ -70,10 +91,10 @@ export default async function LandingPage() {
             <p className="font-display text-base font-bold text-foreground">{nomeEmpresa}</p>
           </div>
           <nav className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button asChild variant="ghost" size="sm" className="hidden rounded-full sm:inline-flex">
               <Link href="/garantias/consultar">Consultar garantia</Link>
             </Button>
-            <Button asChild variant="secondary" size="sm">
+            <Button asChild variant="secondary" size="sm" className="rounded-full">
               <Link href="/login">Entrar</Link>
             </Button>
           </nav>
@@ -82,8 +103,9 @@ export default async function LandingPage() {
 
       <main>
         <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-32 -left-24 size-80 rounded-full bg-primary/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -right-24 size-80 rounded-full bg-action/15 blur-3xl" />
+          <div className="pointer-events-none absolute -top-40 -left-32 size-96 rounded-full bg-primary/25 blur-3xl" />
+          <div className="pointer-events-none absolute top-20 right-0 size-72 rounded-full bg-action/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 left-1/4 size-80 rounded-full bg-success/15 blur-3xl" />
 
           <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
@@ -91,7 +113,7 @@ export default async function LandingPage() {
                 <ShieldCheck className="size-3.5" />
                 {garantiaDias} dias de garantia em todos os serviços
               </span>
-              <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+              <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-foreground md:text-6xl">
                 Conserto de eletrodomésticos com quem você confia
               </h1>
               <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
@@ -100,14 +122,14 @@ export default async function LandingPage() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 {whatsappHref && (
-                  <Button asChild size="lg">
+                  <Button asChild size="lg" className="rounded-full px-7">
                     <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="size-4.5" />
                       Chamar no WhatsApp
                     </a>
                   </Button>
                 )}
-                <Button asChild variant="secondary" size="lg">
+                <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
                   <Link href="/garantias/consultar">
                     <ShieldCheck className="size-4.5" />
                     Consultar minha garantia
@@ -116,53 +138,87 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border shadow-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/site/banner-servicos.webp" alt="Serviços da oficina" className="h-full w-full object-cover" />
+            <div className="relative mx-auto w-full max-w-md md:max-w-none">
+              <div className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-primary/15 blur-2xl" />
+              <div className="relative overflow-hidden rounded-[2rem] border border-border shadow-xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/site/banner-servicos.webp"
+                  alt="Serviços da oficina"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="absolute -top-5 -left-4 flex items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 shadow-lg ring-1 ring-border md:-left-8">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-action/15 text-action">
+                  <Award className="size-4.5" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-bold text-foreground">30+ anos</p>
+                  <p className="text-xs text-muted-foreground">de tradição</p>
+                </div>
+              </div>
+
+              <div className="absolute -right-4 -bottom-5 flex items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 shadow-lg ring-1 ring-border md:-right-8">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <PackageCheck className="size-4.5" />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-sm font-bold text-foreground">Peças</p>
+                  <p className="text-xs text-muted-foreground">originais</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-border bg-secondary/40 py-14">
+        <section className="border-t border-border bg-secondary/40 py-16">
           <div className="mx-auto max-w-3xl px-4 md:px-6">
-            <h2 className="text-center font-display text-2xl font-bold text-foreground">O que a gente conserta</h2>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {SERVICOS.map(({ icon: Icon, label }) => (
-                <div
-                  key={label}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-5 text-center shadow-sm"
-                >
-                  <div className="flex size-11 items-center justify-center rounded-full bg-accent text-primary">
-                    <Icon className="size-5.5" />
+            <h2 className="text-center font-display text-3xl font-bold text-foreground">O que a gente conserta</h2>
+            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {SERVICOS.map(({ icon: Icon, label, tone }) => {
+                const t = TONE_CLASSES[tone];
+                return (
+                  <div
+                    key={label}
+                    className="relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-sm"
+                  >
+                    <div className={`pointer-events-none absolute -top-6 -right-6 size-20 rounded-full ${t.glow} blur-2xl`} />
+                    <div className={`relative flex size-14 items-center justify-center rounded-2xl ${t.bg} text-white shadow-md`}>
+                      <Icon className="size-7" />
+                    </div>
+                    <p className="relative text-sm font-semibold text-foreground">{label}</p>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="py-14">
+        <section className="py-16">
           <div className="mx-auto max-w-6xl px-4 md:px-6">
-            <h2 className="text-center font-display text-2xl font-bold text-foreground">Por que escolher a gente</h2>
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {DIFERENCIAIS.map(({ icon: Icon, title, description }) => (
-                <div key={title} className="rounded-xl border border-border bg-card p-5 shadow-sm">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                    <Icon className="size-5" />
+            <h2 className="text-center font-display text-3xl font-bold text-foreground">Por que escolher a gente</h2>
+            <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {DIFERENCIAIS.map(({ icon: Icon, title, description, tone }) => {
+                const t = TONE_CLASSES[tone];
+                return (
+                  <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+                    <div className={`flex size-12 items-center justify-center rounded-2xl ${t.soft} ${t.text}`}>
+                      <Icon className="size-6" />
+                    </div>
+                    <p className="mt-4 text-base font-semibold text-foreground">{title}</p>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
                   </div>
-                  <p className="mt-4 text-sm font-semibold text-foreground">{title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
 
-        <section className="border-t border-border bg-secondary/40 py-14">
+        <section className="border-t border-border bg-secondary/40 py-16">
           <div className="mx-auto max-w-4xl px-4 md:px-6">
-            <h2 className="text-center font-display text-2xl font-bold text-foreground">Marcas que atendemos</h2>
-            <div className="mt-6 flex flex-wrap justify-center gap-2.5">
+            <h2 className="text-center font-display text-3xl font-bold text-foreground">Marcas que atendemos</h2>
+            <div className="mt-8 flex flex-wrap justify-center gap-2.5">
               {MARCAS.map((marca) => (
                 <span
                   key={marca}
@@ -175,14 +231,18 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        <section className="border-t border-border bg-primary py-14 text-primary-foreground">
-          <div className="mx-auto flex max-w-4xl flex-col items-center px-4 text-center">
-            <ShieldCheck className="size-9" />
-            <h2 className="mt-3 font-display text-2xl font-bold">Já é nosso cliente?</h2>
+        <section className="relative overflow-hidden border-t border-border bg-primary py-16 text-primary-foreground">
+          <div className="pointer-events-none absolute -top-24 -left-10 size-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 right-0 size-72 rounded-full bg-action/25 blur-3xl" />
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-white/15">
+              <ShieldCheck className="size-7" />
+            </div>
+            <h2 className="mt-4 font-display text-3xl font-bold">Já é nosso cliente?</h2>
             <p className="mt-2 max-w-md text-sm text-primary-foreground/80">
               Consulte a validade da garantia do seu reparo digitando o telefone usado no cadastro.
             </p>
-            <Button asChild variant="secondary" size="lg" className="mt-6">
+            <Button asChild variant="secondary" size="lg" className="mt-6 rounded-full px-7">
               <Link href="/garantias/consultar">Consultar garantia</Link>
             </Button>
           </div>
