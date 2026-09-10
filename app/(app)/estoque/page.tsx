@@ -10,6 +10,7 @@ import { PecasInventario } from "@/components/estoque/pecas-inventario";
 import { LojaDialog } from "@/components/estoque/loja-dialog";
 import { EntradaEstoqueDialog } from "@/components/estoque/entrada-estoque-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -111,7 +112,9 @@ export default async function EstoquePage() {
                   {loja.cnpj && <p className="mt-1 text-xs text-muted-foreground">CNPJ: {loja.cnpj}</p>}
                 </div>
               ))}
-              {(lojas ?? []).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma loja cadastrada.</p>}
+              {(lojas ?? []).length === 0 && (
+                <EmptyState icon={<Store className="size-4.5" />} title="Nenhuma loja cadastrada" className="py-4" />
+              )}
               <LojaDialog />
             </CardContent>
           </Card>
@@ -138,7 +141,11 @@ export default async function EstoquePage() {
                 </div>
               ))}
               {(entradas ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhuma entrada de mercadoria registrada ainda.</p>
+                <EmptyState
+                  icon={<FileText className="size-4.5" />}
+                  title="Nenhuma entrada de mercadoria registrada ainda"
+                  className="py-4"
+                />
               )}
             </CardContent>
           </Card>

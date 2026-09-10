@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
@@ -89,8 +90,11 @@ export function OrcamentosLista({ orcamentos }: { orcamentos: OrcamentoListItem[
               })}
               {orcamentosFiltrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    {orcamentos.length === 0 ? "Nenhum orçamento criado ainda." : "Nenhum orçamento encontrado."}
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<FileText className="size-5" />}
+                      title={orcamentos.length === 0 ? "Nenhum orçamento criado ainda" : "Nenhum orçamento encontrado"}
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -120,9 +124,10 @@ export function OrcamentosLista({ orcamentos }: { orcamentos: OrcamentoListItem[
             );
           })}
           {orcamentosFiltrados.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {orcamentos.length === 0 ? "Nenhum orçamento criado ainda." : "Nenhum orçamento encontrado."}
-            </p>
+            <EmptyState
+              icon={<FileText className="size-5" />}
+              title={orcamentos.length === 0 ? "Nenhum orçamento criado ainda" : "Nenhum orçamento encontrado"}
+            />
           )}
         </div>
       </Card>

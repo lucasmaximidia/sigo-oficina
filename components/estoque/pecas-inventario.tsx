@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Search, Tag, Pencil, MoreVertical, Download, X } from "lucide-react";
+import { Search, Tag, Pencil, MoreVertical, Download, X, PackageSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -291,8 +292,11 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
             })}
             {pecasFiltradas.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  {pecas.length === 0 ? "Nenhuma peça cadastrada." : "Nenhuma peça encontrada."}
+                <TableCell colSpan={6}>
+                  <EmptyState
+                    icon={<PackageSearch className="size-5" />}
+                    title={pecas.length === 0 ? "Nenhuma peça cadastrada" : "Nenhuma peça encontrada"}
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -338,9 +342,10 @@ export function PecasInventario({ pecas, lojas }: { pecas: Peca[]; lojas: LojaPa
           );
         })}
         {pecasFiltradas.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            {pecas.length === 0 ? "Nenhuma peça cadastrada." : "Nenhuma peça encontrada."}
-          </p>
+          <EmptyState
+            icon={<PackageSearch className="size-5" />}
+            title={pecas.length === 0 ? "Nenhuma peça cadastrada" : "Nenhuma peça encontrada"}
+          />
         )}
       </div>
     </>

@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Truck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -92,10 +94,14 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
               })}
               {fretesFiltrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                    {fretes.length === 0
-                      ? 'Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem "Frete" numa OS.'
-                      : "Nenhum frete no período selecionado."}
+                  <TableCell colSpan={8}>
+                    <EmptyState
+                      icon={<Truck className="size-5" />}
+                      title={fretes.length === 0 ? "Nenhum frete registrado ainda" : "Nenhum frete no período selecionado"}
+                      description={
+                        fretes.length === 0 ? 'Eles aparecem aqui quando você define a origem "Frete" numa OS.' : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -134,11 +140,11 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
             );
           })}
           {fretesFiltrados.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {fretes.length === 0
-                ? 'Nenhum frete registrado ainda. Eles aparecem aqui quando você define a origem "Frete" numa OS.'
-                : "Nenhum frete no período selecionado."}
-            </p>
+            <EmptyState
+              icon={<Truck className="size-5" />}
+              title={fretes.length === 0 ? "Nenhum frete registrado ainda" : "Nenhum frete no período selecionado"}
+              description={fretes.length === 0 ? 'Eles aparecem aqui quando você define a origem "Frete" numa OS.' : undefined}
+            />
           )}
         </div>
       </Card>
