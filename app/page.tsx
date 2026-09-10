@@ -5,14 +5,12 @@ import {
   Phone,
   MapPin,
   MessageCircle,
-  ClipboardCheck,
+  Award,
   PackageCheck,
-  Timer,
-  Refrigerator,
+  BadgeCheck,
   WashingMachine,
-  Microwave,
-  AirVent,
-  Blocks,
+  Wind,
+  Utensils,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -21,17 +19,15 @@ import { formatPhoneBR } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const SERVICOS = [
-  { icon: Refrigerator, label: "Geladeiras e Freezers" },
-  { icon: WashingMachine, label: "Máquinas de Lavar" },
-  { icon: Microwave, label: "Micro-ondas e Fornos" },
-  { icon: AirVent, label: "Ar-condicionado" },
-  { icon: Blocks, label: "Outros Eletrodomésticos" },
+  { icon: WashingMachine, label: "Máquina de Lavar" },
+  { icon: Wind, label: "Lava e Seca" },
+  { icon: Utensils, label: "Lava Louças" },
 ];
 
 const DIFERENCIAIS = [
-  { icon: ClipboardCheck, title: "Diagnóstico transparente", description: "Você só paga pelo reparo depois de aprovar o orçamento." },
-  { icon: PackageCheck, title: "Peças de qualidade", description: "Usamos peças originais ou equivalentes de qualidade comprovada." },
-  { icon: Timer, title: "Atendimento rápido", description: "Prioridade para quem precisa do equipamento de volta o quanto antes." },
+  { icon: PackageCheck, title: "Peças originais", description: "Sem economia na qualidade do reparo — usamos peças originais." },
+  { icon: Award, title: "Mais de 30 anos de tradição", description: "Décadas de experiência consertando eletrodomésticos na região." },
+  { icon: BadgeCheck, title: "Qualidade", description: "Atenção aos detalhes em cada reparo, do diagnóstico à entrega." },
 ];
 
 export default async function LandingPage() {
@@ -102,9 +98,9 @@ export default async function LandingPage() {
         </section>
 
         <section className="border-t border-border bg-secondary/40 py-14">
-          <div className="mx-auto max-w-6xl px-4 md:px-6">
+          <div className="mx-auto max-w-3xl px-4 md:px-6">
             <h2 className="text-center font-display text-2xl font-bold text-foreground">O que a gente conserta</h2>
-            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {SERVICOS.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
