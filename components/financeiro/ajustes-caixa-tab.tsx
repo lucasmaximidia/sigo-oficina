@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LancarAjusteCaixaDialog } from "@/components/financeiro/lancar-ajuste-caixa-dialog";
 import { ExcluirAjusteCaixaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -63,8 +65,11 @@ export function AjustesCaixaTab({ ajustes }: { ajustes: FinanceiroAjusteCaixa[] 
               ))}
               {ajustesFiltrados.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                    {ajustes.length === 0 ? "Nenhum ajuste lançado." : "Nenhum ajuste no período selecionado."}
+                  <TableCell colSpan={4}>
+                    <EmptyState
+                      icon={<SlidersHorizontal className="size-5" />}
+                      title={ajustes.length === 0 ? "Nenhum ajuste lançado" : "Nenhum ajuste no período selecionado"}
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -87,9 +92,10 @@ export function AjustesCaixaTab({ ajustes }: { ajustes: FinanceiroAjusteCaixa[] 
             </div>
           ))}
           {ajustesFiltrados.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {ajustes.length === 0 ? "Nenhum ajuste lançado." : "Nenhum ajuste no período selecionado."}
-            </p>
+            <EmptyState
+              icon={<SlidersHorizontal className="size-5" />}
+              title={ajustes.length === 0 ? "Nenhum ajuste lançado" : "Nenhum ajuste no período selecionado"}
+            />
           )}
         </div>
       </Card>

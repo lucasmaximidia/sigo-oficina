@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { createTarefa, toggleTarefa } from "@/lib/actions";
 import type { Tarefa } from "@/types";
@@ -24,7 +25,7 @@ export function TarefasCard({ tarefas }: { tarefas: Tarefa[] }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
         {tarefas.length === 0 && (
-          <p className="py-2 text-sm text-muted-foreground">Nenhuma tarefa para hoje.</p>
+          <EmptyState icon={<CheckSquare className="size-4.5" />} title="Nenhuma tarefa para hoje" className="py-3" />
         )}
         {tarefas.map((tarefa) => (
           <label

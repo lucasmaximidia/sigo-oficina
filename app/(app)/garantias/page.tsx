@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { GarantiaCard } from "@/components/garantias/garantia-card";
 import type { GarantiaStatus } from "@/types";
 
@@ -78,7 +79,9 @@ export default async function GarantiasPage({
           <GarantiaCard key={g.os_id} garantia={g} prazoTotal={g.garantia_dias} />
         ))}
         {filtradas.length === 0 && (
-          <p className="col-span-full py-10 text-center text-sm text-muted-foreground">Nenhuma garantia encontrada.</p>
+          <div className="col-span-full">
+            <EmptyState icon={<ShieldCheck className="size-5" />} title="Nenhuma garantia encontrada" />
+          </div>
         )}
       </div>
     </div>

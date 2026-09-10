@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { Plus, ChevronRight, Search } from "lucide-react";
+import { Plus, ChevronRight, Search, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { OsStatusTabs } from "@/components/os/status-tabs";
@@ -10,6 +10,7 @@ import { OsViewToggle } from "@/components/os/os-view-toggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
@@ -282,8 +283,11 @@ export default async function OrdensServicoPage({
               })}
               {(ordens ?? []).length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                    Nenhuma ordem de serviço encontrada.
+                  <TableCell colSpan={7}>
+                    <EmptyState
+                      icon={<ClipboardList className="size-5" />}
+                      title="Nenhuma ordem de serviço encontrada"
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -318,7 +322,7 @@ export default async function OrdensServicoPage({
             );
           })}
           {(ordens ?? []).length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">Nenhuma ordem de serviço encontrada.</p>
+            <EmptyState icon={<ClipboardList className="size-5" />} title="Nenhuma ordem de serviço encontrada" />
           )}
         </div>
 

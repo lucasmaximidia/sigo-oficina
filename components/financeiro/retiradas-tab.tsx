@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { HandCoins } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LancarRetiradaDialog } from "@/components/financeiro/lancar-retirada-dialog";
 import { ExcluirRetiradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -69,8 +71,11 @@ export function RetiradasTab({ retiradas }: { retiradas: FinanceiroRetirada[] })
               })}
               {retiradasFiltradas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    {retiradas.length === 0 ? "Nenhuma retirada lançada." : "Nenhuma retirada no período selecionado."}
+                  <TableCell colSpan={5}>
+                    <EmptyState
+                      icon={<HandCoins className="size-5" />}
+                      title={retiradas.length === 0 ? "Nenhuma retirada lançada" : "Nenhuma retirada no período selecionado"}
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -96,9 +101,10 @@ export function RetiradasTab({ retiradas }: { retiradas: FinanceiroRetirada[] })
             );
           })}
           {retiradasFiltradas.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {retiradas.length === 0 ? "Nenhuma retirada lançada." : "Nenhuma retirada no período selecionado."}
-            </p>
+            <EmptyState
+              icon={<HandCoins className="size-5" />}
+              title={retiradas.length === 0 ? "Nenhuma retirada lançada" : "Nenhuma retirada no período selecionado"}
+            />
           )}
         </div>
       </Card>

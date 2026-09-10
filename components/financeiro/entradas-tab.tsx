@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Wrench, ShoppingCart } from "lucide-react";
+import { Wrench, ShoppingCart, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { VendaDetalhesDialog } from "@/components/financeiro/venda-detalhes-dialog";
 import { OsDetalhesDialog } from "@/components/financeiro/os-detalhes-dialog";
@@ -75,10 +76,16 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
               ))}
               {entradasFiltradas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    {entradas.length === 0
-                      ? "Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
-                      : "Nenhuma entrada no período selecionado."}
+                  <TableCell colSpan={6}>
+                    <EmptyState
+                      icon={<TrendingUp className="size-5" />}
+                      title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
+                      description={
+                        entradas.length === 0
+                          ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
+                          : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -112,11 +119,15 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
             </div>
           ))}
           {entradasFiltradas.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {entradas.length === 0
-                ? "Nenhuma entrada registrada ainda. Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
-                : "Nenhuma entrada no período selecionado."}
-            </p>
+            <EmptyState
+              icon={<TrendingUp className="size-5" />}
+              title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
+              description={
+                entradas.length === 0
+                  ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
+                  : undefined
+              }
+            />
           )}
         </div>
       </Card>

@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Receipt } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
@@ -111,8 +113,8 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
               })}
               {contasFiltradas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    {mensagemVazia}
+                  <TableCell colSpan={6}>
+                    <EmptyState icon={<Receipt className="size-5" />} title={mensagemVazia} />
                   </TableCell>
                 </TableRow>
               )}
@@ -152,11 +154,7 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
               </div>
             );
           })}
-          {contasFiltradas.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {mensagemVazia}
-            </p>
-          )}
+          {contasFiltradas.length === 0 && <EmptyState icon={<Receipt className="size-5" />} title={mensagemVazia} />}
         </div>
       </Card>
     </>

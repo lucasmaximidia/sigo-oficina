@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Wallet2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { ExcluirDespesaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -63,8 +65,11 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
               ))}
               {despesasFiltradas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    {despesas.length === 0 ? "Nenhuma despesa lançada." : "Nenhuma despesa no período selecionado."}
+                  <TableCell colSpan={5}>
+                    <EmptyState
+                      icon={<Wallet2 className="size-5" />}
+                      title={despesas.length === 0 ? "Nenhuma despesa lançada" : "Nenhuma despesa no período selecionado"}
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -86,9 +91,10 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
             </div>
           ))}
           {despesasFiltradas.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {despesas.length === 0 ? "Nenhuma despesa lançada." : "Nenhuma despesa no período selecionado."}
-            </p>
+            <EmptyState
+              icon={<Wallet2 className="size-5" />}
+              title={despesas.length === 0 ? "Nenhuma despesa lançada" : "Nenhuma despesa no período selecionado"}
+            />
           )}
         </div>
       </Card>

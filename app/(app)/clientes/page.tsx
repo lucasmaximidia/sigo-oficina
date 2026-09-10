@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, ClipboardList, Mail, MapPin, Phone, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardList, Mail, MapPin, Phone, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ClienteFormDialog } from "@/components/clientes/cliente-form-dialog";
 import { EquipamentoDialog } from "@/components/clientes/equipamento-dialog";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
@@ -156,7 +157,7 @@ export default async function ClientesPage({
               </Link>
             ))}
             {(clientes ?? []).length === 0 && (
-              <p className="p-6 text-center text-sm text-muted-foreground">Nenhum cliente encontrado.</p>
+              <EmptyState icon={<Users className="size-5" />} title="Nenhum cliente encontrado" />
             )}
           </div>
         </Card>

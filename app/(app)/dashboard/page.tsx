@@ -6,7 +6,9 @@ import {
   PackageCheck,
   ReceiptText,
   CalendarDays,
+  CalendarCheck2,
   AlertTriangle,
+  CheckCircle2,
   Circle,
   ShoppingCart,
   Truck,
@@ -20,6 +22,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { TarefasCard } from "@/components/dashboard/tarefas-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaStatus } from "@/types";
@@ -217,7 +220,7 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 {(osParadas ?? []).length === 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhuma OS parada no momento.</p>
+                  <EmptyState icon={<CheckCircle2 className="size-4.5" />} title="Nenhuma OS parada no momento" className="py-4" />
                 )}
                 {(osParadas ?? []).map((os) => (
                   <Link
@@ -256,7 +259,11 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {(boletosVencendo ?? []).length === 0 && (
-                <p className="text-sm text-muted-foreground">Nenhum boleto vencendo nos próximos {boletosDias} dias.</p>
+                <EmptyState
+                  icon={<ReceiptText className="size-4.5" />}
+                  title={`Nenhum boleto vencendo nos próximos ${boletosDias} dias`}
+                  className="py-4"
+                />
               )}
               {(boletosVencendo ?? []).map((conta) => {
                 const atrasado = conta.vencimento < hojeStr;
@@ -380,7 +387,7 @@ function AgendaList({
   urgencia: "hoje" | "amanha";
 }) {
   if (eventos.length === 0) {
-    return <p className="text-sm text-muted-foreground">{vazio}</p>;
+    return <EmptyState icon={<CalendarCheck2 className="size-4.5" />} title={vazio} className="py-4" />;
   }
   const corBorda = urgencia === "hoje" ? "border-l-destructive" : "border-l-warning";
   return (

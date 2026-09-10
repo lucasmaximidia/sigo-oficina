@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, MapPin, User, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, User, CalendarDays, CalendarX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CalendarGrid, urgenciaBordaClass } from "@/components/agenda/calendar-grid";
 import { cn } from "@/lib/utils";
 import { NovoAgendamentoDialog } from "@/components/agenda/novo-agendamento-dialog";
@@ -106,7 +107,9 @@ export default async function AgendaPage({
             </p>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {eventosDoDia.length === 0 && <p className="text-sm text-muted-foreground">Nenhum agendamento neste dia.</p>}
+            {eventosDoDia.length === 0 && (
+              <EmptyState icon={<CalendarX className="size-4.5" />} title="Nenhum agendamento neste dia" className="py-4" />
+            )}
             {eventosDoDia.map((evento) => {
               const cliente = Array.isArray(evento.clientes) ? evento.clientes[0] : evento.clientes;
               const status = agendaStatusMap[evento.status as AgendaStatus];
