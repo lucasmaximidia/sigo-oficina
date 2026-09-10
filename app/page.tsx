@@ -185,22 +185,19 @@ export default async function LandingPage() {
       </header>
 
       <main>
-        <section className="relative overflow-hidden bg-background">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/site/banner-fundo.webp"
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 hidden h-full w-full object-cover object-[78%_center] sm:block"
-          />
-          <div className="absolute inset-0 hidden bg-gradient-to-r from-background from-40% to-transparent sm:block" />
-          <div className="absolute inset-0 hidden bg-background/10 sm:block dark:bg-background/40" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/site/logo-mark.png"
-            alt={nomeEmpresa}
-            className="absolute top-6 right-6 hidden h-14 w-auto drop-shadow-lg md:block md:top-8 md:right-10 md:h-16"
-          />
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-background">
+          <div className="absolute inset-x-0 top-1/2 hidden aspect-[2000/750] w-full -translate-y-1/2 sm:block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/site/banner-fundo.webp" alt="" aria-hidden="true" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background from-40% to-transparent" />
+            <div className="absolute inset-0 bg-background/10 dark:bg-background/40" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/site/logo-mark.png"
+              alt={nomeEmpresa}
+              className="absolute top-2 right-3 h-[12%] w-auto drop-shadow-lg"
+            />
+          </div>
 
           <div className="relative mx-auto max-w-6xl px-4 py-14 md:px-6 md:py-20">
             <div className="max-w-xl">
