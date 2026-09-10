@@ -103,71 +103,58 @@ export default async function LandingPage() {
 
       <main>
         <section className="relative overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/site/banner-servicos.webp"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-[0.07] blur-sm dark:opacity-[0.05]"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-background/60" />
+
           <div className="pointer-events-none absolute -top-40 -left-32 size-96 rounded-full bg-primary/25 blur-3xl" />
           <div className="pointer-events-none absolute top-20 right-0 size-72 rounded-full bg-action/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-32 left-1/4 size-80 rounded-full bg-success/15 blur-3xl" />
 
-          <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
-                <ShieldCheck className="size-3.5" />
-                {garantiaDias} dias de garantia em todos os serviços
-              </span>
-              <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-foreground md:text-6xl">
-                Conserto de eletrodomésticos com quem você confia
-              </h1>
-              <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
-                A {nomeEmpresa} cuida do seu equipamento com diagnóstico honesto, peças de qualidade e prazo de
-                entrega combinado com você.
-              </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                {whatsappHref && (
-                  <Button asChild size="lg" className="rounded-full px-7">
-                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="size-4.5" />
-                      Chamar no WhatsApp
-                    </a>
-                  </Button>
-                )}
-                <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
-                  <Link href="/garantias/consultar">
-                    <ShieldCheck className="size-4.5" />
-                    Consultar minha garantia
-                  </Link>
+          <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center md:py-24">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3.5 py-1.5 text-xs font-semibold text-success">
+              <ShieldCheck className="size-3.5" />
+              {garantiaDias} dias de garantia em todos os serviços
+            </span>
+            <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+              Conserto de eletrodomésticos com quem você confia
+            </h1>
+            <p className="mt-4 max-w-xl text-base text-muted-foreground md:text-lg">
+              A {nomeEmpresa} cuida do seu equipamento com diagnóstico honesto, peças de qualidade e prazo de
+              entrega combinado com você.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              {whatsappHref && (
+                <Button asChild size="lg" className="rounded-full px-7">
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="size-4.5" />
+                    Chamar no WhatsApp
+                  </a>
                 </Button>
-              </div>
+              )}
+              <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
+                <Link href="/garantias/consultar">
+                  <ShieldCheck className="size-4.5" />
+                  Consultar minha garantia
+                </Link>
+              </Button>
             </div>
 
-            <div className="relative mx-auto w-full max-w-md md:max-w-none">
-              <div className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-primary/15 blur-2xl" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-border shadow-xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/site/banner-servicos.webp"
-                  alt="Serviços da oficina"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-
-              <div className="absolute -top-5 -left-4 flex items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 shadow-lg ring-1 ring-border md:-left-8">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-action/15 text-action">
-                  <Award className="size-4.5" />
-                </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-bold text-foreground">30+ anos</p>
-                  <p className="text-xs text-muted-foreground">de tradição</p>
-                </div>
-              </div>
-
-              <div className="absolute -right-4 -bottom-5 flex items-center gap-2.5 rounded-2xl bg-card px-4 py-2.5 shadow-lg ring-1 ring-border md:-right-8">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                  <PackageCheck className="size-4.5" />
-                </div>
-                <div className="leading-tight">
-                  <p className="text-sm font-bold text-foreground">Peças</p>
-                  <p className="text-xs text-muted-foreground">originais</p>
-                </div>
-              </div>
+            <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground sm:gap-8">
+              <span className="inline-flex items-center gap-1.5">
+                <Award className="size-4 text-action" />
+                30+ anos de tradição
+              </span>
+              <span className="h-4 w-px bg-border" />
+              <span className="inline-flex items-center gap-1.5">
+                <PackageCheck className="size-4 text-primary" />
+                Peças originais
+              </span>
             </div>
           </div>
         </section>
