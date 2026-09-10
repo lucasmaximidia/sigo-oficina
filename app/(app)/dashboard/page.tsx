@@ -345,16 +345,25 @@ function MiniStat({
   return (
     <div
       className={cn(
-        "rounded-xl p-3.5",
-        tone === "action" && "bg-action/10",
-        tone === "success" && "bg-success/10",
-        tone === "warning" && "bg-warning/15",
-        tone === "default" && "bg-accent"
+        "relative overflow-hidden rounded-xl p-3.5",
+        tone === "action" && "bg-gradient-to-br from-action/15 to-action/5",
+        tone === "success" && "bg-gradient-to-br from-success/15 to-success/5",
+        tone === "warning" && "bg-gradient-to-br from-warning/20 to-warning/5",
+        tone === "default" && "bg-gradient-to-br from-accent to-accent/40"
       )}
     >
       <div
         className={cn(
-          "flex size-8 items-center justify-center rounded-lg bg-card/70",
+          "pointer-events-none absolute -top-6 -right-6 size-20 rounded-full blur-2xl",
+          tone === "action" && "bg-action/20",
+          tone === "success" && "bg-success/20",
+          tone === "warning" && "bg-warning/20",
+          tone === "default" && "bg-primary/15"
+        )}
+      />
+      <div
+        className={cn(
+          "relative flex size-8 items-center justify-center rounded-lg bg-card/80 shadow-sm",
           tone === "action" && "text-action",
           tone === "success" && "text-success",
           tone === "warning" && "text-warning",
@@ -363,8 +372,8 @@ function MiniStat({
       >
         <Icon className="size-4" strokeWidth={2} />
       </div>
-      <p className="font-display mt-2.5 text-2xl font-bold text-foreground">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-display relative mt-2.5 text-2xl font-bold text-foreground">{value}</p>
+      <p className="relative text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
