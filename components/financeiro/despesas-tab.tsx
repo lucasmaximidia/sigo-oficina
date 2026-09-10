@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Wallet2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { ExcluirDespesaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -40,45 +41,36 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
         <ExportarCsvButton tipo="despesas" />
       </div>
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead className="w-10">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {despesasFiltradas.map((despesa) => (
-                <TableRow key={despesa.id}>
-                  <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
-                  <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
-                  <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
-                  <TableCell>
-                    <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {despesasFiltradas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyState
-                      icon={<Wallet2 className="size-5" />}
-                      title={despesas.length === 0 ? "Nenhuma despesa lançada" : "Nenhuma despesa no período selecionado"}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {despesasFiltradas.map((despesa) => (
+        <ResponsiveList
+          items={despesasFiltradas}
+          colSpan={5}
+          empty={
+            <EmptyState
+              icon={<Wallet2 className="size-5" />}
+              title={despesas.length === 0 ? "Nenhuma despesa lançada" : "Nenhuma despesa no período selecionado"}
+            />
+          }
+          header={
+            <>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead className="w-10">Ações</TableHead>
+            </>
+          }
+          renderRow={(despesa) => (
+            <TableRow key={despesa.id}>
+              <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
+              <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
+              <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
+              <TableCell>
+                <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
+              </TableCell>
+            </TableRow>
+          )}
+          renderCard={(despesa) => (
             <div key={despesa.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground">{despesa.descricao}</p>
@@ -89,14 +81,8 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
               </div>
               <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
             </div>
-          ))}
-          {despesasFiltradas.length === 0 && (
-            <EmptyState
-              icon={<Wallet2 className="size-5" />}
-              title={despesas.length === 0 ? "Nenhuma despesa lançada" : "Nenhuma despesa no período selecionado"}
-            />
           )}
-        </div>
+        />
       </Card>
     </>
   );

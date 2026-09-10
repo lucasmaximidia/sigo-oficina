@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { ExportarCsvButton } from "@/components/ui/exportar-csv-button";
 import { NovaContaDialog } from "@/components/financeiro/nova-conta-dialog";
 import { MarcarPagoButton } from "@/components/financeiro/marcar-pago-button";
@@ -66,64 +67,53 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
         </div>
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-20">Ações</TableHead>
+        <ResponsiveList
+          items={contasFiltradas}
+          colSpan={6}
+          empty={<EmptyState icon={<Receipt className="size-5" />} title={mensagemVazia} />}
+          header={
+            <>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Vencimento</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-20">Ações</TableHead>
+            </>
+          }
+          renderRow={(conta) => {
+            const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
+            const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
+            return (
+              <TableRow key={conta.id}>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground">{conta.descricao}</p>
+                    {conta.parcela_total && (
+                      <Badge variant="secondary">
+                        {conta.parcela_atual}/{conta.parcela_total}
+                      </Badge>
+                    )}
+                  </div>
+                  {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
+                </TableCell>
+                <TableCell className="text-muted-foreground">{conta.categoria || "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(conta.vencimento)}</TableCell>
+                <TableCell className="font-medium text-foreground">{formatCurrency(conta.valor)}</TableCell>
+                <TableCell>
+                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
+                    <EditarContaDialog conta={conta} />
+                    <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contasFiltradas.map((conta) => {
-                const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
-                const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
-                return (
-                  <TableRow key={conta.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-foreground">{conta.descricao}</p>
-                        {conta.parcela_total && (
-                          <Badge variant="secondary">
-                            {conta.parcela_atual}/{conta.parcela_total}
-                          </Badge>
-                        )}
-                      </div>
-                      {conta.fornecedor && <p className="text-xs text-muted-foreground">{conta.fornecedor}</p>}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{conta.categoria || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(conta.vencimento)}</TableCell>
-                    <TableCell className="font-medium text-foreground">{formatCurrency(conta.valor)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {conta.status !== "pago" && <MarcarPagoButton id={conta.id} />}
-                        <EditarContaDialog conta={conta} />
-                        <ExcluirContaButton id={conta.id} descricao={conta.descricao} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {contasFiltradas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <EmptyState icon={<Receipt className="size-5" />} title={mensagemVazia} />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {contasFiltradas.map((conta) => {
+            );
+          }}
+          renderCard={(conta) => {
             const atrasado = conta.status !== "pago" && conta.vencimento < hojeStr;
             const statusInfo = contaStatusMap[(atrasado ? "atrasado" : conta.status) as ContaStatus];
             return (
@@ -153,9 +143,8 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
                 </div>
               </div>
             );
-          })}
-          {contasFiltradas.length === 0 && <EmptyState icon={<Receipt className="size-5" />} title={mensagemVazia} />}
-        </div>
+          }}
+        />
       </Card>
     </>
   );

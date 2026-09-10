@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { Wrench, ShoppingCart, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { ExcluirEntradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { VendaDetalhesDialog } from "@/components/financeiro/venda-detalhes-dialog";
 import { OsDetalhesDialog } from "@/components/financeiro/os-detalhes-dialog";
@@ -36,65 +37,56 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Origem</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Forma de Pagamento</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead className="w-10">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entradasFiltradas.map((entrada) => (
-                <TableRow key={`${entrada.tipo}-${entrada.id}`}>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      {entrada.tipo === "os" ? (
-                        <Wrench className="size-3.5 text-muted-foreground" />
-                      ) : (
-                        <ShoppingCart className="size-3.5 text-muted-foreground" />
-                      )}
-                      {entrada.tipo === "os" ? (
-                        <OsDetalhesDialog osId={entrada.id} label={entrada.origemLabel} />
-                      ) : (
-                        <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-foreground">{entrada.cliente}</TableCell>
-                  <TableCell className="text-muted-foreground">{entrada.data ? formatDate(entrada.data) : "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
-                  <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
-                  <TableCell>
-                    <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {entradasFiltradas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <EmptyState
-                      icon={<TrendingUp className="size-5" />}
-                      title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
-                      description={
-                        entradas.length === 0
-                          ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
-                          : undefined
-                      }
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {entradasFiltradas.map((entrada) => (
+        <ResponsiveList
+          items={entradasFiltradas}
+          colSpan={6}
+          empty={
+            <EmptyState
+              icon={<TrendingUp className="size-5" />}
+              title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
+              description={
+                entradas.length === 0
+                  ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
+                  : undefined
+              }
+            />
+          }
+          header={
+            <>
+              <TableHead>Origem</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Forma de Pagamento</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead className="w-10">Ações</TableHead>
+            </>
+          }
+          renderRow={(entrada) => (
+            <TableRow key={`${entrada.tipo}-${entrada.id}`}>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  {entrada.tipo === "os" ? (
+                    <Wrench className="size-3.5 text-muted-foreground" />
+                  ) : (
+                    <ShoppingCart className="size-3.5 text-muted-foreground" />
+                  )}
+                  {entrada.tipo === "os" ? (
+                    <OsDetalhesDialog osId={entrada.id} label={entrada.origemLabel} />
+                  ) : (
+                    <VendaDetalhesDialog vendaId={entrada.id} label={entrada.origemLabel} />
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="text-foreground">{entrada.cliente}</TableCell>
+              <TableCell className="text-muted-foreground">{entrada.data ? formatDate(entrada.data) : "—"}</TableCell>
+              <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
+              <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
+              <TableCell>
+                <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+              </TableCell>
+            </TableRow>
+          )}
+          renderCard={(entrada) => (
             <div key={`${entrada.tipo}-${entrada.id}`} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -117,19 +109,8 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
               </div>
               <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
             </div>
-          ))}
-          {entradasFiltradas.length === 0 && (
-            <EmptyState
-              icon={<TrendingUp className="size-5" />}
-              title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
-              description={
-                entradas.length === 0
-                  ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
-                  : undefined
-              }
-            />
           )}
-        </div>
+        />
       </Card>
     </>
   );

@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { HandCoins } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { LancarRetiradaDialog } from "@/components/financeiro/lancar-retirada-dialog";
 import { ExcluirRetiradaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -41,50 +42,41 @@ export function RetiradasTab({ retiradas }: { retiradas: FinanceiroRetirada[] })
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead className="w-10">Ações</TableHead>
+        <ResponsiveList
+          items={retiradasFiltradas}
+          colSpan={5}
+          empty={
+            <EmptyState
+              icon={<HandCoins className="size-5" />}
+              title={retiradas.length === 0 ? "Nenhuma retirada lançada" : "Nenhuma retirada no período selecionado"}
+            />
+          }
+          header={
+            <>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead className="w-10">Ações</TableHead>
+            </>
+          }
+          renderRow={(retirada) => {
+            const tipoInfo = retiradaTipoMap[retirada.tipo as RetiradaTipo];
+            return (
+              <TableRow key={retirada.id}>
+                <TableCell className="font-medium text-foreground">{retirada.descricao}</TableCell>
+                <TableCell>
+                  <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(retirada.data)}</TableCell>
+                <TableCell className="font-medium text-foreground">{formatCurrency(retirada.valor)}</TableCell>
+                <TableCell>
+                  <ExcluirRetiradaButton id={retirada.id} descricao={retirada.descricao} />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {retiradasFiltradas.map((retirada) => {
-                const tipoInfo = retiradaTipoMap[retirada.tipo as RetiradaTipo];
-                return (
-                  <TableRow key={retirada.id}>
-                    <TableCell className="font-medium text-foreground">{retirada.descricao}</TableCell>
-                    <TableCell>
-                      <Badge variant={tipoInfo.variant}>{tipoInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(retirada.data)}</TableCell>
-                    <TableCell className="font-medium text-foreground">{formatCurrency(retirada.valor)}</TableCell>
-                    <TableCell>
-                      <ExcluirRetiradaButton id={retirada.id} descricao={retirada.descricao} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {retiradasFiltradas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <EmptyState
-                      icon={<HandCoins className="size-5" />}
-                      title={retiradas.length === 0 ? "Nenhuma retirada lançada" : "Nenhuma retirada no período selecionado"}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {retiradasFiltradas.map((retirada) => {
+            );
+          }}
+          renderCard={(retirada) => {
             const tipoInfo = retiradaTipoMap[retirada.tipo as RetiradaTipo];
             return (
               <div key={retirada.id} className="flex items-start justify-between gap-3 p-4">
@@ -99,14 +91,8 @@ export function RetiradasTab({ retiradas }: { retiradas: FinanceiroRetirada[] })
                 <ExcluirRetiradaButton id={retirada.id} descricao={retirada.descricao} />
               </div>
             );
-          })}
-          {retiradasFiltradas.length === 0 && (
-            <EmptyState
-              icon={<HandCoins className="size-5" />}
-              title={retiradas.length === 0 ? "Nenhuma retirada lançada" : "Nenhuma retirada no período selecionado"}
-            />
-          )}
-        </div>
+          }}
+        />
       </Card>
     </div>
   );

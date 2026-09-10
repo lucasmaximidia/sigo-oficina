@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ResponsiveList } from "@/components/ui/responsive-list";
 import { LancarAjusteCaixaDialog } from "@/components/financeiro/lancar-ajuste-caixa-dialog";
 import { ExcluirAjusteCaixaButton } from "@/components/financeiro/excluir-lancamento-buttons";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -39,46 +40,37 @@ export function AjustesCaixaTab({ ajustes }: { ajustes: FinanceiroAjusteCaixa[] 
         />
       )}
       <Card className="overflow-hidden p-0">
-        <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead className="w-10">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ajustesFiltrados.map((ajuste) => (
-                <TableRow key={ajuste.id}>
-                  <TableCell className="font-medium text-foreground">{ajuste.descricao}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(ajuste.data)}</TableCell>
-                  <TableCell className={cn("font-medium", ajuste.valor >= 0 ? "text-success" : "text-destructive")}>
-                    {ajuste.valor >= 0 ? "+" : ""}
-                    {formatCurrency(ajuste.valor)}
-                  </TableCell>
-                  <TableCell>
-                    <ExcluirAjusteCaixaButton id={ajuste.id} descricao={ajuste.descricao} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {ajustesFiltrados.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4}>
-                    <EmptyState
-                      icon={<SlidersHorizontal className="size-5" />}
-                      title={ajustes.length === 0 ? "Nenhum ajuste lançado" : "Nenhum ajuste no período selecionado"}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex flex-col divide-y divide-border md:hidden">
-          {ajustesFiltrados.map((ajuste) => (
+        <ResponsiveList
+          items={ajustesFiltrados}
+          colSpan={4}
+          empty={
+            <EmptyState
+              icon={<SlidersHorizontal className="size-5" />}
+              title={ajustes.length === 0 ? "Nenhum ajuste lançado" : "Nenhum ajuste no período selecionado"}
+            />
+          }
+          header={
+            <>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead className="w-10">Ações</TableHead>
+            </>
+          }
+          renderRow={(ajuste) => (
+            <TableRow key={ajuste.id}>
+              <TableCell className="font-medium text-foreground">{ajuste.descricao}</TableCell>
+              <TableCell className="text-muted-foreground">{formatDate(ajuste.data)}</TableCell>
+              <TableCell className={cn("font-medium", ajuste.valor >= 0 ? "text-success" : "text-destructive")}>
+                {ajuste.valor >= 0 ? "+" : ""}
+                {formatCurrency(ajuste.valor)}
+              </TableCell>
+              <TableCell>
+                <ExcluirAjusteCaixaButton id={ajuste.id} descricao={ajuste.descricao} />
+              </TableCell>
+            </TableRow>
+          )}
+          renderCard={(ajuste) => (
             <div key={ajuste.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground">{ajuste.descricao}</p>
@@ -90,14 +82,8 @@ export function AjustesCaixaTab({ ajustes }: { ajustes: FinanceiroAjusteCaixa[] 
               </div>
               <ExcluirAjusteCaixaButton id={ajuste.id} descricao={ajuste.descricao} />
             </div>
-          ))}
-          {ajustesFiltrados.length === 0 && (
-            <EmptyState
-              icon={<SlidersHorizontal className="size-5" />}
-              title={ajustes.length === 0 ? "Nenhum ajuste lançado" : "Nenhum ajuste no período selecionado"}
-            />
           )}
-        </div>
+        />
       </Card>
     </div>
   );
