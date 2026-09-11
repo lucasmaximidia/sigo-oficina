@@ -127,7 +127,7 @@ export default async function LandingPage() {
 
       <main>
         <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-background">
-          <div className="absolute inset-x-0 top-1/2 hidden aspect-[1440/610] w-full -translate-y-1/2 sm:block">
+          <div className="absolute inset-x-0 top-1/2 hidden aspect-[2000/573] w-full -translate-y-1/2 sm:block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/site/banner-fundo.webp" alt="" aria-hidden="true" className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-background from-40% to-transparent" />
