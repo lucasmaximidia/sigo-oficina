@@ -23,6 +23,7 @@ interface HistoricoOsRow {
   data_entrada: string;
   problema_relatado: string | null;
   diagnostico: string | null;
+  equipamento_id: string | null;
   equipamentos: { tipo: string; marca: string | null; modelo: string | null } | null;
 }
 
@@ -69,32 +70,35 @@ export default async function ClientesPage({
     clienteDetalhe = cliente;
 
     if (cliente) {
-      const { data: equips } = await supabase
-        .from("equipamentos")
-        .select("id, tipo, marca, modelo, numero_serie")
-        .eq("cliente_id", cliente.id)
-        .order("created_at", { ascending: false });
+      const [{ data: equips }, { data: historico }] = await Promise.all([
+        supabase
+          .from("equipamentos")
+          .select("id, tipo, marca, modelo, numero_serie")
+          .eq("cliente_id", cliente.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("ordens_servico")
+          .select<string, HistoricoOsRow>(
+            "id, numero, status, data_entrada, problema_relatado, diagnostico, equipamento_id, equipamentos(tipo, marca, modelo)"
+          )
+          .eq("cliente_id", cliente.id)
+          .order("data_entrada", { ascending: false }),
+      ]);
 
-      equipamentos = await Promise.all(
-        (equips ?? []).map(async (equip) => {
-          const { data: os } = await supabase
-            .from("ordens_servico")
-            .select("numero")
-            .eq("equipamento_id", equip.id)
-            .order("data_entrada", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          return { ...equip, ultimaOs: os?.numero ?? null };
-        })
-      );
+      // O histórico já vem ordenado do mais recente pro mais antigo, então a
+      // primeira ocorrência de cada equipamento_id já é a última OS dele —
+      // evita uma query extra por equipamento.
+      const ultimaOsPorEquipamento = new Map<string, number>();
+      for (const os of historico ?? []) {
+        if (os.equipamento_id && !ultimaOsPorEquipamento.has(os.equipamento_id)) {
+          ultimaOsPorEquipamento.set(os.equipamento_id, os.numero);
+        }
+      }
 
-      const { data: historico } = await supabase
-        .from("ordens_servico")
-        .select<string, HistoricoOsRow>(
-          "id, numero, status, data_entrada, problema_relatado, diagnostico, equipamentos(tipo, marca, modelo)"
-        )
-        .eq("cliente_id", cliente.id)
-        .order("data_entrada", { ascending: false });
+      equipamentos = (equips ?? []).map((equip) => ({
+        ...equip,
+        ultimaOs: ultimaOsPorEquipamento.get(equip.id) ?? null,
+      }));
 
       historicoOs = (historico ?? []).map((os) => ({
         id: os.id,

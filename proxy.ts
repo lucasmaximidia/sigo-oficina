@@ -10,8 +10,8 @@ export const config = {
     /*
      * Roda em todas as rotas, exceto:
      * - _next/static, _next/image (assets do Next.js)
-     * - arquivos estáticos (ícones, manifesto, etc.)
+     * - arquivos estáticos (ícones, manifesto, imagens do site público, etc.)
      */
-    "/((?!_next/static|_next/image|favicon.ico|apple-icon|icon|manifest.webmanifest).*)",
+    "/((?!_next/static|_next/image|favicon.ico|apple-icon|icon|manifest.webmanifest|site/).*)",
   ],
 };
