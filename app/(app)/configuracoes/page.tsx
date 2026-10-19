@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmpresaForm } from "@/components/configuracoes/empresa-form";
 import { DashboardForm } from "@/components/configuracoes/dashboard-form";
+import { NfseForm } from "@/components/configuracoes/nfse-form";
 import { BackupTotalButton } from "@/components/configuracoes/backup-total-button";
 import { ResetSistemaDialog } from "@/components/configuracoes/reset-sistema-dialog";
 
@@ -20,6 +21,7 @@ export default async function ConfiguracoesPage() {
       <div className="flex flex-col gap-5">
         {config && <EmpresaForm config={config} />}
         {config && <DashboardForm config={config} />}
+        {config && <NfseForm config={config} />}
         <Card>
           <Link href="/configuracoes/etiquetas">
             <CardContent className="flex items-center justify-between gap-3 py-4 md:py-4">

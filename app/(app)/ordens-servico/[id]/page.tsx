@@ -7,6 +7,7 @@ import { OsStepIndicator } from "@/components/os/os-step-indicator";
 import { OsItensList } from "@/components/os/os-itens-list";
 import { OsResumoValores } from "@/components/os/os-resumo-valores";
 import { OsPagamentos } from "@/components/os/os-pagamentos";
+import { OsNotaFiscal } from "@/components/os/os-nota-fiscal";
 import { OsAcoes } from "@/components/os/os-acoes";
 import { OsParadaToggle } from "@/components/os/os-parada-toggle";
 import { FreteCard } from "@/components/os/frete-card";
@@ -42,6 +43,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     { data: pagamentos },
     { data: empresasAutorizadas },
     { data: maoObraItens },
+    { data: notaFiscal },
   ] = await Promise.all([
     supabase
       .from("ordens_servico")
@@ -58,6 +60,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     supabase.from("os_pagamentos").select("*").eq("os_id", id).order("data", { ascending: true }),
     supabase.from("empresas_autorizadas").select("*").eq("ativo", true).order("nome", { ascending: true }),
     supabase.from("os_mao_obra_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
+    supabase.from("notas_fiscais").select("*").eq("os_id", id).neq("status", "cancelada").maybeSingle(),
   ]);
 
   if (!os) notFound();
@@ -225,6 +228,19 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                         Pagamentos
                       </p>
                       <OsPagamentos osId={os.id} total={total} pagamentos={pagamentos ?? []} />
+                    </div>
+                    <div className="flex flex-col gap-3 border-t border-border pt-4">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Wallet2 className="size-4 text-primary" />
+                        Nota Fiscal
+                      </p>
+                      <OsNotaFiscal
+                        osId={os.id}
+                        status={os.status as OsStatus}
+                        total={total}
+                        formasPagamento={(pagamentos ?? []).map((p) => p.forma_pagamento)}
+                        nota={notaFiscal}
+                      />
                     </div>
                   </div>
                 ),
