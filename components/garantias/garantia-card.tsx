@@ -42,7 +42,7 @@ export function GarantiaCard({ garantia, prazoTotal }: { garantia: VwGarantia; p
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               aria-label="Baixar certificado de garantia"
-              className="pointer-events-auto flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
+              className="pointer-events-auto flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-primary"
             >
               <Download className="size-4" />
             </a>

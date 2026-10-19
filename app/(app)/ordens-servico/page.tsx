@@ -140,7 +140,7 @@ export default async function OrdensServicoPage({
       <div className="flex h-full flex-col">
         <PageHeader
           title="Ordens de Serviço"
-          description="Arraste os cards entre as colunas para mudar o status. Finalizadas há mais de 30 dias saem daqui, exceto autorizadas aguardando repasse — veja o histórico completo na Lista."
+          description="Arraste os cards entre as colunas (ou toque no ⌄ de cada card) para mudar o status. Finalizadas há mais de 30 dias saem daqui, exceto autorizadas aguardando repasse — veja o histórico completo na Lista."
           actions={
             <>
               {viewToggle}

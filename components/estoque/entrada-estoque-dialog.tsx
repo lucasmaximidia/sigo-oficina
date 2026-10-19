@@ -475,25 +475,54 @@ export function EntradaEstoqueDialog({ lojas, pecas }: { lojas: LojaParceira[]; 
             <div className="mt-3 flex flex-col gap-2">
               {itens.length === 0 && <p className="text-sm text-muted-foreground">Nenhum item adicionado ainda.</p>}
               {itens.map((item) => (
-                <div key={item.key} className="flex items-center gap-2 rounded-lg border border-border p-2.5">
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{item.nomeExibicao}</p>
-                  <NumericInput
-                    decimal={false}
-                    value={item.quantidade}
-                    onValueChange={(v) => updateItemQtd(item.key, v)}
-                    className="h-9 w-16 text-right"
-                  />
-                  <NumericInput
-                    value={item.valorUnitario}
-                    onValueChange={(v) => updateItemValor(item.key, v)}
-                    className="h-9 w-24 text-right"
-                  />
-                  <p className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
-                    {formatCurrency(item.quantidade * item.valorUnitario)}
-                  </p>
-                  <button type="button" onClick={() => removeItem(item.key)} className="text-muted-foreground hover:text-destructive">
-                    <Trash2 className="size-4" />
-                  </button>
+                <div
+                  key={item.key}
+                  className="flex flex-col gap-2 rounded-lg border border-border p-2.5 sm:flex-row sm:items-center"
+                >
+                  {/* No mobile, nome + subtotal + remover ficam numa linha própria —
+                      junto com os dois campos numéricos não cabe sem cortar o nome. */}
+                  <div className="flex items-center gap-2 sm:hidden">
+                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{item.nomeExibicao}</p>
+                    <p className="w-20 shrink-0 text-right text-sm font-semibold text-foreground">
+                      {formatCurrency(item.quantidade * item.valorUnitario)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.key)}
+                      className="-m-2 p-2 text-muted-foreground hover:text-destructive"
+                      aria-label="Remover item"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:flex-1">
+                    <p className="hidden min-w-0 flex-1 truncate text-sm font-medium text-foreground sm:block">
+                      {item.nomeExibicao}
+                    </p>
+                    <NumericInput
+                      decimal={false}
+                      value={item.quantidade}
+                      onValueChange={(v) => updateItemQtd(item.key, v)}
+                      className="h-9 w-16 text-right"
+                    />
+                    <NumericInput
+                      value={item.valorUnitario}
+                      onValueChange={(v) => updateItemValor(item.key, v)}
+                      className="h-9 w-24 text-right"
+                    />
+                    <p className="hidden w-24 shrink-0 text-right text-sm font-semibold text-foreground sm:block">
+                      {formatCurrency(item.quantidade * item.valorUnitario)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.key)}
+                      className="-m-2 hidden p-2 text-muted-foreground hover:text-destructive sm:block"
+                      aria-label="Remover item"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

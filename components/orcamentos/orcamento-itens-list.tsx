@@ -190,7 +190,7 @@ export function OrcamentoItensList({
                   <button
                     type="button"
                     onClick={() => handleRemove(item.id)}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="-m-2 p-2 text-muted-foreground hover:text-destructive"
                     aria-label="Remover item"
                   >
                     <Trash2 className="size-4" />

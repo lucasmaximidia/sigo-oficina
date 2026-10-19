@@ -196,7 +196,9 @@ export function BalancoForm({ pecas }: { pecas: Peca[] }) {
         </div>
       </div>
 
-      <div className="sticky bottom-4 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-md md:flex-row md:items-center md:justify-between">
+      {/* No mobile o bottom-nav flutuante cobre os últimos ~96px da tela —
+          sem esse ajuste essa barra fica escondida atrás dele. */}
+      <div className="sticky bottom-[calc(104px_+_env(safe-area-inset-bottom))] flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-md md:flex-row md:items-center md:justify-between lg:bottom-4">
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{itensContados.length}</span> {itensContados.length === 1 ? "item contado" : "itens contados"}
           {itensDivergentes.length > 0 && (
