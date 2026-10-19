@@ -1,0 +1,53 @@
+import webPush from "web-push";
+import { createServiceClient } from "@/lib/supabase/service";
+
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+if (!vapidPublicKey || !vapidPrivateKey) {
+  console.warn("NEXT_PUBLIC_VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY não configuradas em .env.local");
+} else {
+  webPush.setVapidDetails("mailto:contato@sigooficina.com.br", vapidPublicKey, vapidPrivateKey);
+}
+
+export interface PushPayload {
+  title: string;
+  body: string;
+  url?: string;
+}
+
+// Envia a notificação para todos os dispositivos cadastrados (os 2 usuários
+// da oficina têm o mesmo nível de acesso, então não há segmentação por
+// usuário). Assinaturas que o navegador recusar de forma permanente (410
+// Gone — usuário desinstalou o PWA ou revogou a permissão) são removidas do
+// banco para não tentar de novo no próximo disparo.
+export async function enviarPushParaTodos(payload: PushPayload) {
+  if (!vapidPublicKey || !vapidPrivateKey) return;
+
+  const supabase = createServiceClient();
+  const { data: subscriptions } = await supabase.from("push_subscriptions").select("id, endpoint, p256dh, auth");
+  if (!subscriptions || subscriptions.length === 0) return;
+
+  const body = JSON.stringify(payload);
+  const idsParaRemover: string[] = [];
+
+  await Promise.all(
+    subscriptions.map(async (sub) => {
+      try {
+        await webPush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          body
+        );
+      } catch (error) {
+        const statusCode = error instanceof webPush.WebPushError ? error.statusCode : null;
+        if (statusCode === 404 || statusCode === 410) {
+          idsParaRemover.push(sub.id);
+        }
+      }
+    })
+  );
+
+  if (idsParaRemover.length > 0) {
+    await supabase.from("push_subscriptions").delete().in("id", idsParaRemover);
+  }
+}
