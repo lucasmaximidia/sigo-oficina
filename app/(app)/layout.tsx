@@ -4,6 +4,7 @@ import { AppTopbar } from "@/components/layout/app-topbar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { PageTransition } from "@/components/layout/page-transition";
 import { LembreteContasToast } from "@/components/layout/lembrete-contas-toast";
+import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/notificacoes-bell";
 import { dataLembreteVencimento } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
       <LembreteContasToast contas={contasLembreteHoje} />
+      <ServiceWorkerRegister />
       <AppSidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopbar

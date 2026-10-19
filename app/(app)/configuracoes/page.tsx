@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmpresaForm } from "@/components/configuracoes/empresa-form";
 import { DashboardForm } from "@/components/configuracoes/dashboard-form";
 import { NfseForm } from "@/components/configuracoes/nfse-form";
+import { NotificacoesPushCard } from "@/components/configuracoes/notificacoes-push-card";
 import { BackupTotalButton } from "@/components/configuracoes/backup-total-button";
 import { ResetSistemaDialog } from "@/components/configuracoes/reset-sistema-dialog";
 
@@ -21,6 +22,7 @@ export default async function ConfiguracoesPage() {
       <div className="flex flex-col gap-5">
         {config && <EmpresaForm config={config} />}
         {config && <DashboardForm config={config} />}
+        <NotificacoesPushCard />
         {config && <NfseForm config={config} />}
         <Card>
           <Link href="/configuracoes/etiquetas">
