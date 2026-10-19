@@ -26,6 +26,9 @@ export type OrcamentoItemTipo = "peca" | "mao_obra";
 export type FreteStatus = "pendente" | "pago";
 export type FreteTipo = "buscar" | "entrega";
 export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
+export type NotaFiscalOrigem = "os" | "venda_pdv" | "avulsa";
+export type NotaFiscalMotivo = "obrigatoria_cartao_pix" | "opcional_cliente_sim" | "opcional_cliente_nao";
+export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
 export type EtiquetaAlinhamento = "left" | "center" | "right";
@@ -597,6 +600,75 @@ export interface Database {
         };
         Relationships: [];
       };
+      notas_fiscais: {
+        Row: {
+          id: string;
+          origem: NotaFiscalOrigem;
+          os_id: string | null;
+          venda_id: string | null;
+          cliente_id: string | null;
+          cliente_nome: string;
+          cliente_documento: string | null;
+          descricao_servico: string;
+          valor: number;
+          motivo: NotaFiscalMotivo;
+          status: NotaFiscalStatus;
+          provider: string;
+          provider_id: string | null;
+          numero_nfse: string | null;
+          codigo_verificacao: string | null;
+          url_pdf: string | null;
+          url_xml: string | null;
+          erro_mensagem: string | null;
+          created_at: string;
+          emitida_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          origem: NotaFiscalOrigem;
+          os_id?: string | null;
+          venda_id?: string | null;
+          cliente_id?: string | null;
+          cliente_nome: string;
+          cliente_documento?: string | null;
+          descricao_servico: string;
+          valor: number;
+          motivo: NotaFiscalMotivo;
+          status?: NotaFiscalStatus;
+          provider?: string;
+          provider_id?: string | null;
+          numero_nfse?: string | null;
+          codigo_verificacao?: string | null;
+          url_pdf?: string | null;
+          url_xml?: string | null;
+          erro_mensagem?: string | null;
+          created_at?: string;
+          emitida_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          origem?: NotaFiscalOrigem;
+          os_id?: string | null;
+          venda_id?: string | null;
+          cliente_id?: string | null;
+          cliente_nome?: string;
+          cliente_documento?: string | null;
+          descricao_servico?: string;
+          valor?: number;
+          motivo?: NotaFiscalMotivo;
+          status?: NotaFiscalStatus;
+          provider?: string;
+          provider_id?: string | null;
+          numero_nfse?: string | null;
+          codigo_verificacao?: string | null;
+          url_pdf?: string | null;
+          url_xml?: string | null;
+          erro_mensagem?: string | null;
+          created_at?: string;
+          emitida_em?: string | null;
+        };
+        Relationships: [];
+      };
       financeiro_contas: {
         Row: {
           id: string;
@@ -903,6 +975,10 @@ export interface Database {
           dashboard_mostrar_orcamentos_pendentes: boolean;
           dashboard_mostrar_boletos_pendentes: boolean;
           dashboard_boletos_dias: number;
+          nfse_ativo: boolean;
+          nfse_codigo_servico: string | null;
+          nfse_descricao_padrao: string;
+          nfse_aliquota_iss: number | null;
           updated_at: string;
         };
         Insert: {
@@ -934,6 +1010,10 @@ export interface Database {
           dashboard_mostrar_orcamentos_pendentes?: boolean;
           dashboard_mostrar_boletos_pendentes?: boolean;
           dashboard_boletos_dias?: number;
+          nfse_ativo?: boolean;
+          nfse_codigo_servico?: string | null;
+          nfse_descricao_padrao?: string;
+          nfse_aliquota_iss?: number | null;
           updated_at?: string;
         };
         Update: {
@@ -965,6 +1045,10 @@ export interface Database {
           dashboard_mostrar_orcamentos_pendentes?: boolean;
           dashboard_mostrar_boletos_pendentes?: boolean;
           dashboard_boletos_dias?: number;
+          nfse_ativo?: boolean;
+          nfse_codigo_servico?: string | null;
+          nfse_descricao_padrao?: string;
+          nfse_aliquota_iss?: number | null;
           updated_at?: string;
         };
         Relationships: [];

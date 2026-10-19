@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { criarNotaFiscalComDecisao } from "@/lib/notas-fiscais-core";
 import type {
   Database,
   OsStatus,
@@ -277,7 +278,7 @@ export async function deleteOrdemServico(id: string) {
 
 // Soma tudo que compõe o valor de uma OS (peças + mão de obra + frete -
 // desconto) e quanto já foi pago até agora nos pagamentos registrados.
-async function getOsTotais(osId: string) {
+export async function getOsTotais(osId: string) {
   const supabase = await createClient();
   const [{ data: os }, { data: itens }, { data: pagamentos }] = await Promise.all([
     supabase.from("ordens_servico").select("valor_mao_obra, valor_frete, desconto").eq("id", osId).single(),
@@ -850,6 +851,7 @@ export async function finalizarVendaPdv(input: {
   pagamentos: PdvPagamentoInput[];
   desconto: number;
   itens: PdvItemInput[];
+  clienteDesejaNota: boolean | null;
 }) {
   const supabase = await createClient();
   const subtotal = input.itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
@@ -909,6 +911,26 @@ export async function finalizarVendaPdv(input: {
       }
     }
   }
+
+  let clienteNome = input.clienteNomeAvulso?.toUpperCase() || "Consumidor";
+  let clienteDocumento: string | null = null;
+  if (input.clienteId) {
+    const { data: cliente } = await supabase.from("clientes").select("nome, cpf_cnpj").eq("id", input.clienteId).single();
+    if (cliente) {
+      clienteNome = cliente.nome;
+      clienteDocumento = cliente.cpf_cnpj;
+    }
+  }
+  await criarNotaFiscalComDecisao({
+    origem: "venda_pdv",
+    vendaId: venda.id,
+    clienteId: input.clienteId,
+    clienteNome,
+    clienteDocumento,
+    valor: total,
+    formasPagamento: input.pagamentos.map((p) => p.forma_pagamento),
+    clienteDesejaNota: input.clienteDesejaNota,
+  });
 
   revalidatePath("/pdv");
   revalidatePath("/estoque");
@@ -1553,6 +1575,23 @@ export async function updateConfiguracoesDashboard(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/configuracoes");
   revalidatePath("/dashboard");
+}
+
+export async function updateConfiguracoesNfse(formData: FormData) {
+  const supabase = await createClient();
+  const aliquota = str(formData, "nfse_aliquota_iss");
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      nfse_ativo: formData.get("nfse_ativo") === "on",
+      nfse_codigo_servico: str(formData, "nfse_codigo_servico"),
+      nfse_descricao_padrao: str(formData, "nfse_descricao_padrao") ?? "Serviço de assistência técnica em eletrodomésticos.",
+      nfse_aliquota_iss: aliquota ? Number(aliquota.replace(",", ".")) : null,
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+  revalidatePath("/notas-fiscais");
 }
 
 export async function updateEtiquetaConfig(tipo: EtiquetaTipo, config: EtiquetaTipoConfig) {

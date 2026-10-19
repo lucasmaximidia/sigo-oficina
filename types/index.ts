@@ -28,6 +28,7 @@ export type EntradaEstoqueItem = Database["public"]["Tables"]["entrada_estoque_i
 export type EmpresaAutorizada = Database["public"]["Tables"]["empresas_autorizadas"]["Row"];
 export type BalancoEstoque = Database["public"]["Tables"]["balancos_estoque"]["Row"];
 export type BalancoEstoqueItem = Database["public"]["Tables"]["balanco_estoque_itens"]["Row"];
+export type NotaFiscal = Database["public"]["Tables"]["notas_fiscais"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;

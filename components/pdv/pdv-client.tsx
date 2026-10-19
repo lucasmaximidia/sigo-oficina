@@ -2,13 +2,14 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle, ShoppingCart, History } from "lucide-react";
+import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle, ShoppingCart, History, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 import { finalizarVendaPdv, type PdvItemInput } from "@/lib/actions";
+import { nfseObrigatoria } from "@/lib/notas-fiscais";
 import type { FormaPagamento, Peca, VendaPdv } from "@/types";
 
 interface CartItem extends PdvItemInput {
@@ -41,6 +42,7 @@ export function PdvClient({
   const [desconto, setDesconto] = useState(0);
   const [saleKey, setSaleKey] = useState(0);
   const [clienteNome, setClienteNome] = useState("");
+  const [clienteDesejaNota, setClienteDesejaNota] = useState<boolean | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const resultados = useMemo(() => {
@@ -60,6 +62,8 @@ export function PdvClient({
   const totalAlocado = pagamentosEfetivos.reduce((acc, p) => acc + p.valor, 0);
   const restante = Math.round((total - totalAlocado) * 100) / 100;
   const pagamentosBatem = Math.abs(restante) < CENTAVO;
+  const notaObrigatoria = nfseObrigatoria(pagamentosEfetivos.map((p) => p.forma_pagamento));
+  const notaOk = notaObrigatoria || clienteDesejaNota !== null;
 
   function togglePagamento(forma: FormaPagamento) {
     setPagamentos((prev) => {
@@ -139,6 +143,10 @@ export function PdvClient({
       toast.error("A soma das formas de pagamento precisa bater com o total da venda");
       return;
     }
+    if (!notaOk) {
+      toast.error("Informe se o cliente quer nota fiscal");
+      return;
+    }
     startTransition(async () => {
       try {
         await finalizarVendaPdv({
@@ -153,12 +161,14 @@ export function PdvClient({
             quantidade: item.quantidade,
             valor_unitario: item.valor_unitario,
           })),
+          clienteDesejaNota,
         });
         toast.success("Venda finalizada com sucesso!");
         setCart([]);
         setDesconto(0);
         setSaleKey((k) => k + 1);
         setClienteNome("");
+        setClienteDesejaNota(null);
         setPagamentos([{ forma_pagamento: "dinheiro", valor: 0 }]);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao finalizar venda");
@@ -355,7 +365,41 @@ export function PdvClient({
               className="uppercase"
             />
 
-            <Button size="lg" onClick={finalizar} disabled={isPending || !pagamentosBatem || cart.length === 0}>
+            <div className="rounded-xl border border-border p-3">
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <Receipt className="size-3.5" />
+                Nota Fiscal
+              </p>
+              {notaObrigatoria ? (
+                <p className="text-sm text-foreground">
+                  Obrigatória — pagamento em cartão ou PIX exige emissão de nota fiscal.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground">O cliente quer nota fiscal?</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={clienteDesejaNota === true ? "default" : "outline"}
+                      onClick={() => setClienteDesejaNota(true)}
+                    >
+                      Sim
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={clienteDesejaNota === false ? "default" : "outline"}
+                      onClick={() => setClienteDesejaNota(false)}
+                    >
+                      Não
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button size="lg" onClick={finalizar} disabled={isPending || !pagamentosBatem || !notaOk || cart.length === 0}>
               {isPending ? "Finalizando..." : "Finalizar Venda"}
             </Button>
           </CardContent>
