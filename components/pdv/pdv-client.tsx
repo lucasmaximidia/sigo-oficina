@@ -184,7 +184,7 @@ export function PdvClient({
       {cart.length > 0 && (
         <div
           className="fixed inset-x-4 z-30 lg:hidden"
-          style={{ bottom: "calc(104px + env(safe-area-inset-bottom, 0px))" }}
+          style={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
         >
           <Button
             size="lg"
@@ -482,9 +482,9 @@ export function PdvClient({
       </div>
 
       {/* Reserva espaço de rolagem pro botão flutuante não cobrir o fim da
-          página (o padding-bottom do layout já reserva espaço pro bottom-nav,
-          mas não pro botão extra acima dele). */}
-      {cart.length > 0 && <div className="h-14 lg:hidden" aria-hidden />}
+          página — o padding-bottom do layout sozinho não é alto o
+          suficiente pra isso. */}
+      {cart.length > 0 && <div className="h-16 lg:hidden" aria-hidden />}
     </div>
   );
 }

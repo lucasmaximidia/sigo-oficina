@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
-import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { PageTransition } from "@/components/layout/page-transition";
 import { LembreteContasToast } from "@/components/layout/lembrete-contas-toast";
 import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/notificacoes-bell";
@@ -51,13 +50,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           notificacoesContas={notificacoesContas}
           notificacoesPecas={notificacoesPecas}
         />
-        <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(7rem_+_env(safe-area-inset-bottom))] md:px-6 md:py-6 lg:px-8 lg:pb-6">
+        <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))] md:px-6 md:py-6 lg:px-8 lg:pb-6">
           <div className="mx-auto h-full w-full max-w-7xl">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
       </div>
-      <MobileBottomNav />
     </div>
   );
 }
