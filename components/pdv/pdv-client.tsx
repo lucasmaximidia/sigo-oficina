@@ -178,6 +178,26 @@ export function PdvClient({
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      {/* No mobile, "Finalizar Venda" fica sempre alcançável aqui — sem isso,
+          é preciso rolar a lista de itens inteira e o card de pagamento pra
+          chegar no botão, que no desktop já está visível na coluna lateral. */}
+      {cart.length > 0 && (
+        <div
+          className="fixed inset-x-4 z-30 lg:hidden"
+          style={{ bottom: "calc(104px + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <Button
+            size="lg"
+            onClick={finalizar}
+            disabled={isPending || !pagamentosBatem || !notaOk}
+            className="w-full justify-between shadow-[0_10px_26px_-10px_rgba(20,22,42,0.35)]"
+          >
+            <span>{isPending ? "Finalizando..." : "Finalizar Venda"}</span>
+            <span>{formatCurrency(total)}</span>
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-4 lg:col-span-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -225,50 +245,80 @@ export function PdvClient({
               <p className="py-6 text-center text-sm text-muted-foreground">Nenhum item adicionado.</p>
             )}
             {cart.map((item) => (
-              <div key={item.key} className="flex items-center gap-3 py-3">
-                <div className="flex items-center gap-1.5 rounded-lg border border-border">
-                  <button
-                    type="button"
-                    onClick={() => updateQty(item.key, -1)}
-                    className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    <Minus className="size-3.5" />
-                  </button>
-                  <span className="w-6 text-center text-sm font-medium">{item.quantidade}</span>
-                  <button
-                    type="button"
-                    onClick={() => updateQty(item.key, 1)}
-                    className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
-                  >
-                    <Plus className="size-3.5" />
-                  </button>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {item.descricao}
-                    {item.tipo === "servico" && (
-                      <span className="ml-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                        Serviço
-                      </span>
-                    )}
+              <div key={item.key} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
+                {/* No mobile, nome + subtotal + remover ficam numa linha própria —
+                    a linha de baixo (quantidade + preço) já ocupa boa parte da
+                    largura e não cabe tudo junto sem cortar o nome do item. */}
+                <div className="flex items-center gap-2 sm:hidden">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.descricao}
+                      {item.tipo === "servico" && (
+                        <span className="ml-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          Serviço
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <p className="w-20 shrink-0 text-right text-sm font-semibold text-foreground">
+                    {formatCurrency(item.quantidade * item.valor_unitario)}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.key)}
+                    className="-m-2 p-2 text-muted-foreground hover:text-destructive"
+                    aria-label="Remover item"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
                 </div>
-                <NumericInput
-                  key={item.key}
-                  defaultValue={item.valor_unitario}
-                  onValueChange={(v) => updateValor(item.key, v)}
-                  className="h-9 w-24 text-right"
-                />
-                <p className="w-24 shrink-0 text-right text-sm font-semibold text-foreground">
-                  {formatCurrency(item.quantidade * item.valor_unitario)}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.key)}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="size-4" />
-                </button>
+
+                <div className="flex items-center gap-3 sm:flex-1">
+                  <div className="flex items-center gap-1.5 rounded-lg border border-border">
+                    <button
+                      type="button"
+                      onClick={() => updateQty(item.key, -1)}
+                      className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+                    >
+                      <Minus className="size-3.5" />
+                    </button>
+                    <span className="w-6 text-center text-sm font-medium">{item.quantidade}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQty(item.key, 1)}
+                      className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+                    >
+                      <Plus className="size-3.5" />
+                    </button>
+                  </div>
+                  <div className="hidden min-w-0 flex-1 sm:block">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.descricao}
+                      {item.tipo === "servico" && (
+                        <span className="ml-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          Serviço
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <NumericInput
+                    key={item.key}
+                    defaultValue={item.valor_unitario}
+                    onValueChange={(v) => updateValor(item.key, v)}
+                    className="h-9 w-24 text-right"
+                  />
+                  <p className="hidden w-24 shrink-0 text-right text-sm font-semibold text-foreground sm:block">
+                    {formatCurrency(item.quantidade * item.valor_unitario)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.key)}
+                    className="-m-2 hidden p-2 text-muted-foreground hover:text-destructive sm:block"
+                    aria-label="Remover item"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </CardContent>
@@ -430,6 +480,11 @@ export function PdvClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Reserva espaço de rolagem pro botão flutuante não cobrir o fim da
+          página (o padding-bottom do layout já reserva espaço pro bottom-nav,
+          mas não pro botão extra acima dele). */}
+      {cart.length > 0 && <div className="h-14 lg:hidden" aria-hidden />}
     </div>
   );
 }

@@ -3,8 +3,15 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ChevronDown } from "lucide-react";
 import { updateOrdemServicoStatus } from "@/lib/actions";
 import { formatCurrency, cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { OsStatus, OsUrgencia } from "@/types";
 
 export interface OsKanbanItem {
@@ -87,10 +94,65 @@ const COLUNAS: Coluna[] = [
   },
 ];
 
+// Mesmo conjunto de destinos que o drag-and-drop aceita (sem "finalizado",
+// que exige o fluxo de pagamento em "Finalizar Ordem") — serve de
+// alternativa por toque, já que arrastar não funciona em celular.
+const STATUS_MOVIVEIS: { value: OsStatus; label: string }[] = [
+  { value: "aguardando_orcamento", label: "Aguardando Orçamento" },
+  { value: "aguardando_pecas", label: "Aguardando Peças" },
+  { value: "em_execucao", label: "Em Execução" },
+  { value: "aguardando_pagamento", label: "Pagamento" },
+];
+
+function MoverStatusMenu({
+  osId,
+  status,
+  onMover,
+}: {
+  osId: string;
+  status: OsStatus;
+  onMover: (osId: string, novoStatus: OsStatus) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          className="-m-1 flex shrink-0 items-center rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          aria-label="Mudar status"
+        >
+          <ChevronDown className="size-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {STATUS_MOVIVEIS.map((opcao) => (
+          <DropdownMenuItem key={opcao.value} disabled={opcao.value === status} onSelect={() => onMover(osId, opcao.value)}>
+            {opcao.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  function moverStatus(id: string, novoStatus: OsStatus) {
+    startTransition(async () => {
+      try {
+        await updateOrdemServicoStatus(id, novoStatus);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao mover OS");
+      }
+    });
+  }
 
   function handleDrop(coluna: Coluna) {
     setDragOverKey(null);
@@ -108,13 +170,7 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
       toast.error('Para finalizar, abra a OS e use "Finalizar Ordem" — é preciso informar a forma de pagamento.');
       return;
     }
-    startTransition(async () => {
-      try {
-        await updateOrdemServicoStatus(id, coluna.dropStatus as OsStatus);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao mover OS");
-      }
-    });
+    moverStatus(id, coluna.dropStatus as OsStatus);
   }
 
   return (
@@ -166,7 +222,10 @@ export function OsKanbanBoard({ ordens }: { ordens: OsKanbanItem[] }) {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[13px] font-bold text-foreground">#OS-{String(os.numero).padStart(4, "0")}</span>
-                      <span className={cn("size-1.75 shrink-0 rounded-full", DOT_CLASS[os.urgencia])} />
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span className={cn("size-1.75 rounded-full", DOT_CLASS[os.urgencia])} />
+                        {!encerrada && <MoverStatusMenu osId={os.id} status={os.status} onMover={moverStatus} />}
+                      </div>
                     </div>
                     <p className="truncate text-[13px] font-semibold text-foreground">{os.clienteNome}</p>
                     <p className="truncate text-xs text-muted-foreground">{os.equipamentoDescricao}</p>
