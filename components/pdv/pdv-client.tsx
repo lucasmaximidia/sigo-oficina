@@ -4,13 +4,15 @@ import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Search, Minus, Plus, Trash2, Wallet, CreditCard, QrCode, AlertCircle, ShoppingCart, History, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 import { finalizarVendaPdv, type PdvItemInput } from "@/lib/actions";
 import { nfseObrigatoria } from "@/lib/notas-fiscais";
-import type { FormaPagamento, Peca, VendaPdv } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { FormaPagamento, Peca, TipoCartao, VendaPdv } from "@/types";
 
 interface CartItem extends PdvItemInput {
   key: string;
@@ -19,6 +21,12 @@ interface CartItem extends PdvItemInput {
 interface PagamentoSelecionado {
   forma_pagamento: FormaPagamento;
   valor: number;
+  // Só usados quando forma_pagamento === "cartao": o valor que de fato cai
+  // no caixa costuma ser menor que o cobrado do cliente, por causa da taxa
+  // da maquininha. valorRecebidoLiquido undefined = ainda não ajustado
+  // (assume igual ao valor cobrado, sem taxa).
+  tipoCartao?: TipoCartao;
+  valorRecebidoLiquido?: number;
 }
 
 const formasPagamento: { value: FormaPagamento; label: string; icon: typeof Wallet }[] = [
@@ -75,12 +83,20 @@ export function PdvClient({
       }
       const jaAlocado = prev.reduce((acc, p) => acc + p.valor, 0);
       const sugestao = Math.max(0, Math.round((total - jaAlocado) * 100) / 100);
-      return [...prev, { forma_pagamento: forma, valor: sugestao }];
+      return [...prev, { forma_pagamento: forma, valor: sugestao, tipoCartao: forma === "cartao" ? "debito" : undefined }];
     });
   }
 
   function updatePagamentoValor(forma: FormaPagamento, valor: number) {
     setPagamentos((prev) => prev.map((p) => (p.forma_pagamento === forma ? { ...p, valor } : p)));
+  }
+
+  function updatePagamentoTipoCartao(tipoCartao: TipoCartao) {
+    setPagamentos((prev) => prev.map((p) => (p.forma_pagamento === "cartao" ? { ...p, tipoCartao } : p)));
+  }
+
+  function updatePagamentoValorLiquido(valorRecebidoLiquido: number) {
+    setPagamentos((prev) => prev.map((p) => (p.forma_pagamento === "cartao" ? { ...p, valorRecebidoLiquido } : p)));
   }
 
   function addPeca(peca: Peca) {
@@ -152,7 +168,14 @@ export function PdvClient({
         await finalizarVendaPdv({
           clienteId: null,
           clienteNomeAvulso: clienteNome || null,
-          pagamentos: pagamentosEfetivos.filter((p) => p.valor > 0),
+          pagamentos: pagamentosEfetivos
+            .filter((p) => p.valor > 0)
+            .map((p) => ({
+              forma_pagamento: p.forma_pagamento,
+              valor: p.valor,
+              tipo_cartao: p.tipoCartao ?? null,
+              valor_recebido_liquido: p.valorRecebidoLiquido ?? null,
+            })),
           desconto,
           itens: cart.map((item) => ({
             peca_id: item.peca_id,
@@ -388,6 +411,45 @@ export function PdvClient({
                   </p>
                 </div>
               )}
+
+              {(() => {
+                const pagamentoCartao = pagamentosEfetivos.find((p) => p.forma_pagamento === "cartao");
+                if (!pagamentoCartao) return null;
+                return (
+                  <div className="mt-3 flex flex-col gap-3 rounded-xl border border-border bg-secondary/50 p-3.5">
+                    <div>
+                      <Label className="mb-1.5 block">Tipo de cartão</Label>
+                      <Select
+                        value={pagamentoCartao.tipoCartao ?? "debito"}
+                        onValueChange={(v) => updatePagamentoTipoCartao(v as TipoCartao)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="debito">Débito</SelectItem>
+                          <SelectItem value="credito">Crédito</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="valor_recebido_liquido" className="mb-1.5 block">
+                        Valor que entrou no caixa (R$)
+                      </Label>
+                      <NumericInput
+                        id="valor_recebido_liquido"
+                        key={pagamentoCartao.valor}
+                        defaultValue={pagamentoCartao.valorRecebidoLiquido ?? pagamentoCartao.valor}
+                        onValueChange={updatePagamentoValorLiquido}
+                        className="h-9"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      A diferença entre o valor cobrado do cliente e o que entrou é a taxa da maquininha.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             <div>

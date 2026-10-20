@@ -51,7 +51,12 @@ export function VendaDetalhesDialog({ vendaId, label }: { vendaId: string; label
               </div>
               <p className="text-muted-foreground">
                 {detalhes.pagamentos
-                  .map((p) => `${formaPagamentoLabel[p.formaPagamento] ?? p.formaPagamento} (${formatCurrency(p.valor)})`)
+                  .map((p) => {
+                    const label = `${formaPagamentoLabel[p.formaPagamento] ?? p.formaPagamento} (${formatCurrency(p.valor)})`;
+                    return p.valorRecebidoLiquido != null && p.valorRecebidoLiquido !== p.valor
+                      ? `${label} · líquido ${formatCurrency(p.valorRecebidoLiquido)}`
+                      : label;
+                  })
                   .join(" + ")}
               </p>
             </div>

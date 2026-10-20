@@ -24,19 +24,21 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("data_asc");
   const [periodoInicio, setPeriodoInicio] = useState("");
   const [periodoFim, setPeriodoFim] = useState("");
-  const [soNaoPagas, setSoNaoPagas] = useState(false);
+  // Por padrão só mostra o que ainda precisa de atenção (não pago) — contas
+  // pagas só entram na lista se o usuário pedir explicitamente.
+  const [mostrarPagas, setMostrarPagas] = useState(false);
 
   const contasFiltradas = useMemo(() => {
-    const base = soNaoPagas ? contas.filter((c) => c.status !== "pago") : contas;
+    const base = mostrarPagas ? contas : contas.filter((c) => c.status !== "pago");
     return filtrarEOrdenar(base, (c) => c.vencimento, (c) => c.valor, ordenacao, periodoInicio, periodoFim);
-  }, [contas, soNaoPagas, ordenacao, periodoInicio, periodoFim]);
+  }, [contas, mostrarPagas, ordenacao, periodoInicio, periodoFim]);
 
   const mensagemVazia =
     contas.length === 0
       ? "Nenhuma conta cadastrada."
-      : soNaoPagas
-        ? "Nenhuma conta não paga no período selecionado."
-        : "Nenhuma conta no período selecionado.";
+      : mostrarPagas
+        ? "Nenhuma conta no período selecionado."
+        : "Nenhuma conta não paga no período selecionado.";
 
   return (
     <>
@@ -60,9 +62,9 @@ export function ContasTab({ contas, hojeStr }: { contas: FinanceiroConta[]; hoje
       </div>
       {contas.length > 0 && (
         <div className="mb-3 flex items-center gap-2.5">
-          <Switch id="so-nao-pagas" checked={soNaoPagas} onCheckedChange={setSoNaoPagas} />
-          <Label htmlFor="so-nao-pagas" className="text-sm text-muted-foreground">
-            Mostrar só não pagas
+          <Switch id="mostrar-pagas" checked={mostrarPagas} onCheckedChange={setMostrarPagas} />
+          <Label htmlFor="mostrar-pagas" className="text-sm text-muted-foreground">
+            Mostrar contas pagas
           </Label>
         </div>
       )}

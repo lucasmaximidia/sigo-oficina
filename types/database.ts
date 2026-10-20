@@ -581,21 +581,27 @@ export interface Database {
           id: string;
           venda_id: string;
           forma_pagamento: FormaPagamento;
+          tipo_cartao: TipoCartao | null;
           valor: number;
+          valor_recebido_liquido: number | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           venda_id: string;
           forma_pagamento: FormaPagamento;
+          tipo_cartao?: TipoCartao | null;
           valor?: number;
+          valor_recebido_liquido?: number | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           venda_id?: string;
           forma_pagamento?: FormaPagamento;
+          tipo_cartao?: TipoCartao | null;
           valor?: number;
+          valor_recebido_liquido?: number | null;
           created_at?: string;
         };
         Relationships: [];

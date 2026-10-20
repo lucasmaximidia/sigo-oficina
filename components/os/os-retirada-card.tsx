@@ -18,10 +18,12 @@ export function OsRetiradaCard({
   osId,
   garantiaDias,
   dataRetirada,
+  osFinalizada,
 }: {
   osId: string;
   garantiaDias: number;
   dataRetirada: string | null;
+  osFinalizada: boolean;
 }) {
   const [editando, setEditando] = useState(!dataRetirada);
   const [data, setData] = useState(dataRetirada ?? hoje());
@@ -54,7 +56,9 @@ export function OsRetiradaCard({
       {!editando && dataRetirada ? (
         <>
           <Badge variant="success" className="justify-center py-2 text-sm">
-            Retirado em {formatDate(dataRetirada)} — garantia de {garantiaDias} dias ativa
+            {osFinalizada
+              ? `Retirado em ${formatDate(dataRetirada)} — garantia de ${garantiaDias} dias ativa`
+              : `Retirado em ${formatDate(dataRetirada)} — garantia começa a contar quando a OS for finalizada`}
           </Badge>
           <button
             type="button"

@@ -844,6 +844,8 @@ export interface PdvItemInput {
 export interface PdvPagamentoInput {
   forma_pagamento: FormaPagamento;
   valor: number;
+  tipo_cartao?: TipoCartao | null;
+  valor_recebido_liquido?: number | null;
 }
 
 export async function finalizarVendaPdv(input: {
@@ -883,6 +885,8 @@ export async function finalizarVendaPdv(input: {
       venda_id: venda.id,
       forma_pagamento: p.forma_pagamento,
       valor: p.valor,
+      tipo_cartao: p.forma_pagamento === "cartao" ? (p.tipo_cartao ?? null) : null,
+      valor_recebido_liquido: p.forma_pagamento === "cartao" ? (p.valor_recebido_liquido ?? null) : null,
     }))
   );
   if (pagamentosError) throw new Error(pagamentosError.message);
@@ -1256,7 +1260,12 @@ export interface VendaDetalhes {
   desconto: number;
   total: number;
   itens: { descricao: string; tipo: "peca" | "servico"; quantidade: number; valorUnitario: number }[];
-  pagamentos: { formaPagamento: FormaPagamento; valor: number }[];
+  pagamentos: {
+    formaPagamento: FormaPagamento;
+    valor: number;
+    tipoCartao: TipoCartao | null;
+    valorRecebidoLiquido: number | null;
+  }[];
 }
 
 interface VendaRow {
@@ -1278,7 +1287,10 @@ export async function getVendaDetalhes(id: string): Promise<VendaDetalhes> {
       .eq("id", id)
       .single(),
     supabase.from("venda_itens").select("descricao, tipo, quantidade, valor_unitario").eq("venda_id", id),
-    supabase.from("venda_pagamentos").select("forma_pagamento, valor").eq("venda_id", id),
+    supabase
+      .from("venda_pagamentos")
+      .select("forma_pagamento, valor, tipo_cartao, valor_recebido_liquido")
+      .eq("venda_id", id),
   ]);
   if (error || !venda) throw new Error("Venda não encontrada");
 
@@ -1295,7 +1307,12 @@ export async function getVendaDetalhes(id: string): Promise<VendaDetalhes> {
       quantidade: i.quantidade,
       valorUnitario: i.valor_unitario,
     })),
-    pagamentos: (pagamentos ?? []).map((p) => ({ formaPagamento: p.forma_pagamento, valor: p.valor })),
+    pagamentos: (pagamentos ?? []).map((p) => ({
+      formaPagamento: p.forma_pagamento,
+      valor: p.valor,
+      tipoCartao: p.tipo_cartao,
+      valorRecebidoLiquido: p.valor_recebido_liquido,
+    })),
   };
 }
 
