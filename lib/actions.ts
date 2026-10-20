@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { criarNotaFiscalComDecisao } from "@/lib/notas-fiscais-core";
+import { enviarPushParaTodos } from "@/lib/push";
 import type {
   Database,
   OsStatus,
@@ -1727,7 +1728,11 @@ export async function resetarSistema() {
 
 // ---------- Notificações push ----------
 
-export async function salvarPushSubscription(subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
+export async function salvarPushSubscription(subscription: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  userAgent?: string | null;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -1740,14 +1745,59 @@ export async function salvarPushSubscription(subscription: { endpoint: string; k
       endpoint: subscription.endpoint,
       p256dh: subscription.keys.p256dh,
       auth: subscription.keys.auth,
+      user_agent: subscription.userAgent || null,
     },
     { onConflict: "endpoint" }
   );
   if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
 }
 
 export async function removerPushSubscription(endpoint: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
   if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
+// Remoção administrativa por id (lista de dispositivos em Configurações) —
+// ao contrário de removerPushSubscription, não exige que o navegador atual
+// seja o dono da assinatura (o dispositivo pode já estar perdido/formatado).
+export async function removerPushSubscriptionPorId(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("push_subscriptions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
+export async function updateConfiguracoesPushContas(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("configuracoes")
+    .update({
+      push_contas_vencer_ativo: formData.get("push_contas_vencer_ativo") === "on",
+      push_contas_vencer_dias: num(formData, "push_contas_vencer_dias"),
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidatePath("/configuracoes");
+}
+
+export async function enviarNotificacaoTeste() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Usuário não autenticado");
+
+  const { count } = await supabase
+    .from("push_subscriptions")
+    .select("id", { count: "exact", head: true });
+  if (!count) throw new Error("Nenhum dispositivo com notificações ativadas ainda");
+
+  await enviarPushParaTodos({
+    title: "Notificação de teste",
+    body: "Se você está vendo isso, as notificações push estão funcionando.",
+    url: "/configuracoes",
+  });
 }

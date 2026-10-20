@@ -19,9 +19,19 @@ export async function GET(request: Request) {
   }
 
   const supabase = createServiceClient();
+
+  const { data: config } = await supabase
+    .from("configuracoes")
+    .select("push_contas_vencer_ativo, push_contas_vencer_dias")
+    .eq("id", 1)
+    .single();
+  if (!config?.push_contas_vencer_ativo) {
+    return NextResponse.json({ enviado: false, motivo: "aviso desativado em configurações" });
+  }
+
   const hoje = new Date();
   const hojeStr = hoje.toISOString().slice(0, 10);
-  const limiteLembreteStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 2)
+  const limiteLembreteStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + config.push_contas_vencer_dias)
     .toISOString()
     .slice(0, 10);
 

@@ -14,7 +14,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient();
-  const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
+  const [{ data: config }, { data: dispositivos }] = await Promise.all([
+    supabase.from("configuracoes").select("*").eq("id", 1).single(),
+    supabase
+      .from("push_subscriptions")
+      .select("id, endpoint, user_agent, created_at")
+      .order("created_at", { ascending: false }),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -22,7 +28,7 @@ export default async function ConfiguracoesPage() {
       <div className="flex flex-col gap-5">
         {config && <EmpresaForm config={config} />}
         {config && <DashboardForm config={config} />}
-        <NotificacoesPushCard />
+        {config && <NotificacoesPushCard config={config} dispositivos={dispositivos ?? []} />}
         {config && <NfseForm config={config} />}
         <Card>
           <Link href="/configuracoes/etiquetas">
