@@ -28,6 +28,11 @@ export type FreteTipo = "buscar" | "entrega";
 export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
 export type NotaFiscalOrigem = "os" | "venda_pdv" | "avulsa";
 export type NotaFiscalMotivo = "obrigatoria_cartao_pix" | "opcional_cliente_sim" | "opcional_cliente_nao";
+
+export type LocacaoVeiculoTipo = "scooter" | "bicicleta";
+export type LocacaoVeiculoStatus = "disponivel" | "alugado" | "manutencao" | "inativo";
+export type LocacaoFormaPagamento = "pix" | "cartao" | "dinheiro" | "transferencia";
+export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
@@ -1220,6 +1225,165 @@ export interface Database {
           p256dh?: string;
           auth?: string;
           user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_veiculos: {
+        Row: {
+          id: string;
+          tipo: LocacaoVeiculoTipo;
+          marca: string;
+          modelo: string;
+          cor: string | null;
+          chassi: string;
+          status: LocacaoVeiculoStatus;
+          valor_diaria: number | null;
+          observacoes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tipo: LocacaoVeiculoTipo;
+          marca: string;
+          modelo: string;
+          cor?: string | null;
+          chassi: string;
+          status?: LocacaoVeiculoStatus;
+          valor_diaria?: number | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tipo?: LocacaoVeiculoTipo;
+          marca?: string;
+          modelo?: string;
+          cor?: string | null;
+          chassi?: string;
+          status?: LocacaoVeiculoStatus;
+          valor_diaria?: number | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_clientes: {
+        Row: {
+          id: string;
+          nome: string;
+          cpf: string | null;
+          telefone: string | null;
+          observacoes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          cpf?: string | null;
+          telefone?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          cpf?: string | null;
+          telefone?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_alugueis: {
+        Row: {
+          id: string;
+          numero: number;
+          veiculo_id: string;
+          cliente_id: string;
+          data_retirada: string;
+          data_prevista_devolucao: string;
+          data_devolucao_real: string | null;
+          valor: number;
+          forma_pagamento: LocacaoFormaPagamento;
+          status_pagamento: LocacaoStatusPagamento;
+          valor_pago: number;
+          data_pagamento: string | null;
+          observacoes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          numero?: number;
+          veiculo_id: string;
+          cliente_id: string;
+          data_retirada?: string;
+          data_prevista_devolucao: string;
+          data_devolucao_real?: string | null;
+          valor?: number;
+          forma_pagamento: LocacaoFormaPagamento;
+          status_pagamento?: LocacaoStatusPagamento;
+          valor_pago?: number;
+          data_pagamento?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          numero?: number;
+          veiculo_id?: string;
+          cliente_id?: string;
+          data_retirada?: string;
+          data_prevista_devolucao?: string;
+          data_devolucao_real?: string | null;
+          valor?: number;
+          forma_pagamento?: LocacaoFormaPagamento;
+          status_pagamento?: LocacaoStatusPagamento;
+          valor_pago?: number;
+          data_pagamento?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_despesas: {
+        Row: {
+          id: string;
+          data: string;
+          descricao: string;
+          categoria: string | null;
+          fornecedor: string | null;
+          forma_pagamento: LocacaoFormaPagamento | null;
+          valor: number;
+          observacoes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          data?: string;
+          descricao: string;
+          categoria?: string | null;
+          fornecedor?: string | null;
+          forma_pagamento?: LocacaoFormaPagamento | null;
+          valor?: number;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          data?: string;
+          descricao?: string;
+          categoria?: string | null;
+          fornecedor?: string | null;
+          forma_pagamento?: LocacaoFormaPagamento | null;
+          valor?: number;
+          observacoes?: string | null;
           created_at?: string;
         };
         Relationships: [];
