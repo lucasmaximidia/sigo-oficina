@@ -15,7 +15,7 @@ import {
   removerPushSubscription,
   removerPushSubscriptionPorId,
   enviarNotificacaoTeste,
-  updateConfiguracoesPushContas,
+  updateConfiguracoesPush,
 } from "@/lib/actions";
 import type { Configuracao } from "@/types";
 
@@ -43,7 +43,7 @@ export function NotificacoesPushCard({
   config,
   dispositivos,
 }: {
-  config: Pick<Configuracao, "push_contas_vencer_ativo" | "push_contas_vencer_dias">;
+  config: Pick<Configuracao, "push_contas_vencer_ativo" | "push_contas_vencer_dias" | "push_agenda_hoje_ativo">;
   dispositivos: DispositivoPush[];
 }) {
   const [suporte, setSuporte] = useState<Suporte>("verificando");
@@ -133,7 +133,7 @@ export function NotificacoesPushCard({
   function salvarConfig(formData: FormData) {
     startTransitionConfig(async () => {
       try {
-        await updateConfiguracoesPushContas(formData);
+        await updateConfiguracoesPush(formData);
         toast.success("Configuração de avisos salva");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao salvar");
@@ -167,7 +167,8 @@ export function NotificacoesPushCard({
           Notificações
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Receba avisos de contas a vencer direto no celular ou computador, mesmo com o app fechado.
+          Receba avisos de contas a vencer e agendamentos do dia direto no celular ou computador, mesmo com o app
+          fechado.
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -226,6 +227,12 @@ export function NotificacoesPushCard({
                 Contas já vencidas ou vencendo hoje sempre avisam, independente desse número.
               </p>
             </div>
+
+            <label className="mt-2 flex items-center gap-2.5 border-t border-border pt-4">
+              <Checkbox name="push_agenda_hoje_ativo" defaultChecked={config.push_agenda_hoje_ativo} />
+              <span className="text-sm text-foreground">Avisar agendamentos do dia (manhã, com o resumo do dia)</span>
+            </label>
+
             <div className="flex justify-end">
               <Button type="submit" size="sm" disabled={isPendingConfig}>
                 {isPendingConfig ? "Salvando..." : "Salvar"}

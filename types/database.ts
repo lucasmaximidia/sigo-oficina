@@ -987,6 +987,7 @@ export interface Database {
           nfse_aliquota_iss: number | null;
           push_contas_vencer_ativo: boolean;
           push_contas_vencer_dias: number;
+          push_agenda_hoje_ativo: boolean;
           updated_at: string;
         };
         Insert: {
@@ -1024,6 +1025,7 @@ export interface Database {
           nfse_aliquota_iss?: number | null;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
+          push_agenda_hoje_ativo?: boolean;
           updated_at?: string;
         };
         Update: {
@@ -1061,6 +1063,7 @@ export interface Database {
           nfse_aliquota_iss?: number | null;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
+          push_agenda_hoje_ativo?: boolean;
           updated_at?: string;
         };
         Relationships: [];

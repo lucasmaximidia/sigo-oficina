@@ -1787,13 +1787,14 @@ export async function removerPushSubscriptionPorId(id: string) {
   revalidatePath("/configuracoes");
 }
 
-export async function updateConfiguracoesPushContas(formData: FormData) {
+export async function updateConfiguracoesPush(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("configuracoes")
     .update({
       push_contas_vencer_ativo: formData.get("push_contas_vencer_ativo") === "on",
       push_contas_vencer_dias: num(formData, "push_contas_vencer_dias"),
+      push_agenda_hoje_ativo: formData.get("push_agenda_hoje_ativo") === "on",
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);

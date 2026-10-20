@@ -6,7 +6,6 @@ import {
   PackageCheck,
   ReceiptText,
   CalendarDays,
-  CalendarCheck2,
   AlertTriangle,
   CheckCircle2,
   Circle,
@@ -29,6 +28,11 @@ import type { AgendaStatus } from "@/types";
 import type { LucideIcon } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+// Quantos itens aparecem antes de recolher num link "+N" — os cards da
+// seção "Hoje" dividem a largura em até 3 colunas, então a lista precisa
+// ficar compacta; a tela cheia (agenda, financeiro) continua mostrando tudo.
+const LIMITE_LISTA_HOJE = 3;
 
 interface OsParadaRow {
   id: string;
@@ -75,6 +79,7 @@ export default async function DashboardPage() {
   const mostrarGarantiasVencendo = config?.dashboard_mostrar_garantias_vencendo ?? true;
   const mostrarOrcamentosPendentes = config?.dashboard_mostrar_orcamentos_pendentes ?? true;
   const mostrarExtras = mostrarPdvHoje || mostrarFretesPendentes || mostrarGarantiasVencendo || mostrarOrcamentosPendentes;
+  const colunasHoje = [mostrarAgenda, mostrarOsParadas, mostrarBoletosPendentes].filter(Boolean).length;
 
   const limiteParada = new Date(hoje);
   limiteParada.setDate(limiteParada.getDate() - paradaDias);
@@ -184,41 +189,40 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {(mostrarAgenda || mostrarOsParadas) && (
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 lg:mt-6">
+      {(mostrarAgenda || mostrarOsParadas || mostrarBoletosPendentes) && (
+        <div
+          className={cn(
+            "mt-4 grid grid-cols-1 gap-4 lg:mt-6",
+            colunasHoje === 3 ? "lg:grid-cols-3" : colunasHoje === 2 ? "lg:grid-cols-2" : "lg:grid-cols-1"
+          )}
+        >
           {mostrarAgenda && (
-            <Card className={mostrarOsParadas ? "lg:col-span-2" : "lg:col-span-3"}>
+            <Card>
               <CardHeader className="flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <CalendarDays className="size-4.5 text-primary" />
                   Agenda
                 </CardTitle>
                 <Link href="/agenda" className="text-sm font-medium text-primary hover:underline">
-                  Ver calendário
+                  Ver
                 </Link>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hoje</p>
-                  <AgendaList eventos={agendaHoje ?? []} vazio="Nenhum compromisso para hoje." urgencia="hoje" />
-                </div>
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amanhã</p>
-                  <AgendaList eventos={agendaAmanha ?? []} vazio="Nenhum compromisso para amanhã." urgencia="amanha" />
-                </div>
+                <AgendaResumo eventos={agendaHoje ?? []} rotulo="Hoje" vazio="Nenhum compromisso hoje." />
+                <AgendaResumo eventos={agendaAmanha ?? []} rotulo="Amanhã" vazio="Nenhum compromisso amanhã." />
               </CardContent>
             </Card>
           )}
 
           {mostrarOsParadas && (
-            <Card className={mostrarAgenda ? "" : "lg:col-span-3"}>
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="size-4.5" />
                   OS Paradas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-3">
+              <CardContent className="flex flex-col gap-2">
                 {(osParadas ?? []).length === 0 && (
                   <EmptyState icon={<CheckCircle2 className="size-4.5" />} title="Nenhuma OS parada no momento" className="py-4" />
                 )}
@@ -226,74 +230,65 @@ export default async function DashboardPage() {
                   <Link
                     key={os.id}
                     href={`/ordens-servico/${os.id}`}
-                    className="block rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
+                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/50"
                   >
-                    <div className="flex items-center gap-2">
-                      <Circle className="size-2 shrink-0 fill-destructive text-destructive" />
-                      <p className="text-sm font-semibold text-foreground">
-                        OS #{os.numero} · Parada há {diasParado(os.updated_at)} dias
+                    <Circle className="size-2 shrink-0 fill-destructive text-destructive" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        OS #{os.numero} · {diasParado(os.updated_at)}d parada
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {os.parada_motivo || os.problema_relatado || "Sem detalhes"}
                       </p>
                     </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {os.parada_motivo || os.problema_relatado || "Sem detalhes"}
-                    </p>
                   </Link>
                 ))}
               </CardContent>
             </Card>
           )}
-        </div>
-      )}
 
-      {mostrarBoletosPendentes && (
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <ReceiptText className="size-4.5" />
-                Boletos Pendentes
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Atrasados e vencendo nos próximos {boletosDias} {boletosDias === 1 ? "dia" : "dias"}.
-              </p>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {(boletosVencendo ?? []).length === 0 && (
-                <EmptyState
-                  icon={<ReceiptText className="size-4.5" />}
-                  title={`Nenhum boleto vencendo nos próximos ${boletosDias} dias`}
-                  className="py-4"
-                />
-              )}
-              {(boletosVencendo ?? []).map((conta) => {
-                const atrasado = conta.vencimento < hojeStr;
-                return (
-                  <Link
-                    key={conta.id}
-                    href="/financeiro"
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Circle
-                          className={`size-2 shrink-0 ${atrasado ? "fill-destructive text-destructive" : "fill-warning text-warning"}`}
-                        />
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {conta.descricao}
-                          {conta.parcela_total ? ` (${conta.parcela_atual}/${conta.parcela_total})` : ""}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {atrasado ? "Venceu em" : "Vence em"} {formatDate(conta.vencimento)}
-                        {conta.numero_documento ? ` · NF ${conta.numero_documento}` : ""}
+          {mostrarBoletosPendentes && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <ReceiptText className="size-4.5" />
+                  Boletos Pendentes
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Atrasados e vencendo em {boletosDias} {boletosDias === 1 ? "dia" : "dias"}.
+                </p>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1">
+                {(boletosVencendo ?? []).length === 0 && (
+                  <EmptyState icon={<ReceiptText className="size-4.5" />} title="Nenhum boleto vencendo" className="py-4" />
+                )}
+                {(boletosVencendo ?? []).slice(0, LIMITE_LISTA_HOJE).map((conta) => {
+                  const atrasado = conta.vencimento < hojeStr;
+                  return (
+                    <Link
+                      key={conta.id}
+                      href="/financeiro"
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary/50"
+                    >
+                      <Circle
+                        className={`size-2 shrink-0 ${atrasado ? "fill-destructive text-destructive" : "fill-warning text-warning"}`}
+                      />
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                        {conta.descricao}
+                        {conta.parcela_total ? ` (${conta.parcela_atual}/${conta.parcela_total})` : ""}
                       </p>
-                    </div>
-                    <p className="shrink-0 text-sm font-semibold text-foreground">{formatCurrency(conta.valor)}</p>
+                      <p className="shrink-0 text-sm font-semibold text-foreground">{formatCurrency(conta.valor)}</p>
+                    </Link>
+                  );
+                })}
+                {(boletosVencendo ?? []).length > LIMITE_LISTA_HOJE && (
+                  <Link href="/financeiro" className="mt-1 px-2 text-xs font-medium text-primary hover:underline">
+                    +{(boletosVencendo ?? []).length - LIMITE_LISTA_HOJE} boleto(s)
                   </Link>
-                );
-              })}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -378,50 +373,59 @@ function MiniStat({
   );
 }
 
-function AgendaList({
+// Mesmos tokens de cor do Badge, só que como bolinha — cabe muito mais
+// compromisso por linha do que um Badge inteiro ao lado de cada horário.
+const STATUS_DOT: Record<string, string> = {
+  secondary: "bg-secondary-foreground/40",
+  success: "bg-success",
+  warning: "bg-warning",
+  info: "bg-info",
+  destructive: "bg-destructive",
+};
+
+function AgendaResumo({
   eventos,
+  rotulo,
   vazio,
-  urgencia,
 }: {
   eventos: {
     id: string;
     titulo: string;
-    tipo: string;
     status: keyof typeof agendaStatusMap;
     data_hora_inicio: string;
-    endereco: string | null;
-    clientes: { nome: string } | { nome: string }[] | null;
   }[];
+  rotulo: string;
   vazio: string;
-  urgencia: "hoje" | "amanha";
 }) {
-  if (eventos.length === 0) {
-    return <EmptyState icon={<CalendarCheck2 className="size-4.5" />} title={vazio} className="py-4" />;
-  }
-  const corBorda = urgencia === "hoje" ? "border-l-destructive" : "border-l-warning";
+  const visiveis = eventos.slice(0, LIMITE_LISTA_HOJE);
+  const restantes = eventos.length - visiveis.length;
+
   return (
-    <div className="flex flex-col gap-2">
-      {eventos.map((evento) => {
-        const cliente = Array.isArray(evento.clientes) ? evento.clientes[0] : evento.clientes;
-        const status = agendaStatusMap[evento.status];
-        return (
-          <div key={evento.id} className={`flex gap-3 rounded-lg border border-l-[3px] border-border p-3 ${corBorda}`}>
-            <div className="w-14 shrink-0 text-sm font-semibold text-primary">
-              {new Date(evento.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-semibold text-foreground">{evento.titulo}</p>
-                {status && <Badge variant={status.variant}>{status.label}</Badge>}
+    <div>
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{rotulo}</p>
+      {eventos.length === 0 ? (
+        <p className="px-2 py-1 text-sm text-muted-foreground">{vazio}</p>
+      ) : (
+        <div className="flex flex-col gap-0.5">
+          {visiveis.map((evento) => {
+            const status = agendaStatusMap[evento.status];
+            return (
+              <div key={evento.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
+                <span className="w-11 shrink-0 text-xs font-semibold text-primary">
+                  {new Date(evento.data_hora_inicio).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span className={cn("size-1.75 shrink-0 rounded-full", status ? STATUS_DOT[status.variant] : "bg-muted-foreground/40")} />
+                <p className="min-w-0 flex-1 truncate text-sm text-foreground">{evento.titulo}</p>
               </div>
-              <p className="truncate text-xs text-muted-foreground">
-                {cliente?.nome ?? "Sem cliente"}
-                {evento.endereco ? ` · ${evento.endereco}` : ""}
-              </p>
-            </div>
-          </div>
-        );
-      })}
+            );
+          })}
+          {restantes > 0 && (
+            <Link href="/agenda" className="px-2 text-xs font-medium text-primary hover:underline">
+              +{restantes} agendamento{restantes === 1 ? "" : "s"}
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }
