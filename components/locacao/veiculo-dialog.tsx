@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,15 +20,9 @@ import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { createVeiculo, updateVeiculo } from "@/lib/locacao-actions";
-import type { LocacaoVeiculo } from "@/types";
+import type { LocacaoIcone, LocacaoVeiculo } from "@/types";
 
-const FOTOS_DISPONIVEIS = [
-  { value: "/locacao/veiculos/maj-sport-701l-short.webp", label: "MAJ Sport 701L Short (laranja)" },
-  { value: "/locacao/veiculos/maj-v20-ultra.webp", label: "MAJ V20 Ultra (bicicleta)" },
-  { value: "/locacao/veiculos/maj-x15-pro.webp", label: "MAJ X15 Pro" },
-];
-
-export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
+export function VeiculoDialog({ veiculo, icones }: { veiculo?: LocacaoVeiculo; icones: LocacaoIcone[] }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const editando = !!veiculo;
@@ -122,20 +117,27 @@ export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
             </div>
           </div>
           <div>
-            <Label className="mb-1.5 block">Foto</Label>
+            <Label className="mb-1.5 block">Ícone</Label>
             <Select name="foto_url" defaultValue={veiculo?.foto_url ?? "nenhuma"}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="locacao-theme">
-                <SelectItem value="nenhuma">Sem foto (ícone padrão)</SelectItem>
-                {FOTOS_DISPONIVEIS.map((foto) => (
-                  <SelectItem key={foto.value} value={foto.value}>
-                    {foto.label}
+                <SelectItem value="nenhuma">Sem ícone (padrão genérico)</SelectItem>
+                {icones.map((icone) => (
+                  <SelectItem key={icone.id} value={icone.arquivo_url}>
+                    {icone.nome}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Precisa de outro ícone?{" "}
+              <Link href="/locacao/icones" className="underline underline-offset-2">
+                Adicione na aba Ícones
+              </Link>
+              .
+            </p>
           </div>
           <div>
             <Label htmlFor="observacoes" className="mb-1.5 block">

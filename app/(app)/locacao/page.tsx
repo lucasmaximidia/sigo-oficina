@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function LocacaoPage() {
   const supabase = await createClient();
 
-  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: kmFinais }, saldoCaixa] =
+  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: kmFinais }, { data: icones }, saldoCaixa] =
     await Promise.all([
       supabase.from("locacao_veiculos").select("*").order("created_at", { ascending: true }),
       supabase
@@ -24,6 +24,7 @@ export default async function LocacaoPage() {
         .is("data_devolucao_real", null),
       supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
       supabase.from("locacao_alugueis").select("veiculo_id, km_fim").not("km_fim", "is", null),
+      supabase.from("locacao_icones").select("*").order("created_at", { ascending: true }),
       getSaldoEmCaixa(supabase),
     ]);
 
@@ -61,7 +62,7 @@ export default async function LocacaoPage() {
       <PageHeader
         title="Locação"
         description="Scooters e bicicletas elétricas alugadas"
-        actions={<VeiculoDialog />}
+        actions={<VeiculoDialog icones={icones ?? []} />}
       />
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -81,6 +82,7 @@ export default async function LocacaoPage() {
         alugueisPorVeiculo={alugueisPorVeiculo}
         kmPorVeiculo={kmPorVeiculo}
         clientes={clientes ?? []}
+        icones={icones ?? []}
       />
     </div>
   );

@@ -1232,6 +1232,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_icones: {
+        Row: {
+          id: string;
+          nome: string;
+          arquivo_url: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          arquivo_url: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          arquivo_url?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       locacao_veiculos: {
         Row: {
           id: string;
