@@ -144,6 +144,7 @@ export async function criarAluguel(input: {
   veiculoId: string;
   clienteId?: string | null;
   clienteNovo?: ClienteNovoInput | null;
+  dataRetirada?: string;
   dataPrevistaDevolucao: string;
   valor: number;
   formaPagamento: LocacaoFormaPagamento;
@@ -180,6 +181,7 @@ export async function criarAluguel(input: {
   const { error: aluguelError } = await supabase.from("locacao_alugueis").insert({
     veiculo_id: input.veiculoId,
     cliente_id: clienteId,
+    data_retirada: input.dataRetirada ?? undefined,
     data_prevista_devolucao: input.dataPrevistaDevolucao,
     valor: input.valor,
     forma_pagamento: input.formaPagamento,

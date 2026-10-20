@@ -1795,6 +1795,7 @@ export async function updateConfiguracoesPush(formData: FormData) {
       push_contas_vencer_ativo: formData.get("push_contas_vencer_ativo") === "on",
       push_contas_vencer_dias: num(formData, "push_contas_vencer_dias"),
       push_agenda_hoje_ativo: formData.get("push_agenda_hoje_ativo") === "on",
+      push_locacao_devolucao_ativo: formData.get("push_locacao_devolucao_ativo") === "on",
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);

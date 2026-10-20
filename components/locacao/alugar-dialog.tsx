@@ -28,10 +28,22 @@ const formasPagamento: { value: LocacaoFormaPagamento; label: string; icon: type
   { value: "transferencia", label: "Transf.", icon: Landmark },
 ];
 
-function amanha() {
+// Formata em horário local (não UTC) no formato que <input type="datetime-local">
+// espera — new Date(valorDoInput) depois interpreta de volta como horário local.
+function paraDatetimeLocal(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function agora() {
+  return paraDatetimeLocal(new Date());
+}
+
+function amanhaAsDezoitoHoras() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  d.setHours(18, 0, 0, 0);
+  return paraDatetimeLocal(d);
 }
 
 export function AlugarDialog({
@@ -70,7 +82,8 @@ export function AlugarDialog({
                 telefone: String(formData.get("cliente_telefone") ?? "") || null,
               }
             : null,
-          dataPrevistaDevolucao: new Date(String(formData.get("data_prevista") ?? amanha())).toISOString(),
+          dataRetirada: new Date(String(formData.get("data_retirada") ?? agora())).toISOString(),
+          dataPrevistaDevolucao: new Date(String(formData.get("data_prevista") ?? amanhaAsDezoitoHoras())).toISOString(),
           valor: parseFloat(String(formData.get("valor") ?? "0").replace(",", ".")) || 0,
           formaPagamento,
           statusPagamento: jaPago ? "pago" : "pendente",
@@ -90,7 +103,7 @@ export function AlugarDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>Alugar {veiculo.marca} {veiculo.modelo}</DialogTitle>
           <DialogDescription>Chassi {veiculo.chassi}</DialogDescription>
@@ -123,17 +136,30 @@ export function AlugarDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <Label htmlFor="data_retirada" className="mb-1.5 block">
+                Retirada
+              </Label>
+              <Input id="data_retirada" name="data_retirada" type="datetime-local" defaultValue={agora()} required />
+            </div>
+            <div>
               <Label htmlFor="data_prevista" className="mb-1.5 block">
                 Devolução prevista
               </Label>
-              <Input id="data_prevista" name="data_prevista" type="date" defaultValue={amanha()} required />
+              <Input
+                id="data_prevista"
+                name="data_prevista"
+                type="datetime-local"
+                defaultValue={amanhaAsDezoitoHoras()}
+                required
+              />
             </div>
-            <div>
-              <Label htmlFor="valor" className="mb-1.5 block">
-                Valor (R$)
-              </Label>
-              <NumericInput id="valor" name="valor" defaultValue={veiculo.valor_diaria ?? undefined} required />
-            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="valor" className="mb-1.5 block">
+              Valor (R$)
+            </Label>
+            <NumericInput id="valor" name="valor" defaultValue={veiculo.valor_diaria ?? undefined} required />
           </div>
 
           <div>

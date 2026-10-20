@@ -43,7 +43,10 @@ export function NotificacoesPushCard({
   config,
   dispositivos,
 }: {
-  config: Pick<Configuracao, "push_contas_vencer_ativo" | "push_contas_vencer_dias" | "push_agenda_hoje_ativo">;
+  config: Pick<
+    Configuracao,
+    "push_contas_vencer_ativo" | "push_contas_vencer_dias" | "push_agenda_hoje_ativo" | "push_locacao_devolucao_ativo"
+  >;
   dispositivos: DispositivoPush[];
 }) {
   const [suporte, setSuporte] = useState<Suporte>("verificando");
@@ -231,6 +234,13 @@ export function NotificacoesPushCard({
             <label className="mt-2 flex items-center gap-2.5 border-t border-border pt-4">
               <Checkbox name="push_agenda_hoje_ativo" defaultChecked={config.push_agenda_hoje_ativo} />
               <span className="text-sm text-foreground">Avisar agendamentos do dia (manhã, com o resumo do dia)</span>
+            </label>
+
+            <label className="flex items-center gap-2.5 border-t border-border pt-4">
+              <Checkbox name="push_locacao_devolucao_ativo" defaultChecked={config.push_locacao_devolucao_ativo} />
+              <span className="text-sm text-foreground">
+                Avisar devoluções de locação do dia (manhã, com o horário previsto)
+              </span>
             </label>
 
             <div className="flex justify-end">

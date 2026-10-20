@@ -15,12 +15,21 @@ export interface AluguelPainel {
   statusPagamento: string;
 }
 
-function diasRestantes(dataPrevista: string) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+const formatarHora = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
+function statusDevolucao(dataPrevista: string) {
+  const agora = new Date();
   const prevista = new Date(dataPrevista);
-  prevista.setHours(0, 0, 0, 0);
-  return Math.round((prevista.getTime() - hoje.getTime()) / 86400000);
+  const atrasado = prevista.getTime() < agora.getTime();
+
+  const hojeCal = new Date();
+  hojeCal.setHours(0, 0, 0, 0);
+  const prevCal = new Date(dataPrevista);
+  prevCal.setHours(0, 0, 0, 0);
+  const dias = Math.round((prevCal.getTime() - hojeCal.getTime()) / 86400000);
+
+  return { atrasado, dias, hora: formatarHora(dataPrevista) };
 }
 
 // Painel de destaque da Locação (VoltCity) no dashboard da oficina — cores
@@ -58,8 +67,7 @@ export function LocacaoPainel({ alugueis }: { alugueis: AluguelPainel[] }) {
           {alugueis.map((a) => {
             const Icon = a.veiculoTipo === "bicicleta" ? Bike : Scooter;
             const cor = corVeiculo(a.veiculoCor);
-            const dias = diasRestantes(a.dataPrevistaDevolucao);
-            const atrasado = dias < 0;
+            const { atrasado, dias, hora } = statusDevolucao(a.dataPrevistaDevolucao);
             return (
               <div key={a.id} className="flex items-center gap-3 rounded-xl bg-white/[0.06] p-3">
                 <div
@@ -88,7 +96,13 @@ export function LocacaoPainel({ alugueis }: { alugueis: AluguelPainel[] }) {
                     )}
                   >
                     {atrasado ? <AlertTriangle className="size-3" /> : <CalendarClock className="size-3" />}
-                    {atrasado ? `${Math.abs(dias)}d atraso` : dias === 0 ? "hoje" : `${dias}d`}
+                    {atrasado
+                      ? dias < 0
+                        ? `${Math.abs(dias)}d atraso`
+                        : `atraso ${hora}`
+                      : dias === 0
+                        ? `hoje ${hora}`
+                        : `${dias}d`}
                   </div>
                   {a.statusPagamento !== "pago" && (
                     <Badge variant="warning" className="px-1.5 py-0 text-[10px]">

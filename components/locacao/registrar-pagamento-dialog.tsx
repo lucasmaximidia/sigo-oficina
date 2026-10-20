@@ -40,7 +40,7 @@ export function RegistrarPagamentoDialog({ aluguelId, valor }: { aluguelId: stri
         Registrar pagamento
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>Registrar pagamento</DialogTitle>
           <DialogDescription>Confirme o valor recebido por este aluguel.</DialogDescription>

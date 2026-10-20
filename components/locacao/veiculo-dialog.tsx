@@ -61,7 +61,7 @@ export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>{editando ? "Editar veículo" : "Novo veículo"}</DialogTitle>
           <DialogDescription>Scooter ou bicicleta elétrica disponível para locação.</DialogDescription>
@@ -74,7 +74,7 @@ export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="locacao-theme">
                   <SelectItem value="scooter">Scooter</SelectItem>
                   <SelectItem value="bicicleta">Bicicleta</SelectItem>
                 </SelectContent>

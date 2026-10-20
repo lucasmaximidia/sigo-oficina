@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +91,10 @@ export default async function LocacaoAlugueisPage({
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {veiculo ? `${veiculo.marca} ${veiculo.modelo} · ${veiculo.chassi}` : "Veículo"} · Retirada{" "}
-                  {formatDate(a.data_retirada)} · Devolução {a.data_devolucao_real ? formatDate(a.data_devolucao_real) : `prevista ${formatDate(a.data_prevista_devolucao)}`}
+                  {formatDateTime(a.data_retirada)} · Devolução{" "}
+                  {a.data_devolucao_real
+                    ? formatDateTime(a.data_devolucao_real)
+                    : `prevista ${formatDateTime(a.data_prevista_devolucao)}`}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {FORMA_LABEL[a.forma_pagamento] ?? a.forma_pagamento}
