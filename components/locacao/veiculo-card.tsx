@@ -75,13 +75,23 @@ export function VeiculoCard({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "relative flex size-13 shrink-0 items-center justify-center rounded-2xl shadow-sm",
-              !cor && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
+              "relative flex size-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-sm",
+              !cor && !veiculo.foto_url && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
+              veiculo.foto_url && "bg-muted",
               veiculo.status === "alugado" && "ring-2 ring-info/50 ring-offset-2 ring-offset-card"
             )}
-            style={cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
+            style={!veiculo.foto_url && cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
           >
-            <Icon className="size-6" strokeWidth={1.75} />
+            {veiculo.foto_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={veiculo.foto_url}
+                alt={`${veiculo.marca} ${veiculo.modelo}`}
+                className="size-full object-cover"
+              />
+            ) : (
+              <Icon className="size-6" strokeWidth={1.75} />
+            )}
             <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-locacao-spark text-locacao-spark-foreground shadow-sm ring-2 ring-card">
               <Zap className="size-3" strokeWidth={2.5} fill="currentColor" />
             </span>
