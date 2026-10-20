@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { excluirIcone } from "@/lib/locacao-actions";
+import { IconeDialog } from "@/components/locacao/icone-dialog";
 import type { LocacaoIcone } from "@/types";
 
 export function IconeCard({ icone, emUso }: { icone: LocacaoIcone; emUso: number }) {
@@ -19,24 +20,27 @@ export function IconeCard({ icone, emUso }: { icone: LocacaoIcone; emUso: number
       <p className="text-xs text-muted-foreground">
         {emUso > 0 ? `Em uso em ${emUso} veículo${emUso === 1 ? "" : "s"}` : "Sem veículo usando"}
       </p>
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() =>
-          startTransition(async () => {
-            try {
-              await excluirIcone(icone.id, icone.arquivo_url);
-              toast.success("Ícone excluído");
-            } catch (error) {
-              toast.error(error instanceof Error ? error.message : "Erro ao excluir ícone");
-            }
-          })
-        }
-        className="mt-1 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-destructive disabled:opacity-50"
-      >
-        <Trash2 className="size-3.5" />
-        Excluir
-      </button>
+      <div className="mt-1 flex items-center gap-1">
+        <IconeDialog icone={icone} />
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            startTransition(async () => {
+              try {
+                await excluirIcone(icone.id, icone.arquivo_url);
+                toast.success("Ícone excluído");
+              } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Erro ao excluir ícone");
+              }
+            })
+          }
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-destructive disabled:opacity-50"
+        >
+          <Trash2 className="size-3.5" />
+          Excluir
+        </button>
+      </div>
     </div>
   );
 }
