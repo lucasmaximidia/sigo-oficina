@@ -10,7 +10,7 @@ import { DevolverDialog } from "@/components/locacao/devolver-dialog";
 import { updateVeiculoStatus } from "@/lib/locacao-actions";
 import { corVeiculo } from "@/lib/locacao-cores";
 import { cn } from "@/lib/utils";
-import type { LocacaoVeiculo } from "@/types";
+import type { LocacaoIcone, LocacaoVeiculo } from "@/types";
 
 export interface AluguelAtivo {
   id: string;
@@ -50,15 +50,19 @@ export function VeiculoCard({
   aluguel,
   clientes,
   kmAtual,
+  icones,
 }: {
   veiculo: LocacaoVeiculo;
   aluguel: AluguelAtivo | null;
   clientes: { id: string; nome: string }[];
   kmAtual?: number | null;
+  icones: LocacaoIcone[];
 }) {
   const [alugarOpen, setAlugarOpen] = useState(false);
   const [devolverOpen, setDevolverOpen] = useState(false);
+  const [iconeComErro, setIconeComErro] = useState(false);
   const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
+  const mostrarIcone = !!veiculo.foto_url && !iconeComErro;
   const status = STATUS_INFO[veiculo.status] ?? STATUS_INFO.disponivel;
   const cor = corVeiculo(veiculo.cor);
   const devolucao = aluguel ? statusDevolucao(aluguel.data_prevista_devolucao) : null;
@@ -75,22 +79,22 @@ export function VeiculoCard({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "relative flex size-13 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-sm",
-              !cor && !veiculo.foto_url && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
-              veiculo.foto_url && "bg-muted",
+              "relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-sm",
+              !cor && !mostrarIcone && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
               veiculo.status === "alugado" && "ring-2 ring-info/50 ring-offset-2 ring-offset-card"
             )}
-            style={!veiculo.foto_url && cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
+            style={!mostrarIcone && cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
           >
-            {veiculo.foto_url ? (
+            {mostrarIcone ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={veiculo.foto_url}
+                src={veiculo.foto_url!}
                 alt={`${veiculo.marca} ${veiculo.modelo}`}
-                className="size-full object-cover"
+                className="size-full object-contain"
+                onError={() => setIconeComErro(true)}
               />
             ) : (
-              <Icon className="size-6" strokeWidth={1.75} />
+              <Icon className="size-7" strokeWidth={1.75} />
             )}
             <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-locacao-spark text-locacao-spark-foreground shadow-sm ring-2 ring-card">
               <Zap className="size-3" strokeWidth={2.5} fill="currentColor" />
@@ -106,7 +110,7 @@ export function VeiculoCard({
             </p>
           </div>
         </div>
-        <VeiculoDialog veiculo={veiculo} />
+        <VeiculoDialog veiculo={veiculo} icones={icones} />
       </div>
 
       <Badge variant={status.variant} className="w-fit">

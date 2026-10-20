@@ -29,6 +29,7 @@ export type EmpresaAutorizada = Database["public"]["Tables"]["empresas_autorizad
 export type BalancoEstoque = Database["public"]["Tables"]["balancos_estoque"]["Row"];
 export type BalancoEstoqueItem = Database["public"]["Tables"]["balanco_estoque_itens"]["Row"];
 export type NotaFiscal = Database["public"]["Tables"]["notas_fiscais"]["Row"];
+export type LocacaoIcone = Database["public"]["Tables"]["locacao_icones"]["Row"];
 export type LocacaoVeiculo = Database["public"]["Tables"]["locacao_veiculos"]["Row"];
 export type LocacaoCliente = Database["public"]["Tables"]["locacao_clientes"]["Row"];
 export type LocacaoAluguel = Database["public"]["Tables"]["locacao_alugueis"]["Row"];

@@ -85,6 +85,62 @@ export async function updateVeiculoStatus(id: string, status: LocacaoVeiculoStat
   revalidarLocacao();
 }
 
+// ---------- Ícones de veículos ----------
+// Biblioteca de ícones usados no card do veículo (aba /locacao/icones) —
+// alguns vêm prontos com o app (em public/locacao/icones), outros o
+// próprio usuário envia aqui, guardados no bucket "locacao-icones".
+
+export async function criarIcone(formData: FormData) {
+  const supabase = await createClient();
+  const nome = str(formData, "nome");
+  const file = formData.get("arquivo");
+  if (!nome) throw new Error("Informe um nome para o ícone");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Selecione uma imagem");
+  if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
+
+  const extensao = file.name.split(".").pop()?.toLowerCase() || "png";
+  const caminho = `${crypto.randomUUID()}.${extensao}`;
+
+  const { error: uploadError } = await supabase.storage.from("locacao-icones").upload(caminho, file, {
+    contentType: file.type,
+  });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { data: publicUrlData } = supabase.storage.from("locacao-icones").getPublicUrl(caminho);
+
+  const { error } = await supabase
+    .from("locacao_icones")
+    .insert({ nome, arquivo_url: publicUrlData.publicUrl });
+  if (error) throw new Error(error.message);
+  revalidatePath("/locacao/icones");
+}
+
+export async function excluirIcone(id: string, arquivoUrl: string) {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("locacao_veiculos")
+    .select("id", { count: "exact", head: true })
+    .eq("foto_url", arquivoUrl);
+  if (count && count > 0) {
+    throw new Error(
+      `Esse ícone está em uso em ${count} veículo${count === 1 ? "" : "s"}. Troque o ícone dele${count === 1 ? "" : "s"} antes de excluir.`
+    );
+  }
+
+  const { error } = await supabase.from("locacao_icones").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  // Ícones padrão do app (servidos de /locacao/icones) não têm arquivo no
+  // Storage pra remover — só os enviados pela tela ficam no bucket.
+  const prefixoStorage = "/locacao-icones/";
+  if (arquivoUrl.includes(prefixoStorage)) {
+    const caminho = arquivoUrl.split(prefixoStorage)[1];
+    if (caminho) await supabase.storage.from("locacao-icones").remove([caminho]);
+  }
+
+  revalidatePath("/locacao/icones");
+}
+
 // ---------- Clientes ----------
 
 export async function createCliente(formData: FormData) {
