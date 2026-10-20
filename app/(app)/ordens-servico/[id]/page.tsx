@@ -262,12 +262,13 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
             ]}
           />
 
-          {os.status === "finalizado" && (
+          {os.status !== "cancelado" && (
             <OsRetiradaCard
               key={os.data_retirada ?? "sem-retirada"}
               osId={os.id}
               garantiaDias={os.garantia_dias}
               dataRetirada={os.data_retirada}
+              osFinalizada={os.status === "finalizado"}
             />
           )}
         </div>
