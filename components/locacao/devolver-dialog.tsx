@@ -52,7 +52,7 @@ export function DevolverDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>Registrar devolução</DialogTitle>
           <DialogDescription>Informe o KM final e em que condição o veículo foi devolvido.</DialogDescription>

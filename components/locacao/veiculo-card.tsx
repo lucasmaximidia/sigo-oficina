@@ -28,12 +28,21 @@ const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning
   inativo: { label: "Inativo", variant: "secondary" },
 };
 
-function diasRestantes(dataPrevista: string) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+const formatarHora = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+
+function statusDevolucao(dataPrevista: string) {
+  const agora = new Date();
   const prevista = new Date(dataPrevista);
-  prevista.setHours(0, 0, 0, 0);
-  return Math.round((prevista.getTime() - hoje.getTime()) / 86400000);
+  const atrasado = prevista.getTime() < agora.getTime();
+
+  const hojeCal = new Date();
+  hojeCal.setHours(0, 0, 0, 0);
+  const prevCal = new Date(dataPrevista);
+  prevCal.setHours(0, 0, 0, 0);
+  const dias = Math.round((prevCal.getTime() - hojeCal.getTime()) / 86400000);
+
+  return { atrasado, dias, hora: formatarHora(dataPrevista) };
 }
 
 export function VeiculoCard({
@@ -52,8 +61,8 @@ export function VeiculoCard({
   const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
   const status = STATUS_INFO[veiculo.status] ?? STATUS_INFO.disponivel;
   const cor = corVeiculo(veiculo.cor);
-  const dias = aluguel ? diasRestantes(aluguel.data_prevista_devolucao) : null;
-  const atrasado = dias !== null && dias < 0;
+  const devolucao = aluguel ? statusDevolucao(aluguel.data_prevista_devolucao) : null;
+  const atrasado = devolucao?.atrasado ?? false;
 
   return (
     <div
@@ -108,10 +117,12 @@ export function VeiculoCard({
           >
             {atrasado ? <AlertTriangle className="size-3.5" /> : <CalendarClock className="size-3.5" />}
             {atrasado
-              ? `Atrasado há ${Math.abs(dias!)} dia${Math.abs(dias!) === 1 ? "" : "s"}`
-              : dias === 0
-                ? "Devolução hoje"
-                : `${dias} dia${dias === 1 ? "" : "s"} para devolver`}
+              ? devolucao!.dias < 0
+                ? `Atrasado há ${Math.abs(devolucao!.dias)} dia${Math.abs(devolucao!.dias) === 1 ? "" : "s"}`
+                : `Atrasado desde ${devolucao!.hora}`
+              : devolucao!.dias === 0
+                ? `Devolução hoje às ${devolucao!.hora}`
+                : `${devolucao!.dias} dia${devolucao!.dias === 1 ? "" : "s"} para devolver (${devolucao!.hora})`}
           </div>
           {aluguel.status_pagamento !== "pago" && (
             <Badge variant="warning" className="w-fit">

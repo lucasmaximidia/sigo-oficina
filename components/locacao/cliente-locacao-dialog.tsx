@@ -59,7 +59,7 @@ export function ClienteLocacaoDialog({ cliente }: { cliente?: LocacaoCliente }) 
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>{editando ? "Editar cliente" : "Novo cliente"}</DialogTitle>
           <DialogDescription>Cadastro de cliente da locação.</DialogDescription>

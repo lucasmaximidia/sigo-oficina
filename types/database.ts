@@ -993,6 +993,7 @@ export interface Database {
           push_contas_vencer_ativo: boolean;
           push_contas_vencer_dias: number;
           push_agenda_hoje_ativo: boolean;
+          push_locacao_devolucao_ativo: boolean;
           updated_at: string;
         };
         Insert: {
@@ -1031,6 +1032,7 @@ export interface Database {
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
           push_agenda_hoje_ativo?: boolean;
+          push_locacao_devolucao_ativo?: boolean;
           updated_at?: string;
         };
         Update: {
@@ -1069,6 +1071,7 @@ export interface Database {
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
           push_agenda_hoje_ativo?: boolean;
+          push_locacao_devolucao_ativo?: boolean;
           updated_at?: string;
         };
         Relationships: [];

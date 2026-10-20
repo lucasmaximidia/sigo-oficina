@@ -49,7 +49,7 @@ export function DespesaDialog({ veiculos }: { veiculos: Pick<LocacaoVeiculo, "id
           Nova Saída
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>Nova saída</DialogTitle>
           <DialogDescription>Despesa da operação de locação (manutenção, compra, aluguel de ponto, etc.).</DialogDescription>
@@ -96,7 +96,7 @@ export function DespesaDialog({ veiculos }: { veiculos: Pick<LocacaoVeiculo, "id
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="locacao-theme">
                   <SelectItem value="nenhum">Nenhum</SelectItem>
                   {veiculos.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
@@ -119,7 +119,7 @@ export function DespesaDialog({ veiculos }: { veiculos: Pick<LocacaoVeiculo, "id
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="locacao-theme">
                 <SelectItem value="pix">PIX</SelectItem>
                 <SelectItem value="cartao">Cartão</SelectItem>
                 <SelectItem value="dinheiro">Dinheiro</SelectItem>
