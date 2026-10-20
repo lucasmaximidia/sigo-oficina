@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { FechamentoPdf } from "@/components/financeiro/fechamento-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { retiradaTipoMap } from "@/lib/status";
+import { dataBR } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -109,10 +110,10 @@ export async function GET(request: Request) {
     const totalItens = totalItensPorOs.get(os.id) ?? 0;
     const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
     const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
-    return { data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""), valor, descricao: "" };
+    return { data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""), valor, descricao: "" };
   });
   const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({
-    data: v.created_at.slice(0, 10),
+    data: dataBR(v.created_at),
     valor: valorLiquidoPorVenda.get(v.id) ?? v.total,
     descricao: "",
   }));
@@ -171,10 +172,10 @@ export async function GET(request: Request) {
 
   const formasNoMes = ["pix", "cartao", "dinheiro"].map((forma) => {
     const osDoMes = (osPagas ?? []).filter((os) => {
-      const data = os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "");
+      const data = os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : "");
       return os.forma_pagamento === forma && data >= inicioMes && data <= fimMes;
     });
-    const pdvDoMes = (vendas ?? []).filter((v) => v.forma_pagamento === forma && v.created_at.slice(0, 10) >= inicioMes && v.created_at.slice(0, 10) <= fimMes);
+    const pdvDoMes = (vendas ?? []).filter((v) => v.forma_pagamento === forma && dataBR(v.created_at) >= inicioMes && dataBR(v.created_at) <= fimMes);
     const totalOs = osDoMes.reduce((acc, os) => {
       const totalItens = totalItensPorOs.get(os.id) ?? 0;
       const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;

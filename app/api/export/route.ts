@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildCsv, csvResponse } from "@/lib/csv";
-import { formatDate } from "@/lib/utils";
+import { formatDate, hojeBR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Parâmetro tipo inválido" }, { status: 400 });
   }
 
-  const dataHoje = new Date().toISOString().slice(0, 10);
+  const dataHoje = hojeBR();
 
   if (tipo === "clientes") {
     const { data } = await supabase

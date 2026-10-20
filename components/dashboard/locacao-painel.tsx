@@ -16,7 +16,7 @@ export interface AluguelPainel {
 }
 
 const formatarHora = (iso: string) =>
-  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 
 function statusDevolucao(dataPrevista: string) {
   const agora = new Date();

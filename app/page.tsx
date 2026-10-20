@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
-import { formatPhoneBR } from "@/lib/utils";
+import { agoraBR, formatPhoneBR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -308,7 +308,7 @@ export default async function LandingPage() {
 
           <div className="mt-6 flex flex-col items-center justify-between gap-2 border-t border-background/15 pt-6 text-xs text-background/50 sm:flex-row">
             <p>
-              &copy; {new Date().getFullYear()} {nomeEmpresa}
+              &copy; {agoraBR().ano} {nomeEmpresa}
             </p>
             <Link href="/login" className="hover:text-background hover:underline">
               Acesso da equipe

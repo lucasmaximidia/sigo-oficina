@@ -12,7 +12,7 @@ import { AjusteCaixaDialog } from "@/components/locacao/ajuste-caixa-dialog";
 import { AjusteCaixaDeleteButton } from "@/components/locacao/ajuste-caixa-delete-button";
 import { OutraEntradaDialog } from "@/components/locacao/outra-entrada-dialog";
 import { OutraEntradaDeleteButton } from "@/components/locacao/outra-entrada-delete-button";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { agoraBR, formatCurrency, formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,8 @@ const FORMA_LABEL: Record<string, string> = {
 
 export default async function LocacaoFinanceiroPage() {
   const supabase = await createClient();
-  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+  const { ano: anoAtual, mes: mesAtual } = agoraBR();
+  const inicioMes = `${anoAtual}-${String(mesAtual).padStart(2, "0")}-01`;
 
   const [
     { data: alugueisPagosMes },

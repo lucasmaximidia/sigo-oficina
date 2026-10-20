@@ -5,15 +5,12 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { LembreteContasToast } from "@/components/layout/lembrete-contas-toast";
 import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/notificacoes-bell";
-import { dataLembreteVencimento } from "@/lib/utils";
+import { dataLembreteVencimento, diasAPartirDe, hojeBR } from "@/lib/utils";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const limiteLembreteStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 2)
-    .toISOString()
-    .slice(0, 10);
+  const hojeStr = hojeBR();
+  const limiteLembreteStr = diasAPartirDe(hojeStr, 2);
 
   const [{ data: config }, { data: contasVencendo }, { data: contasParaLembrete }, { data: pecas }] =
     await Promise.all([

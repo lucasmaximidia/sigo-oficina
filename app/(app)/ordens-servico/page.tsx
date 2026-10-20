@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResponsiveList } from "@/components/ui/responsive-list";
 import { TableCell, TableHead } from "@/components/ui/table";
-import { formatDate } from "@/lib/utils";
+import { diasAPartirDe, formatDate, hojeBR } from "@/lib/utils";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
 import type { FormaPagamento, OsStatus, OsUrgencia } from "@/types";
 
@@ -73,8 +73,7 @@ export default async function OrdensServicoPage({
   if (view === "kanban") {
     const colunasKanban =
       "id, numero, status, urgencia, valor_mao_obra, valor_frete, desconto, data_entrada, data_finalizacao, data_retirada, forma_pagamento, empresa_autorizada_id, clientes(nome), equipamentos(tipo, marca, modelo), empresas_autorizadas(nome), os_itens(quantidade, valor_unitario)";
-    const limiteFinalizadas = new Date();
-    limiteFinalizadas.setDate(limiteFinalizadas.getDate() - 30);
+    const limiteFinalizadasStr = diasAPartirDe(hojeBR(), -30);
 
     const [{ data: ordensAtivas }, { data: ordensFinalizadas }, { data: ordensAutorizadasPendentes }] =
       await Promise.all([
@@ -90,7 +89,7 @@ export default async function OrdensServicoPage({
           .from("ordens_servico")
           .select<string, OsKanbanRow>(colunasKanban)
           .eq("status", "finalizado")
-          .gte("data_finalizacao", limiteFinalizadas.toISOString().slice(0, 10))
+          .gte("data_finalizacao", limiteFinalizadasStr)
           .order("data_finalizacao", { ascending: false })
           .limit(200),
         // OS de autorizada finalizadas aguardando o repasse (fechado em lote no

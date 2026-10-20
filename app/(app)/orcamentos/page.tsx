@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { OrcamentoStatusTabs } from "@/components/orcamentos/status-tabs";
 import { OrcamentosLista, type OrcamentoListItem } from "@/components/orcamentos/orcamentos-lista";
+import { hojeBR } from "@/lib/utils";
 import type { OrcamentoStatus } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export default async function OrcamentosPage({
     )
     .order("created_at", { ascending: false });
 
-  const hojeStr = new Date().toISOString().slice(0, 10);
+  const hojeStr = hojeBR();
 
   const orcamentosComTotal: OrcamentoListItem[] = (orcamentos ?? []).map((orc) => {
     const totalItens = orc.orcamento_itens.reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);

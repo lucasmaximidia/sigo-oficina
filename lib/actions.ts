@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { criarNotaFiscalComDecisao } from "@/lib/notas-fiscais-core";
 import { enviarPushParaTodos } from "@/lib/push";
+import { hojeBR } from "@/lib/utils";
 import type {
   Database,
   OsStatus,
@@ -591,7 +592,7 @@ export async function marcarFretePago(freteId: string, osId: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("fretes")
-    .update({ status: "pago" as FreteStatus, data_pagamento: new Date().toISOString().slice(0, 10) })
+    .update({ status: "pago" as FreteStatus, data_pagamento: hojeBR() })
     .eq("id", freteId);
   if (error) throw new Error(error.message);
   revalidatePath(`/ordens-servico/${osId}`);
@@ -1003,7 +1004,7 @@ export async function marcarContaPaga(id: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("financeiro_contas")
-    .update({ status: "pago", pago_em: new Date().toISOString().slice(0, 10) })
+    .update({ status: "pago", pago_em: hojeBR() })
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1039,7 +1040,7 @@ export async function createDespesa(formData: FormData) {
     descricao,
     categoria: strUp(formData, "categoria"),
     valor: num(formData, "valor"),
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1082,7 +1083,7 @@ export async function createRetirada(formData: FormData) {
     tipo: (str(formData, "tipo") as RetiradaTipo) ?? "outro",
     descricao,
     valor: num(formData, "valor"),
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1119,7 +1120,7 @@ export async function createAjusteCaixa(formData: FormData) {
   const { error } = await supabase.from("financeiro_ajustes_caixa").insert({
     descricao,
     valor: tipo === "saida" ? -valorAbsoluto : valorAbsoluto,
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/financeiro");
@@ -1182,7 +1183,7 @@ export async function fecharContaParceiro(lojaParceiraId: string) {
     descricao: `Pagamento de peças - ${loja.nome}`,
     loja_parceira_id: lojaParceiraId,
     valor: total,
-    data: agora.slice(0, 10),
+    data: hojeBR(),
   });
   if (retiradaError) throw new Error(retiradaError.message);
 
@@ -1221,7 +1222,7 @@ export async function fecharContaAutorizada(empresaAutorizadaId: string) {
   if (!empresa) throw new Error("Empresa autorizada não encontrada");
   if (!osCandidatas || osCandidatas.length === 0) throw new Error("Nada pendente com essa autorizada");
 
-  const agora = new Date().toISOString().slice(0, 10);
+  const agora = hojeBR();
   let algumaFechada = false;
 
   for (const os of osCandidatas) {
@@ -1643,7 +1644,7 @@ export async function createOrcamento(formData: FormData) {
   }
 
   const validadeDias = Number(str(formData, "validade_dias") ?? "15");
-  const dataValidade = new Date();
+  const dataValidade = new Date(`${hojeBR()}T00:00:00`);
   dataValidade.setDate(dataValidade.getDate() + validadeDias);
 
   const { data: orcamento, error } = await supabase

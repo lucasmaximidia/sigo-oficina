@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ResponsiveList } from "@/components/ui/responsive-list";
 import { MarcarFretePagoButton } from "@/components/financeiro/marcar-frete-pago-button";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, dataBR, formatCurrency } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
 import { freteStatusMap, freteTipoMap } from "@/lib/status";
 import type { FreteComRelacoes } from "@/types";
@@ -24,7 +24,7 @@ export function FretesTab({ fretes }: { fretes: FreteComRelacoes[] }) {
     () =>
       filtrarEOrdenar(
         fretes,
-        (f) => f.data_pagamento ?? f.created_at.slice(0, 10),
+        (f) => f.data_pagamento ?? dataBR(f.created_at),
         (f) => f.valor_custo,
         ordenacao,
         periodoInicio,

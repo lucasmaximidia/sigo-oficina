@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { CertificadoPdf } from "@/components/garantias/certificado-pdf";
+import { dataBR, diasAPartirDe } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,10 +43,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ osId
     return NextResponse.json({ error: "A garantia só é emitida após a OS ser finalizada" }, { status: 400 });
   }
 
-  const dataInicio = os.data_finalizacao.slice(0, 10);
-  const expiracao = new Date(os.data_finalizacao);
-  expiracao.setDate(expiracao.getDate() + os.garantia_dias);
-  const dataExpiracao = expiracao.toISOString().slice(0, 10);
+  const dataInicio = dataBR(os.data_finalizacao);
+  const dataExpiracao = diasAPartirDe(dataInicio, os.garantia_dias);
 
   const equipamento = os.equipamentos;
   const equipamentoDescricao = equipamento

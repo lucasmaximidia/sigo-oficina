@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, hojeBR } from "@/lib/utils";
 import { weekdayLabels, type CalendarDay } from "@/lib/calendar";
 import type { AgendaEvento } from "@/types";
 
@@ -31,7 +31,7 @@ export function CalendarGrid({
   selectedIso: string;
   monthParam: string;
 }) {
-  const hojeIso = new Date().toISOString().slice(0, 10);
+  const hojeIso = hojeBR();
 
   return (
     <div className="overflow-hidden rounded-xl border border-border">

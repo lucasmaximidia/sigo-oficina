@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoStatus, LocacaoVeiculoTipo } from "@/types";
+import { hojeBR } from "@/lib/utils";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -187,7 +188,7 @@ export async function criarAluguel(input: {
     forma_pagamento: input.formaPagamento,
     status_pagamento: input.statusPagamento,
     valor_pago: input.statusPagamento === "pago" ? input.valor : 0,
-    data_pagamento: input.statusPagamento === "pago" ? new Date().toISOString().slice(0, 10) : null,
+    data_pagamento: input.statusPagamento === "pago" ? hojeBR() : null,
     km_inicio: input.kmInicio ?? null,
     observacoes: input.observacoes ?? null,
   });
@@ -309,7 +310,7 @@ export async function marcarAluguelPago(aluguelId: string, valorPago: number) {
     .update({
       status_pagamento: "pago",
       valor_pago: valorPago,
-      data_pagamento: new Date().toISOString().slice(0, 10),
+      data_pagamento: hojeBR(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", aluguelId);
@@ -335,7 +336,7 @@ export async function createDespesa(formData: FormData) {
   if (!descricao) throw new Error("Descrição é obrigatória");
 
   const { error } = await supabase.from("locacao_despesas").insert({
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
     descricao,
     categoria: strUp(formData, "categoria"),
     fornecedor: strUp(formData, "fornecedor"),
@@ -382,7 +383,7 @@ export async function createAjusteCaixa(formData: FormData) {
   const valor = tipo === "sai" ? -Math.abs(valorAbs) : Math.abs(valorAbs);
 
   const { error } = await supabase.from("locacao_ajustes_caixa").insert({
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
     motivo,
     valor,
   });
@@ -405,7 +406,7 @@ export async function createOutraEntrada(formData: FormData) {
   if (!descricao) throw new Error("Descrição é obrigatória");
 
   const { error } = await supabase.from("locacao_outras_entradas").insert({
-    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    data: str(formData, "data") ?? hojeBR(),
     descricao,
     categoria: strUp(formData, "categoria"),
     forma_pagamento: str(formData, "forma_pagamento") as LocacaoFormaPagamento | null,

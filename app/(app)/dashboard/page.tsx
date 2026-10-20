@@ -23,7 +23,7 @@ import { LocacaoPainel, type AluguelPainel } from "@/components/dashboard/locaca
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { agoraMs, cn, diasAPartirDe, formatCurrency, formatDate, hojeBR, inicioDiaBR } from "@/lib/utils";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaStatus } from "@/types";
 import type { LucideIcon } from "lucide-react";
@@ -57,17 +57,14 @@ interface AgendaResumoRow {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const amanha = new Date(hoje);
-  amanha.setDate(amanha.getDate() + 1);
-  const amanhaStr = amanha.toISOString().slice(0, 10);
+  const hojeStr = hojeBR();
+  const hoje = new Date(`${hojeStr}T00:00:00-03:00`);
+  const amanhaStr = diasAPartirDe(hojeStr, 1);
 
   const { data: config } = await supabase.from("configuracoes").select("*").eq("id", 1).single();
 
   const boletosDias = config?.dashboard_boletos_dias ?? 3;
-  const emBoletosDias = new Date(hoje);
-  emBoletosDias.setDate(emBoletosDias.getDate() + boletosDias);
+  const emBoletosDiasStr = diasAPartirDe(hojeStr, boletosDias);
 
   const mostrarStats = config?.dashboard_mostrar_stats ?? true;
   const mostrarAgenda = config?.dashboard_mostrar_agenda ?? true;
@@ -82,8 +79,7 @@ export default async function DashboardPage() {
   const mostrarExtras = mostrarPdvHoje || mostrarFretesPendentes || mostrarGarantiasVencendo || mostrarOrcamentosPendentes;
   const colunasHoje = [mostrarAgenda, mostrarOsParadas, mostrarBoletosPendentes].filter(Boolean).length;
 
-  const limiteParada = new Date(hoje);
-  limiteParada.setDate(limiteParada.getDate() - paradaDias);
+  const limiteParadaStr = diasAPartirDe(hojeStr, -paradaDias);
 
   const [
     { count: aguardandoOrcamento },
@@ -107,26 +103,26 @@ export default async function DashboardPage() {
       .select("id, descricao, numero_documento, valor, vencimento, status, parcela_atual, parcela_total")
       .is("deletado_em", null)
       .neq("status", "pago")
-      .lte("vencimento", emBoletosDias.toISOString().slice(0, 10))
+      .lte("vencimento", emBoletosDiasStr)
       .order("vencimento", { ascending: true }),
     supabase
       .from("ordens_servico")
       .select<string, OsParadaRow>("id, numero, problema_relatado, parada_motivo, updated_at, clientes(nome)")
-      .or(`parada.eq.true,updated_at.lt.${limiteParada.toISOString()}`)
+      .or(`parada.eq.true,updated_at.lt.${inicioDiaBR(limiteParadaStr)}`)
       .not("status", "in", "(finalizado,cancelado)")
       .order("updated_at", { ascending: true })
       .limit(5),
     supabase
       .from("agenda_eventos")
       .select<string, AgendaResumoRow>("id, titulo, tipo, status, data_hora_inicio, endereco, tecnico, clientes(nome)")
-      .gte("data_hora_inicio", `${hojeStr}T00:00:00`)
-      .lt("data_hora_inicio", `${amanhaStr}T00:00:00`)
+      .gte("data_hora_inicio", inicioDiaBR(hojeStr))
+      .lt("data_hora_inicio", inicioDiaBR(amanhaStr))
       .order("data_hora_inicio", { ascending: true }),
     supabase
       .from("agenda_eventos")
       .select<string, AgendaResumoRow>("id, titulo, tipo, status, data_hora_inicio, endereco, tecnico, clientes(nome)")
-      .gte("data_hora_inicio", `${amanhaStr}T00:00:00`)
-      .lt("data_hora_inicio", `${amanhaStr}T23:59:59`)
+      .gte("data_hora_inicio", inicioDiaBR(amanhaStr))
+      .lt("data_hora_inicio", inicioDiaBR(diasAPartirDe(amanhaStr, 1)))
       .order("data_hora_inicio", { ascending: true }),
     supabase.from("tarefas").select("*").eq("data", hojeStr).order("created_at", { ascending: true }),
     supabase.from("locacao_veiculos").select("id", { count: "exact", head: true }),
@@ -166,8 +162,8 @@ export default async function DashboardPage() {
             .from("vendas_pdv")
             .select("total")
             .is("deletado_em", null)
-            .gte("created_at", `${hojeStr}T00:00:00`)
-            .lt("created_at", `${amanhaStr}T00:00:00`)
+            .gte("created_at", inicioDiaBR(hojeStr))
+            .lt("created_at", inicioDiaBR(amanhaStr))
         : Promise.resolve({ data: null }),
       mostrarFretesPendentes ? supabase.from("fretes").select("valor_custo").eq("status", "pendente") : Promise.resolve({ data: null }),
       mostrarGarantiasVencendo
@@ -181,8 +177,9 @@ export default async function DashboardPage() {
   const totalVendasHoje = (vendasHoje ?? []).reduce((acc, v) => acc + v.total, 0);
   const totalFretesPendentes = (fretesPendentes ?? []).reduce((acc, f) => acc + f.valor_custo, 0);
 
+  const agora = agoraMs();
   const diasParado = (updatedAt: string) => {
-    return Math.floor((hoje.getTime() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.floor((agora - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24));
   };
 
   return (
