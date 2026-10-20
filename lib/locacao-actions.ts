@@ -115,6 +115,53 @@ export async function criarIcone(formData: FormData) {
   revalidatePath("/locacao/icones");
 }
 
+export async function editarIcone(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const nome = str(formData, "nome");
+  if (!nome) throw new Error("Informe um nome para o ícone");
+
+  const file = formData.get("arquivo");
+  const temArquivoNovo = file instanceof File && file.size > 0;
+
+  if (!temArquivoNovo) {
+    const { error } = await supabase.from("locacao_icones").update({ nome }).eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/locacao/icones");
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) throw new Error("O arquivo precisa ser uma imagem");
+
+  const { data: atual } = await supabase.from("locacao_icones").select("arquivo_url").eq("id", id).single();
+
+  const extensao = file.name.split(".").pop()?.toLowerCase() || "png";
+  const caminho = `${crypto.randomUUID()}.${extensao}`;
+  const { error: uploadError } = await supabase.storage.from("locacao-icones").upload(caminho, file, {
+    contentType: file.type,
+  });
+  if (uploadError) throw new Error(uploadError.message);
+  const { data: publicUrlData } = supabase.storage.from("locacao-icones").getPublicUrl(caminho);
+  const novaUrl = publicUrlData.publicUrl;
+
+  const { error } = await supabase.from("locacao_icones").update({ nome, arquivo_url: novaUrl }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  // Veículos que usavam a imagem antiga passam a apontar pra nova, e o
+  // arquivo antigo é removido do Storage (quando enviado pela própria tela —
+  // os ícones padrão, servidos de /locacao/icones, não têm o que remover).
+  const prefixoStorage = "/locacao-icones/";
+  if (atual?.arquivo_url && atual.arquivo_url !== novaUrl) {
+    await supabase.from("locacao_veiculos").update({ foto_url: novaUrl }).eq("foto_url", atual.arquivo_url);
+    if (atual.arquivo_url.includes(prefixoStorage)) {
+      const caminhoAntigo = atual.arquivo_url.split(prefixoStorage)[1];
+      if (caminhoAntigo) await supabase.storage.from("locacao-icones").remove([caminhoAntigo]);
+    }
+  }
+
+  revalidatePath("/locacao/icones");
+  revalidarLocacao();
+}
+
 export async function excluirIcone(id: string, arquivoUrl: string) {
   const supabase = await createClient();
   const { count } = await supabase
