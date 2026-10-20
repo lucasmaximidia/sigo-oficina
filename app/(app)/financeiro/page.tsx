@@ -140,9 +140,30 @@ export default async function FinanceiroPage() {
     ]);
 
   const osIdsPagas = (osPagas ?? []).map((os) => os.id);
-  const { data: itensDasOsPagas } = osIdsPagas.length
-    ? await supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsPagas)
-    : { data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] };
+  const vendaIds = (vendas ?? []).map((v) => v.id);
+  const [{ data: itensDasOsPagas }, { data: pagamentosDasVendas }] = await Promise.all([
+    osIdsPagas.length
+      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsPagas)
+      : Promise.resolve({ data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] }),
+    vendaIds.length
+      ? supabase
+          .from("venda_pagamentos")
+          .select("venda_id, forma_pagamento, valor, valor_recebido_liquido")
+          .in("venda_id", vendaIds)
+      : Promise.resolve({
+          data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[],
+        }),
+  ]);
+
+  // Pra cada venda, o valor que efetivamente entrou no caixa: pagamentos em
+  // dinheiro/PIX contam pelo valor cheio, cartão conta pelo valor líquido
+  // (desconta a taxa da maquininha) quando essa informação foi registrada —
+  // mesmo critério já usado pras OS logo abaixo.
+  const valorLiquidoPorVenda = new Map<string, number>();
+  for (const p of pagamentosDasVendas ?? []) {
+    const valor = p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
+    valorLiquidoPorVenda.set(p.venda_id, (valorLiquidoPorVenda.get(p.venda_id) ?? 0) + valor);
+  }
 
   const totalItensPorOs = new Map<string, number>();
   for (const item of itensDasOsPagas ?? []) {
@@ -173,7 +194,7 @@ export default async function FinanceiroPage() {
     data: venda.created_at.slice(0, 10),
     formaPagamento: formaPagamentoLabel[venda.forma_pagamento] ?? venda.forma_pagamento,
     formaPagamentoChave: venda.forma_pagamento,
-    valor: venda.total,
+    valor: valorLiquidoPorVenda.get(venda.id) ?? venda.total,
   }));
 
   const entradas = [...entradasOs, ...entradasPdv].sort((a, b) => (a.data < b.data ? 1 : -1));

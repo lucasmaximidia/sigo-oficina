@@ -76,13 +76,33 @@ export async function GET(request: Request) {
   ]);
 
   const osIds = (osPagas ?? []).map((os) => os.id);
-  const { data: itensDasOs } = osIds.length
-    ? await supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIds)
-    : { data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] };
+  const vendaIds = (vendas ?? []).map((v) => v.id);
+  const [{ data: itensDasOs }, { data: pagamentosDasVendas }] = await Promise.all([
+    osIds.length
+      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIds)
+      : Promise.resolve({ data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] }),
+    vendaIds.length
+      ? supabase
+          .from("venda_pagamentos")
+          .select("venda_id, forma_pagamento, valor, valor_recebido_liquido")
+          .in("venda_id", vendaIds)
+      : Promise.resolve({
+          data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[],
+        }),
+  ]);
 
   const totalItensPorOs = new Map<string, number>();
   for (const item of itensDasOs ?? []) {
     totalItensPorOs.set(item.os_id, (totalItensPorOs.get(item.os_id) ?? 0) + item.quantidade * item.valor_unitario);
+  }
+
+  // Pra cada venda, o valor que efetivamente entrou no caixa: pagamentos em
+  // dinheiro/PIX contam pelo valor cheio, cartão conta pelo valor líquido
+  // (desconta a taxa da maquininha) quando essa informação foi registrada.
+  const valorLiquidoPorVenda = new Map<string, number>();
+  for (const p of pagamentosDasVendas ?? []) {
+    const valor = p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
+    valorLiquidoPorVenda.set(p.venda_id, (valorLiquidoPorVenda.get(p.venda_id) ?? 0) + valor);
   }
 
   const entradasOs: MovimentoDatado[] = (osPagas ?? []).map((os) => {
@@ -91,7 +111,11 @@ export async function GET(request: Request) {
     const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
     return { data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""), valor, descricao: "" };
   });
-  const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({ data: v.created_at.slice(0, 10), valor: v.total, descricao: "" }));
+  const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({
+    data: v.created_at.slice(0, 10),
+    valor: valorLiquidoPorVenda.get(v.id) ?? v.total,
+    descricao: "",
+  }));
   const entradas = [...entradasOs, ...entradasPdv];
 
   const saidasDespesas: MovimentoDatado[] = (despesas ?? []).map((d) => ({
@@ -156,7 +180,7 @@ export async function GET(request: Request) {
       const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
       return acc + (os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado);
     }, 0);
-    const totalPdv = pdvDoMes.reduce((acc, v) => acc + v.total, 0);
+    const totalPdv = pdvDoMes.reduce((acc, v) => acc + (valorLiquidoPorVenda.get(v.id) ?? v.total), 0);
     return { forma, label: formaPagamentoLabel[forma] ?? forma, valor: totalOs + totalPdv };
   }).filter((f) => f.valor > 0);
 
