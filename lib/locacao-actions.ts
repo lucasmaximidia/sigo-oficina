@@ -396,3 +396,29 @@ export async function deleteAjusteCaixa(id: string) {
   if (error) throw new Error(error.message);
   revalidarLocacao();
 }
+
+// ---------- Outras entradas ----------
+
+export async function createOutraEntrada(formData: FormData) {
+  const supabase = await createClient();
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+
+  const { error } = await supabase.from("locacao_outras_entradas").insert({
+    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    descricao,
+    categoria: strUp(formData, "categoria"),
+    forma_pagamento: str(formData, "forma_pagamento") as LocacaoFormaPagamento | null,
+    valor: num(formData, "valor"),
+    observacoes: str(formData, "observacoes"),
+  });
+  if (error) throw new Error(error.message);
+  revalidarLocacao();
+}
+
+export async function deleteOutraEntrada(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("locacao_outras_entradas").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidarLocacao();
+}

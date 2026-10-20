@@ -10,6 +10,8 @@ import { DespesaDeleteButton } from "@/components/locacao/despesa-delete-button"
 import { CaixaConfigDialog } from "@/components/locacao/caixa-config-dialog";
 import { AjusteCaixaDialog } from "@/components/locacao/ajuste-caixa-dialog";
 import { AjusteCaixaDeleteButton } from "@/components/locacao/ajuste-caixa-delete-button";
+import { OutraEntradaDialog } from "@/components/locacao/outra-entrada-dialog";
+import { OutraEntradaDeleteButton } from "@/components/locacao/outra-entrada-delete-button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -25,19 +27,27 @@ export default async function LocacaoFinanceiroPage() {
   const supabase = await createClient();
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
 
-  const [{ data: alugueisPagosMes }, { data: despesas }, { data: veiculos }, saldoCaixa, { data: ajustes }] =
-    await Promise.all([
-      supabase.from("locacao_alugueis").select("valor_pago").eq("status_pagamento", "pago").gte("data_pagamento", inicioMes),
-      supabase
-        .from("locacao_despesas")
-        .select("*, locacao_veiculos(marca, modelo)")
-        .order("data", { ascending: false }),
-      supabase.from("locacao_veiculos").select("id, marca, modelo").order("marca", { ascending: true }),
-      getSaldoEmCaixa(supabase),
-      supabase.from("locacao_ajustes_caixa").select("*").order("data", { ascending: false }),
-    ]);
+  const [
+    { data: alugueisPagosMes },
+    { data: despesas },
+    { data: veiculos },
+    saldoCaixa,
+    { data: ajustes },
+    { data: outrasEntradas },
+  ] = await Promise.all([
+    supabase.from("locacao_alugueis").select("valor_pago").eq("status_pagamento", "pago").gte("data_pagamento", inicioMes),
+    supabase
+      .from("locacao_despesas")
+      .select("*, locacao_veiculos(marca, modelo)")
+      .order("data", { ascending: false }),
+    supabase.from("locacao_veiculos").select("id, marca, modelo").order("marca", { ascending: true }),
+    getSaldoEmCaixa(supabase),
+    supabase.from("locacao_ajustes_caixa").select("*").order("data", { ascending: false }),
+    supabase.from("locacao_outras_entradas").select("*").order("data", { ascending: false }),
+  ]);
 
-  const entradasMes = (alugueisPagosMes ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
+  const outrasEntradasMes = (outrasEntradas ?? []).filter((e) => e.data >= inicioMes).reduce((acc, r) => acc + r.valor, 0);
+  const entradasMes = (alugueisPagosMes ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0) + outrasEntradasMes;
   const despesasMes = (despesas ?? []).filter((d) => d.data >= inicioMes);
   const saidasMes = despesasMes.reduce((acc, r) => acc + r.valor, 0);
   const saldoMes = entradasMes - saidasMes;
@@ -95,6 +105,34 @@ export default async function LocacaoFinanceiroPage() {
         </div>
         {(ajustes ?? []).length === 0 && (
           <EmptyState icon={<ScrollText className="size-5" />} title="Nenhum ajuste registrado" className="py-6" />
+        )}
+      </Card>
+
+      <Card className="mb-6 p-0">
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <p className="text-sm font-semibold text-foreground">Outras entradas</p>
+          <OutraEntradaDialog />
+        </div>
+        <div className="flex flex-col divide-y divide-border">
+          {(outrasEntradas ?? []).map((e) => (
+            <div key={e.id} className="flex items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">{e.descricao}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(e.data)}
+                  {e.categoria ? ` · ${e.categoria}` : ""}
+                  {e.forma_pagamento ? ` · ${FORMA_LABEL[e.forma_pagamento] ?? e.forma_pagamento}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-success">+{formatCurrency(e.valor)}</p>
+                <OutraEntradaDeleteButton id={e.id} />
+              </div>
+            </div>
+          ))}
+        </div>
+        {(outrasEntradas ?? []).length === 0 && (
+          <EmptyState icon={<ArrowUpCircle className="size-5" />} title="Nenhuma outra entrada registrada" className="py-6" />
         )}
       </Card>
 

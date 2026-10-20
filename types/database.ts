@@ -1448,6 +1448,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_outras_entradas: {
+        Row: {
+          id: string;
+          data: string;
+          descricao: string;
+          categoria: string | null;
+          forma_pagamento: LocacaoFormaPagamento | null;
+          valor: number;
+          observacoes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          data?: string;
+          descricao: string;
+          categoria?: string | null;
+          forma_pagamento?: LocacaoFormaPagamento | null;
+          valor?: number;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          data?: string;
+          descricao?: string;
+          categoria?: string | null;
+          forma_pagamento?: LocacaoFormaPagamento | null;
+          valor?: number;
+          observacoes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       vw_garantias: {

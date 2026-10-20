@@ -17,19 +17,24 @@ export async function getSaldoEmCaixa(supabase: Awaited<ReturnType<typeof create
   let pagosQuery = supabase.from("locacao_alugueis").select("valor_pago").eq("status_pagamento", "pago");
   let despesasQuery = supabase.from("locacao_despesas").select("valor");
   let ajustesQuery = supabase.from("locacao_ajustes_caixa").select("valor");
+  let outrasEntradasQuery = supabase.from("locacao_outras_entradas").select("valor");
   if (dataInicio) {
     pagosQuery = pagosQuery.gte("data_pagamento", dataInicio);
     despesasQuery = despesasQuery.gte("data", dataInicio);
     ajustesQuery = ajustesQuery.gte("data", dataInicio);
+    outrasEntradasQuery = outrasEntradasQuery.gte("data", dataInicio);
   }
 
-  const [{ data: pagos }, { data: despesas }, { data: ajustes }] = await Promise.all([
+  const [{ data: pagos }, { data: despesas }, { data: ajustes }, { data: outrasEntradas }] = await Promise.all([
     pagosQuery,
     despesasQuery,
     ajustesQuery,
+    outrasEntradasQuery,
   ]);
 
-  const entradas = (pagos ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
+  const entradasAlugueis = (pagos ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
+  const entradasOutras = (outrasEntradas ?? []).reduce((acc, r) => acc + r.valor, 0);
+  const entradas = entradasAlugueis + entradasOutras;
   const saidas = (despesas ?? []).reduce((acc, r) => acc + r.valor, 0);
   const ajustesTotal = (ajustes ?? []).reduce((acc, r) => acc + r.valor, 0);
 
@@ -38,6 +43,8 @@ export async function getSaldoEmCaixa(supabase: Awaited<ReturnType<typeof create
     saldoInicial,
     dataInicio,
     entradas,
+    entradasAlugueis,
+    entradasOutras,
     saidas,
     ajustesTotal,
   };
