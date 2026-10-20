@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NovoClienteDialog } from "@/components/clientes/novo-cliente-dialog";
 import { ClienteCombobox } from "@/components/clientes/cliente-combobox";
 import { updateAgendaEvento } from "@/lib/actions";
+import { dataBR } from "@/lib/utils";
 import { agendaStatusMap } from "@/lib/status";
 import type { AgendaEvento, AgendaStatus, Cliente } from "@/types";
 
@@ -35,7 +36,7 @@ export function EditarAgendamentoDialog({
   const [isPending, startTransition] = useTransition();
 
   const inicio = new Date(evento.data_hora_inicio);
-  const dataDefault = evento.data_hora_inicio.slice(0, 10);
+  const dataDefault = dataBR(evento.data_hora_inicio);
   const horaDefault = inicio.toTimeString().slice(0, 5);
 
   function handleSubmit(formData: FormData) {

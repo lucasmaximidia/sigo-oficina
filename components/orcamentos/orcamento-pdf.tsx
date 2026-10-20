@@ -1,4 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+import { formatDate as formatDatePdf } from "@/lib/utils";
 import type { Orcamento, OrcamentoItem, Configuracao } from "@/types";
 
 const cores = {
@@ -108,12 +109,6 @@ function formatCurrencyPdf(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
-function formatDatePdf(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
-    new Date(`${value}T00:00:00`)
-  );
-}
-
 export function OrcamentoPdf({
   orcamento,
   itens,
@@ -147,7 +142,7 @@ export function OrcamentoPdf({
           <View style={styles.tituloBloco}>
             <Text style={styles.titulo}>ORÇAMENTO</Text>
             <Text style={styles.numero}>#ORC-{String(orcamento.numero).padStart(4, "0")}</Text>
-            <Text style={styles.numero}>Emitido em {formatDatePdf(orcamento.created_at.slice(0, 10))}</Text>
+            <Text style={styles.numero}>Emitido em {formatDatePdf(orcamento.created_at)}</Text>
           </View>
         </View>
 

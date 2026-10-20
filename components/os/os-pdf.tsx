@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import type { OrdemServico, OsItem, OsMaoObraItem, Configuracao } from "@/types";
 import { osStatusMap, urgenciaMap } from "@/lib/status";
+import { formatDate as formatDatePdf } from "@/lib/utils";
 
 const cores = {
   primary: "#2542b8",
@@ -110,10 +111,6 @@ const styles = StyleSheet.create({
 
 function formatCurrencyPdf(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDatePdf(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(value));
 }
 
 export function OsPdf({

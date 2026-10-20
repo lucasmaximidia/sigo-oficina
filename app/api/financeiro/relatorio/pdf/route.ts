@@ -3,6 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
 import { RelatorioPdf, type RelatorioLinha } from "@/components/financeiro/relatorio-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
+import { dataBR } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -118,7 +119,7 @@ export async function GET(request: Request) {
       pecas_oficina_desc: itensOficina.map((i) => i.descricao).join(", ") || "—",
       valor_total: valorTotal,
       valor_com_desconto: Math.max(0, valorTotal - os.desconto),
-      data_pagamento: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
+      data_pagamento: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
       forma_pagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
     };
   });

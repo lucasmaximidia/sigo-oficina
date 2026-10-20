@@ -1,4 +1,5 @@
 import { Document, Page, View, Text, Image, Svg, Circle, Path, StyleSheet } from "@react-pdf/renderer";
+import { formatDate as formatDatePdf } from "@/lib/utils";
 import type { Configuracao } from "@/types";
 
 const cores = {
@@ -104,10 +105,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
 });
-
-function formatDatePdf(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T00:00:00`));
-}
 
 function SeloGarantia() {
   return (

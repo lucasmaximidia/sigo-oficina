@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { EtiquetaAutorizadaImage, ETIQUETA_AUTORIZADA_LARGURA } from "@/components/ordens-servico/etiqueta-autorizada-image";
 import { normalizarEtiquetaConfig, ETIQUETA_PX_POR_MM } from "@/lib/etiqueta-config";
-import { formatDate, slugify } from "@/lib/utils";
+import { formatDate, hojeBR, slugify } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,7 +75,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     loadGoogleFont("Montserrat", 700),
   ]);
 
-  const dataHoje = new Date().toISOString().slice(0, 10);
+  const dataHoje = hojeBR();
   const clienteSlug = slugify(os.clientes?.nome ?? "cliente") || "cliente";
   const nomeArquivo = `etiqueta-autorizada-${dataHoje}-${clienteSlug}.png`;
 

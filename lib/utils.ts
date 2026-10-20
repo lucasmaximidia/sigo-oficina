@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+const FUSO_BRASIL = "America/Sao_Paulo";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -13,18 +15,78 @@ export function formatCurrency(value: number) {
 }
 
 export function formatDate(value: string | Date) {
-  // Datas "puras" (YYYY-MM-DD, sem horário) precisam ser interpretadas no
-  // horário local — do contrário `new Date("2026-10-25")` vira meia-noite UTC,
-  // e em fusos atrás de UTC (ex: Brasil) isso exibe o dia anterior (24/10).
+  // Datas "puras" (YYYY-MM-DD, sem horário) são ancoradas explicitamente à
+  // meia-noite de Brasília (-03:00), em vez de depender do fuso do runtime —
+  // isso roda tanto no navegador quanto no servidor (UTC), e combinado com o
+  // timeZone fixo abaixo garante o mesmo dia nos dois lugares. Sem a âncora
+  // explícita, `new Date("2026-10-25")` vira meia-noite UTC, que ao formatar
+  // já fixando o fuso do Brasil viraria 24/10 (21h do dia anterior).
   const date =
     typeof value === "string"
-      ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value)
+      ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00-03:00` : value)
       : value;
+  // timeZone fixo: sem isso, um timestamp real (não uma data pura) formatado
+  // no servidor mostraria o dia em UTC, que diverge do dia no Brasil das
+  // ~21h à meia-noite (horário de Brasília).
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: FUSO_BRASIL,
   }).format(date);
+}
+
+// Data (YYYY-MM-DD) de um instante no fuso do Brasil — nunca faça
+// `algumTimestamptz.slice(0, 10)` pra extrair "a data" de um timestamp real:
+// isso pega o dia em UTC, que diverge do dia no Brasil todo dia das ~21h à
+// meia-noite (horário de Brasília) — ex.: uma venda feita às 23h vira
+// "amanhã" nesse fatiamento ingênuo.
+export function dataBR(instante: Date | string = new Date()): string {
+  const date = typeof instante === "string" ? new Date(instante) : instante;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: FUSO_BRASIL,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+// "Hoje" no fuso do Brasil, não no fuso do servidor — mesmo motivo do
+// dataBR() acima, aplicado ao instante atual.
+export function hojeBR(): string {
+  return dataBR();
+}
+
+// Ano/mês/dia atuais no fuso do Brasil (mês 1-indexado), para cálculos de
+// "mês atual" — mesmo motivo do hojeBR() acima.
+export function agoraBR(): { ano: number; mes: number; dia: number } {
+  const [ano, mes, dia] = hojeBR().split("-").map(Number);
+  return { ano, mes, dia };
+}
+
+// Meia-noite de um dia (YYYY-MM-DD) em Brasília, como instante UTC — para
+// filtrar colunas timestamptz pelo dia civil do Brasil. Um literal
+// "YYYY-MM-DDT00:00:00" sem offset enviado ao Postgres é interpretado no
+// fuso UTC da sessão, não no fuso do Brasil, o que desalinha a janela do dia
+// em 3 horas (ex.: um evento das 22h de hoje cairia em "amanhã").
+export function inicioDiaBR(dataIso: string): string {
+  return new Date(`${dataIso}T00:00:00-03:00`).toISOString();
+}
+
+// Soma (ou subtrai) dias a uma data "YYYY-MM-DD" em aritmética de calendário
+// pura (via Date.UTC), sem depender do fuso do runtime — ao contrário de
+// `Date.setDate()` num Date "local", que pode cair num dia diferente
+// dependendo do fuso em que o processo está rodando.
+export function diasAPartirDe(dataIso: string, dias: number): string {
+  const [ano, mes, dia] = dataIso.split("-").map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia + dias)).toISOString().slice(0, 10);
+}
+
+// Timestamp atual (ms). Só existe pra isolar a chamada impura `Date.now()`
+// para fora do corpo de Server Components — chamá-la direto ali dispara o
+// lint de pureza do React (react-hooks/purity).
+export function agoraMs(): number {
+  return Date.now();
 }
 
 export function formatPhoneBR(value: string) {
@@ -60,12 +122,15 @@ export function dataLembreteVencimento(vencimentoIso: string): string {
 
 export function formatDateTime(value: string | Date) {
   const date = typeof value === "string" ? new Date(value) : value;
+  // Mesmo motivo do timeZone fixo em formatDate(): sem isso, formatado no
+  // servidor (UTC) mostra dia/hora em UTC em vez de horário de Brasília.
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: FUSO_BRASIL,
   }).format(date);
 }
 

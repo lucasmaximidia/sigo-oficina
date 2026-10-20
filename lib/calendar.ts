@@ -1,3 +1,5 @@
+import { hojeBR } from "@/lib/utils";
+
 export interface CalendarDay {
   date: Date;
   iso: string;
@@ -10,7 +12,7 @@ export function buildMonthGrid(year: number, monthIndex: number): CalendarDay[] 
   const startWeekday = firstOfMonth.getDay();
   const gridStart = new Date(year, monthIndex, 1 - startWeekday);
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = hojeBR();
   const days: CalendarDay[] = [];
 
   for (let i = 0; i < 42; i++) {

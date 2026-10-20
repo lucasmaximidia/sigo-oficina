@@ -1,7 +1,16 @@
 import type { createClient } from "@/lib/supabase/server";
+import { agoraBR, dataBR } from "@/lib/utils";
 
+// Para colunas "date" puras (sem horário) — fatiar a string é seguro.
 function mesKey(dataStr: string) {
   return dataStr.slice(0, 7);
+}
+
+// Para colunas timestamptz (ex.: data_retirada) — nunca fatiar direto: o
+// valor vem em UTC, que diverge do mês civil do Brasil perto da virada do
+// mês entre ~21h e meia-noite (horário de Brasília).
+function mesKeyTimestamp(dataStr: string) {
+  return dataBR(dataStr).slice(0, 7);
 }
 
 function proximoMes(mes: string) {
@@ -47,7 +56,7 @@ export async function getRelatoriosLocacao(supabase: Awaited<ReturnType<typeof c
 
   const resumoPorMes = new Map<string, ResumoMensalAluguel>();
   for (const a of alugueis ?? []) {
-    const mes = mesKey(a.data_retirada);
+    const mes = mesKeyTimestamp(a.data_retirada);
     const atual = resumoPorMes.get(mes) ?? { mes, numeroAlugueis: 0, total: 0, recebido: 0, aReceber: 0 };
     atual.numeroAlugueis += 1;
     atual.total += a.valor;
@@ -87,8 +96,8 @@ export async function getRelatoriosLocacao(supabase: Awaited<ReturnType<typeof c
     ...ajustesPorMes.keys(),
   ]);
   if (dataInicio) todosMeses.add(mesKey(dataInicio));
-  const hoje = new Date();
-  todosMeses.add(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`);
+  const { ano: anoAtual, mes: mesAtual } = agoraBR();
+  todosMeses.add(`${anoAtual}-${String(mesAtual).padStart(2, "0")}`);
 
   let mesesOrdenados = [...todosMeses].sort();
   if (mesesOrdenados.length > 0) {

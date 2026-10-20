@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { hojeBR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export async function GET() {
     tabelas: tabelasComDados,
   };
 
-  const dataHoje = new Date().toISOString().slice(0, 10);
+  const dataHoje = hojeBR();
   return new NextResponse(JSON.stringify(backup, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",

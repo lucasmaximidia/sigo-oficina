@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { dataLembreteVencimento, formatCurrency } from "@/lib/utils";
+import { dataLembreteVencimento, diasAPartirDe, formatCurrency, hojeBR, inicioDiaBR } from "@/lib/utils";
 import { enviarPushParaTodos } from "@/lib/push";
 
 export const dynamic = "force-dynamic";
 
-const formatarHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+const formatarHora = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 
 async function avisarContasAVencer(
   supabase: ReturnType<typeof createServiceClient>,
@@ -14,9 +15,8 @@ async function avisarContasAVencer(
 ) {
   if (!ativo) return;
 
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const limiteLembreteStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + dias).toISOString().slice(0, 10);
+  const hojeStr = hojeBR();
+  const limiteLembreteStr = diasAPartirDe(hojeStr, dias);
 
   const [{ data: contasVencendo }, { data: contasParaLembrete }] = await Promise.all([
     supabase
@@ -54,15 +54,14 @@ async function avisarContasAVencer(
 async function avisarAgendaDoDia(supabase: ReturnType<typeof createServiceClient>, ativo: boolean) {
   if (!ativo) return;
 
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const amanhaStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1).toISOString().slice(0, 10);
+  const hojeStr = hojeBR();
+  const amanhaStr = diasAPartirDe(hojeStr, 1);
 
   const { data: eventos } = await supabase
     .from("agenda_eventos")
     .select("id, titulo, data_hora_inicio")
-    .gte("data_hora_inicio", `${hojeStr}T00:00:00`)
-    .lt("data_hora_inicio", `${amanhaStr}T00:00:00`)
+    .gte("data_hora_inicio", inicioDiaBR(hojeStr))
+    .lt("data_hora_inicio", inicioDiaBR(amanhaStr))
     .not("status", "in", "(concluido,cancelado)")
     .order("data_hora_inicio", { ascending: true });
 
@@ -80,16 +79,15 @@ async function avisarAgendaDoDia(supabase: ReturnType<typeof createServiceClient
 async function avisarDevolucoesLocacao(supabase: ReturnType<typeof createServiceClient>, ativo: boolean) {
   if (!ativo) return;
 
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const amanhaStr = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1).toISOString().slice(0, 10);
+  const hojeStr = hojeBR();
+  const amanhaStr = diasAPartirDe(hojeStr, 1);
 
   const { data: alugueis } = await supabase
     .from("locacao_alugueis")
     .select("id, data_prevista_devolucao, locacao_veiculos(marca, modelo), locacao_clientes(nome)")
     .is("data_devolucao_real", null)
-    .gte("data_prevista_devolucao", `${hojeStr}T00:00:00`)
-    .lt("data_prevista_devolucao", `${amanhaStr}T00:00:00`)
+    .gte("data_prevista_devolucao", inicioDiaBR(hojeStr))
+    .lt("data_prevista_devolucao", inicioDiaBR(amanhaStr))
     .order("data_prevista_devolucao", { ascending: true });
 
   if (!alugueis || alugueis.length === 0) return;

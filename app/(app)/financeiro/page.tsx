@@ -29,7 +29,7 @@ import { AjustesCaixaTab } from "@/components/financeiro/ajustes-caixa-tab";
 import { FretesTab } from "@/components/financeiro/fretes-tab";
 import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
 import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
-import { formatCurrency, cn } from "@/lib/utils";
+import { agoraBR, dataBR, diasAPartirDe, formatCurrency, hojeBR, cn } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
 import type { ParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
@@ -84,10 +84,8 @@ export const dynamic = "force-dynamic";
 
 export default async function FinanceiroPage() {
   const supabase = await createClient();
-  const hoje = new Date();
-  const hojeStr = hoje.toISOString().slice(0, 10);
-  const em7dias = new Date(hoje);
-  em7dias.setDate(em7dias.getDate() + 7);
+  const hojeStr = hojeBR();
+  const em7diasStr = diasAPartirDe(hojeStr, 7);
 
   const [
     { data: contas },
@@ -179,7 +177,7 @@ export default async function FinanceiroPage() {
       tipo: "os",
       origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
       cliente: os.clientes?.nome ?? "—",
-      data: os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : ""),
+      data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
       formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
       formaPagamentoChave: os.forma_pagamento ?? "outro",
       valor,
@@ -191,7 +189,7 @@ export default async function FinanceiroPage() {
     tipo: "pdv",
     origemLabel: `Venda #${String(venda.numero).padStart(4, "0")}`,
     cliente: venda.clientes?.nome ?? venda.cliente_nome_avulso ?? "Cliente avulso",
-    data: venda.created_at.slice(0, 10),
+    data: dataBR(venda.created_at),
     formaPagamento: formaPagamentoLabel[venda.forma_pagamento] ?? venda.forma_pagamento,
     formaPagamentoChave: venda.forma_pagamento,
     valor: valorLiquidoPorVenda.get(venda.id) ?? venda.total,
@@ -203,8 +201,10 @@ export default async function FinanceiroPage() {
     .reduce((acc, e) => acc + e.valor, 0);
 
   const entradasMesAtual = entradas.filter((e) => e.data.startsWith(hojeStr.slice(0, 7)));
-  const mesAnteriorData = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-  const mesAnteriorStr = mesAnteriorData.toISOString().slice(0, 7);
+  const { ano: anoAtual, mes: mesAtualNum } = agoraBR();
+  const mesAtualData = new Date(anoAtual, mesAtualNum - 1, 1);
+  const mesAnteriorData = new Date(anoAtual, mesAtualNum - 1 - 1, 1);
+  const mesAnteriorStr = `${mesAnteriorData.getFullYear()}-${String(mesAnteriorData.getMonth() + 1).padStart(2, "0")}`;
   const totalMesAnterior = entradas
     .filter((e) => e.data.startsWith(mesAnteriorStr))
     .reduce((acc, e) => acc + e.valor, 0);
@@ -213,14 +213,14 @@ export default async function FinanceiroPage() {
 
   const totalMaoObraNoMes = (osPagas ?? [])
     .filter((os) => {
-      const data = os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "");
+      const data = os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : "");
       return data.startsWith(hojeStr.slice(0, 7));
     })
     .reduce((acc, os) => acc + os.valor_mao_obra, 0);
 
   const mesesGrafico = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(hoje.getFullYear(), hoje.getMonth() - (5 - i), 1);
-    const chave = d.toISOString().slice(0, 7);
+    const d = new Date(anoAtual, mesAtualNum - 1 - (5 - i), 1);
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const label = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(d).replace(".", "");
     const valor = entradas.filter((e) => e.data.startsWith(chave)).reduce((acc, e) => acc + e.valor, 0);
     return { label: label.charAt(0).toUpperCase() + label.slice(1), valor };
@@ -248,7 +248,7 @@ export default async function FinanceiroPage() {
     .filter((f) => {
       const os = f.ordens_servico;
       if (!os || !os.forma_pagamento) return false;
-      const data = os.data_pagamento ?? (os.data_finalizacao ? os.data_finalizacao.slice(0, 10) : "");
+      const data = os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : "");
       return data.startsWith(mesAtual);
     })
     .reduce((acc, f) => acc + (f.ordens_servico?.valor_frete ?? 0) - f.valor_custo, 0);
@@ -257,7 +257,7 @@ export default async function FinanceiroPage() {
     (c) => c.status !== "pago" && c.vencimento <= hojeStr
   );
   const proximos7dias = (contas ?? []).filter(
-    (c) => c.status !== "pago" && c.vencimento > hojeStr && c.vencimento <= em7dias.toISOString().slice(0, 10)
+    (c) => c.status !== "pago" && c.vencimento > hojeStr && c.vencimento <= em7diasStr
   );
 
   const totalVencendo = vencendoHojeOuAtrasado.reduce((acc, c) => acc + c.valor, 0);
@@ -399,7 +399,7 @@ export default async function FinanceiroPage() {
               icon={TrendingUp}
               label="Faturamento do mês"
               value={formatCurrency(totalRecebidoNoMes)}
-              hint={new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(hoje)}
+              hint={new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(mesAtualData)}
             />
             <StatCard
               icon={variacaoMes !== null && variacaoMes < 0 ? ArrowDownRight : ArrowUpRight}

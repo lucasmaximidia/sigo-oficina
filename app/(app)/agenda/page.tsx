@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CalendarGrid, urgenciaBordaClass } from "@/components/agenda/calendar-grid";
-import { cn } from "@/lib/utils";
+import { agoraBR, cn, dataBR, diasAPartirDe, hojeBR, inicioDiaBR } from "@/lib/utils";
 import { NovoAgendamentoDialog } from "@/components/agenda/novo-agendamento-dialog";
 import { EditarAgendamentoDialog } from "@/components/agenda/editar-agendamento-dialog";
 import { MarcarConcluidoButton } from "@/components/agenda/marcar-concluido-button";
@@ -27,14 +27,14 @@ export default async function AgendaPage({
 }) {
   const supabase = await createClient();
   const params = await searchParams;
-  const now = new Date();
-  const [yearStr, monthStr] = (params.month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`).split("-");
+  const { ano: anoAtualBR, mes: mesAtualBR } = agoraBR();
+  const [yearStr, monthStr] = (params.month ?? `${anoAtualBR}-${String(mesAtualBR).padStart(2, "0")}`).split("-");
   const year = Number(yearStr);
   const monthIndex = Number(monthStr) - 1;
   const monthParam = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
 
   const days = buildMonthGrid(year, monthIndex);
-  const selectedIso = params.day ?? now.toISOString().slice(0, 10);
+  const selectedIso = params.day ?? hojeBR();
 
   const rangeStart = days[0].iso;
   const rangeEnd = days[days.length - 1].iso;
@@ -43,15 +43,15 @@ export default async function AgendaPage({
     supabase
       .from("agenda_eventos")
       .select<string, AgendaEventoComCliente>("*, clientes(nome)")
-      .gte("data_hora_inicio", `${rangeStart}T00:00:00`)
-      .lte("data_hora_inicio", `${rangeEnd}T23:59:59`)
+      .gte("data_hora_inicio", inicioDiaBR(rangeStart))
+      .lt("data_hora_inicio", inicioDiaBR(diasAPartirDe(rangeEnd, 1)))
       .order("data_hora_inicio", { ascending: true }),
     supabase.from("clientes").select("id, nome").order("nome", { ascending: true }),
   ]);
 
   const eventosPorDia: Record<string, AgendaEventoComCliente[]> = {};
   for (const evento of eventosMes ?? []) {
-    const iso = evento.data_hora_inicio.slice(0, 10);
+    const iso = dataBR(evento.data_hora_inicio);
     eventosPorDia[iso] = eventosPorDia[iso] ? [...eventosPorDia[iso], evento] : [evento];
   }
 
@@ -118,7 +118,7 @@ export default async function AgendaPage({
                   key={evento.id}
                   className={cn(
                     "rounded-xl border border-l-[3px] border-border p-3",
-                    urgenciaBordaClass(selectedIso, new Date().toISOString().slice(0, 10), true)
+                    urgenciaBordaClass(selectedIso, hojeBR(), true)
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">

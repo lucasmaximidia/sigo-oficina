@@ -1,5 +1,6 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import { RELATORIO_COLUNAS, type RelatorioColuna } from "@/lib/relatorio-financeiro";
+import { formatDate as formatDatePdf } from "@/lib/utils";
 import type { Configuracao } from "@/types";
 
 const cores = {
@@ -63,10 +64,6 @@ const styles = StyleSheet.create({
 
 function formatCurrencyPdf(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDatePdf(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(`${value}T00:00:00`));
 }
 
 export interface RelatorioLinha {
