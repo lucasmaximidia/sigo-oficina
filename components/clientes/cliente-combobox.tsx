@@ -5,7 +5,6 @@ import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { Cliente } from "@/types";
 
 export function ClienteCombobox({
   clientes,
@@ -13,7 +12,9 @@ export function ClienteCombobox({
   onValueChange,
   placeholder = "Nenhum",
 }: {
-  clientes: Pick<Cliente, "id" | "nome">[];
+  // Genérico de propósito (não amarrado ao tipo Cliente da oficina) — também
+  // é usado pelo módulo de Locação, com os clientes de locacao_clientes.
+  clientes: { id: string; nome: string }[];
   value: string;
   onValueChange: (id: string) => void;
   placeholder?: string;
