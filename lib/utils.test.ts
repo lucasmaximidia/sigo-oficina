@@ -39,14 +39,19 @@ describe("formatDate", () => {
     expect(formatDate("2026-10-25")).toBe("25/10/2026");
   });
 
-  it("aceita um objeto Date diretamente", () => {
-    expect(formatDate(new Date(2026, 0, 5))).toBe("05/01/2026");
+  it("aceita um objeto Date diretamente, exibindo no fuso do Brasil", () => {
+    // Date.UTC(2026, 0, 5, 3, 0, 0) é exatamente meia-noite de 05/01/2026 em
+    // Brasília (UTC-3) — construído via UTC pra não depender do fuso da
+    // máquina que roda o teste.
+    expect(formatDate(new Date(Date.UTC(2026, 0, 5, 3, 0, 0)))).toBe("05/01/2026");
   });
 });
 
 describe("formatDateTime", () => {
-  it("formata data e hora", () => {
-    const resultado = formatDateTime("2026-03-15T14:30:00");
+  it("formata data e hora no fuso do Brasil", () => {
+    // Com offset explícito (-03:00) pra não depender do fuso da máquina que
+    // roda o teste — é assim que o Supabase devolve timestamptz.
+    const resultado = formatDateTime("2026-03-15T14:30:00-03:00");
     expect(resultado).toContain("15/03/2026");
     expect(resultado).toContain("14:30");
   });
