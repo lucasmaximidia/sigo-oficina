@@ -1,5 +1,6 @@
 import { Wallet, Clock, AlertTriangle, Bike } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getSaldoEmCaixa } from "@/lib/locacao-caixa";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { VeiculosGrid } from "@/components/locacao/veiculos-grid";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function LocacaoPage() {
   const supabase = await createClient();
 
-  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: despesasMes }, { data: kmFinais }] =
+  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: kmFinais }, saldoCaixa] =
     await Promise.all([
       supabase.from("locacao_veiculos").select("*").order("created_at", { ascending: true }),
       supabase
@@ -22,11 +23,8 @@ export default async function LocacaoPage() {
         )
         .is("data_devolucao_real", null),
       supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
-      supabase
-        .from("locacao_despesas")
-        .select("valor")
-        .gte("data", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)),
       supabase.from("locacao_alugueis").select("veiculo_id, km_fim").not("km_fim", "is", null),
+      getSaldoEmCaixa(supabase),
     ]);
 
   const kmPorVeiculo: Record<string, number> = {};
@@ -58,16 +56,6 @@ export default async function LocacaoPage() {
     if (prevista.getTime() < hoje.getTime()) emAtraso += 1;
   }
 
-  const { data: aluguéisPagosMes } = await supabase
-    .from("locacao_alugueis")
-    .select("valor_pago")
-    .eq("status_pagamento", "pago")
-    .gte("data_pagamento", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10));
-
-  const entradasMes = (aluguéisPagosMes ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
-  const saidasMes = (despesasMes ?? []).reduce((acc, r) => acc + r.valor, 0);
-  const saldoMes = entradasMes - saidasMes;
-
   return (
     <div>
       <PageHeader
@@ -79,9 +67,9 @@ export default async function LocacaoPage() {
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={Wallet}
-          label="Saldo do mês"
-          value={formatCurrency(saldoMes)}
-          tone={saldoMes >= 0 ? "success" : "danger"}
+          label="Saldo em caixa"
+          value={formatCurrency(saldoCaixa.saldo)}
+          tone={saldoCaixa.saldo >= 0 ? "success" : "danger"}
         />
         <StatCard icon={Clock} label="A receber" value={formatCurrency(aReceber)} tone="highlight" />
         <StatCard icon={AlertTriangle} label="Em atraso" value={emAtraso} tone={emAtraso > 0 ? "danger" : "default"} />

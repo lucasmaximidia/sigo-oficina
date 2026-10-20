@@ -202,6 +202,79 @@ export async function criarAluguel(input: {
   revalidarLocacao();
 }
 
+export async function atualizarAluguel(
+  id: string,
+  input: {
+    veiculoId: string;
+    clienteId: string;
+    dataRetirada: string;
+    dataPrevistaDevolucao: string;
+    valor: number;
+    formaPagamento: LocacaoFormaPagamento;
+    statusPagamento: LocacaoStatusPagamento;
+    valorPago: number;
+    dataPagamento?: string | null;
+    kmInicio?: number | null;
+    kmFim?: number | null;
+    observacoes?: string | null;
+  }
+) {
+  const supabase = await createClient();
+
+  const { data: atual } = await supabase
+    .from("locacao_alugueis")
+    .select("veiculo_id, data_devolucao_real")
+    .eq("id", id)
+    .single();
+  if (!atual) throw new Error("Aluguel não encontrado");
+
+  const estaAberto = !atual.data_devolucao_real;
+  const veiculoMudou = atual.veiculo_id !== input.veiculoId;
+
+  if (estaAberto && veiculoMudou) {
+    const { data: novoVeiculo } = await supabase
+      .from("locacao_veiculos")
+      .select("status")
+      .eq("id", input.veiculoId)
+      .single();
+    if (!novoVeiculo) throw new Error("Veículo não encontrado");
+    if (novoVeiculo.status !== "disponivel") throw new Error("O novo veículo não está disponível");
+  }
+
+  const { error } = await supabase
+    .from("locacao_alugueis")
+    .update({
+      veiculo_id: input.veiculoId,
+      cliente_id: input.clienteId,
+      data_retirada: input.dataRetirada,
+      data_prevista_devolucao: input.dataPrevistaDevolucao,
+      valor: input.valor,
+      forma_pagamento: input.formaPagamento,
+      status_pagamento: input.statusPagamento,
+      valor_pago: input.valorPago,
+      data_pagamento: input.dataPagamento ?? null,
+      km_inicio: input.kmInicio ?? null,
+      km_fim: input.kmFim ?? null,
+      observacoes: input.observacoes ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  if (estaAberto && veiculoMudou) {
+    await supabase
+      .from("locacao_veiculos")
+      .update({ status: "disponivel", updated_at: new Date().toISOString() })
+      .eq("id", atual.veiculo_id);
+    await supabase
+      .from("locacao_veiculos")
+      .update({ status: "alugado", updated_at: new Date().toISOString() })
+      .eq("id", input.veiculoId);
+  }
+
+  revalidarLocacao();
+}
+
 export async function registrarDevolucao(
   aluguelId: string,
   veiculoId: string,
@@ -279,6 +352,47 @@ export async function createDespesa(formData: FormData) {
 export async function deleteDespesa(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("locacao_despesas").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidarLocacao();
+}
+
+// ---------- Caixa (saldo inicial + ajustes) ----------
+
+export async function updateLocacaoConfig(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("locacao_config")
+    .update({
+      saldo_inicial: num(formData, "saldo_inicial"),
+      data_inicio_caixa: str(formData, "data_inicio_caixa"),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+  if (error) throw new Error(error.message);
+  revalidarLocacao();
+}
+
+export async function createAjusteCaixa(formData: FormData) {
+  const supabase = await createClient();
+  const motivo = strUp(formData, "motivo");
+  if (!motivo) throw new Error("Motivo é obrigatório");
+
+  const valorAbs = num(formData, "valor");
+  const tipo = str(formData, "tipo");
+  const valor = tipo === "sai" ? -Math.abs(valorAbs) : Math.abs(valorAbs);
+
+  const { error } = await supabase.from("locacao_ajustes_caixa").insert({
+    data: str(formData, "data") ?? new Date().toISOString().slice(0, 10),
+    motivo,
+    valor,
+  });
+  if (error) throw new Error(error.message);
+  revalidarLocacao();
+}
+
+export async function deleteAjusteCaixa(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("locacao_ajustes_caixa").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidarLocacao();
 }
