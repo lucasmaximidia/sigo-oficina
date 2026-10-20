@@ -35,7 +35,7 @@ export default async function LocacaoAlugueisPage({
   let query = supabase
     .from("locacao_alugueis")
     .select(
-      "id, numero, data_retirada, data_prevista_devolucao, data_devolucao_real, valor, valor_pago, forma_pagamento, status_pagamento, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome)"
+      "id, numero, data_retirada, data_prevista_devolucao, data_devolucao_real, valor, valor_pago, forma_pagamento, status_pagamento, km_inicio, km_fim, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome)"
     )
     .order("data_retirada", { ascending: false });
 
@@ -93,7 +93,11 @@ export default async function LocacaoAlugueisPage({
                   {veiculo ? `${veiculo.marca} ${veiculo.modelo} · ${veiculo.chassi}` : "Veículo"} · Retirada{" "}
                   {formatDate(a.data_retirada)} · Devolução {a.data_devolucao_real ? formatDate(a.data_devolucao_real) : `prevista ${formatDate(a.data_prevista_devolucao)}`}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{FORMA_LABEL[a.forma_pagamento] ?? a.forma_pagamento}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {FORMA_LABEL[a.forma_pagamento] ?? a.forma_pagamento}
+                  {a.km_inicio != null &&
+                    ` · ${a.km_fim != null ? `${a.km_fim - a.km_inicio} km rodados (${a.km_inicio} → ${a.km_fim})` : `saiu com ${a.km_inicio} km`}`}
+                </p>
               </div>
 
               <div className="flex items-center gap-3">

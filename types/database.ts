@@ -1312,6 +1312,8 @@ export interface Database {
           status_pagamento: LocacaoStatusPagamento;
           valor_pago: number;
           data_pagamento: string | null;
+          km_inicio: number | null;
+          km_fim: number | null;
           observacoes: string | null;
           created_at: string;
           updated_at: string;
@@ -1329,6 +1331,8 @@ export interface Database {
           status_pagamento?: LocacaoStatusPagamento;
           valor_pago?: number;
           data_pagamento?: string | null;
+          km_inicio?: number | null;
+          km_fim?: number | null;
           observacoes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1346,6 +1350,8 @@ export interface Database {
           status_pagamento?: LocacaoStatusPagamento;
           valor_pago?: number;
           data_pagamento?: string | null;
+          km_inicio?: number | null;
+          km_fim?: number | null;
           observacoes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1361,6 +1367,8 @@ export interface Database {
           fornecedor: string | null;
           forma_pagamento: LocacaoFormaPagamento | null;
           valor: number;
+          veiculo_id: string | null;
+          km: number | null;
           observacoes: string | null;
           created_at: string;
         };
@@ -1372,6 +1380,8 @@ export interface Database {
           fornecedor?: string | null;
           forma_pagamento?: LocacaoFormaPagamento | null;
           valor?: number;
+          veiculo_id?: string | null;
+          km?: number | null;
           observacoes?: string | null;
           created_at?: string;
         };
@@ -1383,6 +1393,8 @@ export interface Database {
           fornecedor?: string | null;
           forma_pagamento?: LocacaoFormaPagamento | null;
           valor?: number;
+          veiculo_id?: string | null;
+          km?: number | null;
           observacoes?: string | null;
           created_at?: string;
         };

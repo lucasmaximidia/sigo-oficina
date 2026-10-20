@@ -7,10 +7,12 @@ import type { LocacaoVeiculo } from "@/types";
 export function VeiculosGrid({
   veiculos,
   alugueisPorVeiculo,
+  kmPorVeiculo,
   clientes,
 }: {
   veiculos: LocacaoVeiculo[];
   alugueisPorVeiculo: Record<string, AluguelAtivo>;
+  kmPorVeiculo: Record<string, number>;
   clientes: { id: string; nome: string }[];
 }) {
   return (
@@ -20,6 +22,7 @@ export function VeiculosGrid({
           key={veiculo.id}
           veiculo={veiculo}
           aluguel={alugueisPorVeiculo[veiculo.id] ?? null}
+          kmAtual={kmPorVeiculo[veiculo.id] ?? null}
           clientes={clientes}
         />
       ))}

@@ -17,6 +17,12 @@ function num(fd: FormData, key: string) {
   const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : NaN;
   return Number.isFinite(n) ? n : 0;
 }
+function intOuNull(fd: FormData, key: string) {
+  const v = fd.get(key);
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+}
 
 function revalidarLocacao() {
   revalidatePath("/locacao");
@@ -142,6 +148,7 @@ export async function criarAluguel(input: {
   valor: number;
   formaPagamento: LocacaoFormaPagamento;
   statusPagamento: LocacaoStatusPagamento;
+  kmInicio?: number | null;
   observacoes?: string | null;
 }) {
   const supabase = await createClient();
@@ -179,6 +186,7 @@ export async function criarAluguel(input: {
     status_pagamento: input.statusPagamento,
     valor_pago: input.statusPagamento === "pago" ? input.valor : 0,
     data_pagamento: input.statusPagamento === "pago" ? new Date().toISOString().slice(0, 10) : null,
+    km_inicio: input.kmInicio ?? null,
     observacoes: input.observacoes ?? null,
   });
   if (aluguelError) throw new Error(aluguelError.message);
@@ -195,13 +203,18 @@ export async function criarAluguel(input: {
 export async function registrarDevolucao(
   aluguelId: string,
   veiculoId: string,
-  novoStatusVeiculo: "disponivel" | "manutencao"
+  novoStatusVeiculo: "disponivel" | "manutencao",
+  kmFim?: number | null
 ) {
   const supabase = await createClient();
 
   const { error: aluguelError } = await supabase
     .from("locacao_alugueis")
-    .update({ data_devolucao_real: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({
+      data_devolucao_real: new Date().toISOString(),
+      km_fim: kmFim ?? null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", aluguelId);
   if (aluguelError) throw new Error(aluguelError.message);
 
@@ -253,6 +266,8 @@ export async function createDespesa(formData: FormData) {
     fornecedor: strUp(formData, "fornecedor"),
     forma_pagamento: str(formData, "forma_pagamento") as LocacaoFormaPagamento | null,
     valor: num(formData, "valor"),
+    veiculo_id: str(formData, "veiculo_id") === "nenhum" ? null : str(formData, "veiculo_id"),
+    km: intOuNull(formData, "km"),
     observacoes: str(formData, "observacoes"),
   });
   if (error) throw new Error(error.message);

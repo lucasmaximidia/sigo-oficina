@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Bike, Scooter, CalendarClock, AlertTriangle, User, Wrench, PlayCircle, Zap } from "lucide-react";
+import { Bike, Scooter, CalendarClock, AlertTriangle, User, Wrench, PlayCircle, Zap, Gauge } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
 import { AlugarDialog } from "@/components/locacao/alugar-dialog";
 import { DevolverDialog } from "@/components/locacao/devolver-dialog";
 import { updateVeiculoStatus } from "@/lib/locacao-actions";
+import { corVeiculo } from "@/lib/locacao-cores";
 import { cn } from "@/lib/utils";
 import type { LocacaoVeiculo } from "@/types";
 
@@ -17,6 +18,7 @@ export interface AluguelAtivo {
   data_retirada: string;
   data_prevista_devolucao: string;
   status_pagamento: string;
+  km_inicio: number | null;
 }
 
 const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning" | "secondary" | "info" }> = {
@@ -25,44 +27,6 @@ const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning
   manutencao: { label: "Manutenção", variant: "warning" },
   inativo: { label: "Inativo", variant: "secondary" },
 };
-
-// Pinta o emblema do veículo com a cor real cadastrada, pra cada card ficar
-// visualmente diferente e reconhecível à primeira vista (em vez de todos os
-// cards terem o mesmo emblema neutro) — cai pro gradiente da marca quando a
-// cor não é reconhecida ou não foi informada.
-const CORES_VEICULO: Record<string, { bg: string; fg: string }> = {
-  preto: { bg: "#111827", fg: "#ffffff" },
-  preta: { bg: "#111827", fg: "#ffffff" },
-  branco: { bg: "#f1f5f9", fg: "#334155" },
-  branca: { bg: "#f1f5f9", fg: "#334155" },
-  cinza: { bg: "#6b7280", fg: "#ffffff" },
-  grafite: { bg: "#374151", fg: "#ffffff" },
-  prata: { bg: "#94a3b8", fg: "#1e293b" },
-  vermelho: { bg: "#dc2626", fg: "#ffffff" },
-  vermelha: { bg: "#dc2626", fg: "#ffffff" },
-  azul: { bg: "#2563eb", fg: "#ffffff" },
-  verde: { bg: "#16a34a", fg: "#ffffff" },
-  amarelo: { bg: "#eab308", fg: "#422006" },
-  amarela: { bg: "#eab308", fg: "#422006" },
-  laranja: { bg: "#ea580c", fg: "#ffffff" },
-  roxo: { bg: "#9333ea", fg: "#ffffff" },
-  roxa: { bg: "#9333ea", fg: "#ffffff" },
-  rosa: { bg: "#ec4899", fg: "#ffffff" },
-  marrom: { bg: "#78350f", fg: "#ffffff" },
-  dourado: { bg: "#ca8a04", fg: "#422006" },
-  dourada: { bg: "#ca8a04", fg: "#422006" },
-};
-
-function corVeiculo(cor: string | null) {
-  if (!cor) return null;
-  const chave = cor
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .split(/\s+/)[0];
-  return CORES_VEICULO[chave] ?? null;
-}
 
 function diasRestantes(dataPrevista: string) {
   const hoje = new Date();
@@ -76,10 +40,12 @@ export function VeiculoCard({
   veiculo,
   aluguel,
   clientes,
+  kmAtual,
 }: {
   veiculo: LocacaoVeiculo;
   aluguel: AluguelAtivo | null;
   clientes: { id: string; nome: string }[];
+  kmAtual?: number | null;
 }) {
   const [alugarOpen, setAlugarOpen] = useState(false);
   const [devolverOpen, setDevolverOpen] = useState(false);
@@ -152,9 +118,23 @@ export function VeiculoCard({
               Pagamento pendente
             </Badge>
           )}
+          {aluguel.km_inicio != null && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Gauge className="size-3.5" />
+              Saiu com {aluguel.km_inicio} km
+            </div>
+          )}
         </div>
       ) : (
-        veiculo.observacoes && <p className="text-xs text-muted-foreground">{veiculo.observacoes}</p>
+        <>
+          {veiculo.observacoes && <p className="text-xs text-muted-foreground">{veiculo.observacoes}</p>}
+          {kmAtual != null && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Gauge className="size-3.5" />
+              {kmAtual} km rodados
+            </div>
+          )}
+        </>
       )}
 
       <div className="mt-auto flex gap-2 pt-1">
@@ -184,10 +164,22 @@ export function VeiculoCard({
       </div>
 
       {veiculo.status === "disponivel" && (
-        <AlugarDialog veiculo={veiculo} clientes={clientes} open={alugarOpen} onOpenChange={setAlugarOpen} />
+        <AlugarDialog
+          veiculo={veiculo}
+          clientes={clientes}
+          kmAtual={kmAtual}
+          open={alugarOpen}
+          onOpenChange={setAlugarOpen}
+        />
       )}
       {aluguel && (
-        <DevolverDialog aluguelId={aluguel.id} veiculoId={veiculo.id} open={devolverOpen} onOpenChange={setDevolverOpen} />
+        <DevolverDialog
+          aluguelId={aluguel.id}
+          veiculoId={veiculo.id}
+          kmInicio={aluguel.km_inicio}
+          open={devolverOpen}
+          onOpenChange={setDevolverOpen}
+        />
       )}
     </div>
   );
