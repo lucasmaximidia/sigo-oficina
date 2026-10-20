@@ -68,3 +68,28 @@ export function formatDateTime(value: string | Date) {
     minute: "2-digit",
   }).format(date);
 }
+
+// Identificação amigável de um dispositivo a partir do seu user-agent, pra
+// listar assinaturas de notificação push sem mostrar nada técnico — é uma
+// leitura aproximada (suficiente pra diferenciar "o celular" do
+// "computador da loja"), não uma detecção precisa de navegador.
+export function descreverDispositivo(userAgent: string | null): string {
+  if (!userAgent) return "Dispositivo";
+  const ua = userAgent;
+  let sistema = "Dispositivo";
+  if (/iphone/i.test(ua)) sistema = "iPhone";
+  else if (/ipad/i.test(ua)) sistema = "iPad";
+  else if (/android/i.test(ua)) sistema = "Android";
+  else if (/mac os/i.test(ua)) sistema = "Mac";
+  else if (/windows/i.test(ua)) sistema = "Windows";
+  else if (/linux/i.test(ua)) sistema = "Linux";
+
+  let navegador = "";
+  if (/edg\//i.test(ua)) navegador = "Edge";
+  else if (/chrome\//i.test(ua)) navegador = "Chrome";
+  else if (/crios\//i.test(ua)) navegador = "Chrome";
+  else if (/firefox\//i.test(ua)) navegador = "Firefox";
+  else if (/safari\//i.test(ua)) navegador = "Safari";
+
+  return navegador ? `${sistema} · ${navegador}` : sistema;
+}

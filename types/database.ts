@@ -979,6 +979,8 @@ export interface Database {
           nfse_codigo_servico: string | null;
           nfse_descricao_padrao: string;
           nfse_aliquota_iss: number | null;
+          push_contas_vencer_ativo: boolean;
+          push_contas_vencer_dias: number;
           updated_at: string;
         };
         Insert: {
@@ -1014,6 +1016,8 @@ export interface Database {
           nfse_codigo_servico?: string | null;
           nfse_descricao_padrao?: string;
           nfse_aliquota_iss?: number | null;
+          push_contas_vencer_ativo?: boolean;
+          push_contas_vencer_dias?: number;
           updated_at?: string;
         };
         Update: {
@@ -1049,6 +1053,8 @@ export interface Database {
           nfse_codigo_servico?: string | null;
           nfse_descricao_padrao?: string;
           nfse_aliquota_iss?: number | null;
+          push_contas_vencer_ativo?: boolean;
+          push_contas_vencer_dias?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -1186,6 +1192,7 @@ export interface Database {
           endpoint: string;
           p256dh: string;
           auth: string;
+          user_agent: string | null;
           created_at: string;
         };
         Insert: {
@@ -1194,6 +1201,7 @@ export interface Database {
           endpoint: string;
           p256dh: string;
           auth: string;
+          user_agent?: string | null;
           created_at?: string;
         };
         Update: {
@@ -1202,6 +1210,7 @@ export interface Database {
           endpoint?: string;
           p256dh?: string;
           auth?: string;
+          user_agent?: string | null;
           created_at?: string;
         };
         Relationships: [];
