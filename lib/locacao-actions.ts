@@ -49,6 +49,7 @@ export async function createVeiculo(formData: FormData) {
     chassi,
     valor_diaria: num(formData, "valor_diaria") || null,
     observacoes: str(formData, "observacoes"),
+    foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
   });
   if (error) throw new Error(error.message.includes("unique") ? "Já existe um veículo com esse chassi" : error.message);
   revalidarLocacao();
@@ -66,6 +67,7 @@ export async function updateVeiculo(id: string, formData: FormData) {
       chassi: str(formData, "chassi") ?? undefined,
       valor_diaria: num(formData, "valor_diaria") || null,
       observacoes: str(formData, "observacoes"),
+      foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

@@ -21,6 +21,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { createVeiculo, updateVeiculo } from "@/lib/locacao-actions";
 import type { LocacaoVeiculo } from "@/types";
 
+const FOTOS_DISPONIVEIS = [
+  { value: "/locacao/veiculos/maj-sport-701l-short.webp", label: "MAJ Sport 701L Short (laranja)" },
+  { value: "/locacao/veiculos/maj-v20-ultra.webp", label: "MAJ V20 Ultra (bicicleta)" },
+  { value: "/locacao/veiculos/maj-x15-pro.webp", label: "MAJ X15 Pro" },
+];
+
 export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -114,6 +120,22 @@ export function VeiculoDialog({ veiculo }: { veiculo?: LocacaoVeiculo }) {
               </Label>
               <NumericInput id="valor_diaria" name="valor_diaria" defaultValue={veiculo?.valor_diaria ?? undefined} />
             </div>
+          </div>
+          <div>
+            <Label className="mb-1.5 block">Foto</Label>
+            <Select name="foto_url" defaultValue={veiculo?.foto_url ?? "nenhuma"}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="locacao-theme">
+                <SelectItem value="nenhuma">Sem foto (ícone padrão)</SelectItem>
+                {FOTOS_DISPONIVEIS.map((foto) => (
+                  <SelectItem key={foto.value} value={foto.value}>
+                    {foto.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="observacoes" className="mb-1.5 block">

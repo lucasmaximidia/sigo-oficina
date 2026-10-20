@@ -1243,6 +1243,7 @@ export interface Database {
           status: LocacaoVeiculoStatus;
           valor_diaria: number | null;
           observacoes: string | null;
+          foto_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1256,6 +1257,7 @@ export interface Database {
           status?: LocacaoVeiculoStatus;
           valor_diaria?: number | null;
           observacoes?: string | null;
+          foto_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1269,6 +1271,7 @@ export interface Database {
           status?: LocacaoVeiculoStatus;
           valor_diaria?: number | null;
           observacoes?: string | null;
+          foto_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
