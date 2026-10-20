@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppShellSidebar } from "@/components/layout/app-shell-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
 import { PageTransition } from "@/components/layout/page-transition";
 import { LembreteContasToast } from "@/components/layout/lembrete-contas-toast";
@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex h-dvh overflow-hidden bg-background">
       <LembreteContasToast contas={contasLembreteHoje} />
       <ServiceWorkerRegister />
-      <AppSidebar />
+      <AppShellSidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppTopbar
           logoUrl={config?.logo_url ?? null}

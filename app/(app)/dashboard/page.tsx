@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { TarefasCard } from "@/components/dashboard/tarefas-card";
+import { LocacaoPainel, type AluguelPainel } from "@/components/dashboard/locacao-painel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -94,6 +95,8 @@ export default async function DashboardPage() {
     { data: agendaHoje },
     { data: agendaAmanha },
     { data: tarefas },
+    { count: locacaoVeiculosCount },
+    { data: locacaoAlugueisAbertos },
   ] = await Promise.all([
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_orcamento"),
     supabase.from("ordens_servico").select("id", { count: "exact", head: true }).eq("status", "aguardando_pecas"),
@@ -126,7 +129,35 @@ export default async function DashboardPage() {
       .lt("data_hora_inicio", `${amanhaStr}T23:59:59`)
       .order("data_hora_inicio", { ascending: true }),
     supabase.from("tarefas").select("*").eq("data", hojeStr).order("created_at", { ascending: true }),
+    supabase.from("locacao_veiculos").select("id", { count: "exact", head: true }),
+    supabase
+      .from("locacao_alugueis")
+      .select(
+        "id, data_prevista_devolucao, status_pagamento, locacao_veiculos(tipo, marca, modelo, cor), locacao_clientes(nome)"
+      )
+      .is("data_devolucao_real", null)
+      .order("data_prevista_devolucao", { ascending: true }),
   ]);
+
+  const alugueisPainel: AluguelPainel[] = (locacaoAlugueisAbertos ?? []).map((a) => {
+    const veiculo = a.locacao_veiculos as unknown as {
+      tipo: "scooter" | "bicicleta";
+      marca: string;
+      modelo: string;
+      cor: string | null;
+    } | null;
+    const cliente = a.locacao_clientes as unknown as { nome: string } | null;
+    return {
+      id: a.id,
+      veiculoTipo: veiculo?.tipo ?? "scooter",
+      veiculoMarca: veiculo?.marca ?? "",
+      veiculoModelo: veiculo?.modelo ?? "",
+      veiculoCor: veiculo?.cor ?? null,
+      clienteNome: cliente?.nome ?? "Cliente",
+      dataPrevistaDevolucao: a.data_prevista_devolucao,
+      statusPagamento: a.status_pagamento,
+    };
+  });
 
   const [{ data: vendasHoje }, { data: fretesPendentes }, { data: garantiasCriticas }, { count: orcamentosPendentes }] =
     await Promise.all([
@@ -187,6 +218,12 @@ export default async function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {(locacaoVeiculosCount ?? 0) > 0 && (
+        <div className="mt-4 lg:mt-6">
+          <LocacaoPainel alugueis={alugueisPainel} />
+        </div>
       )}
 
       {(mostrarAgenda || mostrarOsParadas || mostrarBoletosPendentes) && (

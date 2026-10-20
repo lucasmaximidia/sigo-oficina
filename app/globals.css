@@ -54,18 +54,18 @@
   --sidebar-active: #e9ecfa;
   --sidebar-active-foreground: #2542b8;
 
-  /* Identidade visual da Locação (VoltCity) — violeta "elétrico" com um
-     verde-limão de contraste, deliberadamente distante do azul da oficina
-     pra ler como uma área separada à primeira vista. */
-  --locacao-primary: #7c3aed;
-  --locacao-primary-hover: #6d28d9;
+  /* Identidade visual da Locação (VoltCity) — verde e preto, as cores reais
+     da marca (logo "VOLT" em verde + "CITY" em preto), deliberadamente
+     distante do azul da oficina pra ler como uma área separada. */
+  --locacao-primary: #16a34a;
+  --locacao-primary-hover: #15803d;
   --locacao-primary-foreground: #ffffff;
-  --locacao-accent: #f3e8ff;
-  --locacao-accent-foreground: #6d28d9;
-  --locacao-sidebar-active: #f3e8ff;
-  --locacao-sidebar-active-foreground: #6d28d9;
-  --locacao-spark: #84cc16;
-  --locacao-spark-foreground: #1a2e05;
+  --locacao-accent: #dcfce7;
+  --locacao-accent-foreground: #15803d;
+  --locacao-sidebar-active: #dcfce7;
+  --locacao-sidebar-active-foreground: #15803d;
+  --locacao-spark: #111827;
+  --locacao-spark-foreground: #ffffff;
 }
 
 .dark {
@@ -117,15 +117,15 @@
   --sidebar-active: #1c2246;
   --sidebar-active-foreground: #b9c6ff;
 
-  --locacao-primary: #a78bfa;
-  --locacao-primary-hover: #c4b5fd;
-  --locacao-primary-foreground: #1e1b4b;
-  --locacao-accent: #2e1065;
-  --locacao-accent-foreground: #ddd6fe;
-  --locacao-sidebar-active: #2e1065;
-  --locacao-sidebar-active-foreground: #ddd6fe;
-  --locacao-spark: #bef264;
-  --locacao-spark-foreground: #1a2e05;
+  --locacao-primary: #4ade80;
+  --locacao-primary-hover: #86efac;
+  --locacao-primary-foreground: #052e13;
+  --locacao-accent: #0f3d22;
+  --locacao-accent-foreground: #86efac;
+  --locacao-sidebar-active: #0f3d22;
+  --locacao-sidebar-active-foreground: #86efac;
+  --locacao-spark: #f1f5f9;
+  --locacao-spark-foreground: #111827;
 }
 
 /* Escopo de tema da Locação (VoltCity) — sobrescreve só os tokens de marca

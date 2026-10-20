@@ -12,18 +12,29 @@ export const dynamic = "force-dynamic";
 export default async function LocacaoPage() {
   const supabase = await createClient();
 
-  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: despesasMes }] = await Promise.all([
-    supabase.from("locacao_veiculos").select("*").order("created_at", { ascending: true }),
-    supabase
-      .from("locacao_alugueis")
-      .select("id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, locacao_clientes(nome)")
-      .is("data_devolucao_real", null),
-    supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
-    supabase
-      .from("locacao_despesas")
-      .select("valor")
-      .gte("data", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)),
-  ]);
+  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: despesasMes }, { data: kmFinais }] =
+    await Promise.all([
+      supabase.from("locacao_veiculos").select("*").order("created_at", { ascending: true }),
+      supabase
+        .from("locacao_alugueis")
+        .select(
+          "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, km_inicio, locacao_clientes(nome)"
+        )
+        .is("data_devolucao_real", null),
+      supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
+      supabase
+        .from("locacao_despesas")
+        .select("valor")
+        .gte("data", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)),
+      supabase.from("locacao_alugueis").select("veiculo_id, km_fim").not("km_fim", "is", null),
+    ]);
+
+  const kmPorVeiculo: Record<string, number> = {};
+  for (const a of kmFinais ?? []) {
+    if (a.km_fim != null && (kmPorVeiculo[a.veiculo_id] ?? 0) < a.km_fim) {
+      kmPorVeiculo[a.veiculo_id] = a.km_fim;
+    }
+  }
 
   const alugueisPorVeiculo: Record<string, AluguelAtivo> = {};
   let aReceber = 0;
@@ -39,6 +50,7 @@ export default async function LocacaoPage() {
       data_retirada: a.data_retirada,
       data_prevista_devolucao: a.data_prevista_devolucao,
       status_pagamento: a.status_pagamento,
+      km_inicio: a.km_inicio,
     };
     if (a.status_pagamento !== "pago") aReceber += a.valor;
     const prevista = new Date(a.data_prevista_devolucao);
@@ -76,7 +88,12 @@ export default async function LocacaoPage() {
         <StatCard icon={Bike} label="Aluguéis ativos" value={alugueisAbertos?.length ?? 0} />
       </div>
 
-      <VeiculosGrid veiculos={veiculos ?? []} alugueisPorVeiculo={alugueisPorVeiculo} clientes={clientes ?? []} />
+      <VeiculosGrid
+        veiculos={veiculos ?? []}
+        alugueisPorVeiculo={alugueisPorVeiculo}
+        kmPorVeiculo={kmPorVeiculo}
+        clientes={clientes ?? []}
+      />
     </div>
   );
 }

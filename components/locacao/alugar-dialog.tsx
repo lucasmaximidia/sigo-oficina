@@ -37,11 +37,13 @@ function amanha() {
 export function AlugarDialog({
   veiculo,
   clientes,
+  kmAtual,
   open,
   onOpenChange,
 }: {
   veiculo: LocacaoVeiculo;
   clientes: { id: string; nome: string }[];
+  kmAtual?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -72,6 +74,7 @@ export function AlugarDialog({
           valor: parseFloat(String(formData.get("valor") ?? "0").replace(",", ".")) || 0,
           formaPagamento,
           statusPagamento: jaPago ? "pago" : "pendente",
+          kmInicio: formData.get("km_inicio") ? parseInt(String(formData.get("km_inicio")), 10) : null,
           observacoes: String(formData.get("observacoes") ?? "") || null,
         });
         toast.success("Aluguel registrado");
@@ -131,6 +134,20 @@ export function AlugarDialog({
               </Label>
               <NumericInput id="valor" name="valor" defaultValue={veiculo.valor_diaria ?? undefined} required />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="km_inicio" className="mb-1.5 block">
+              KM inicial (opcional)
+            </Label>
+            <Input
+              id="km_inicio"
+              name="km_inicio"
+              type="number"
+              inputMode="numeric"
+              placeholder={kmAtual != null ? `Atual: ${kmAtual} km` : "Ex: 1200"}
+              defaultValue={kmAtual ?? undefined}
+            />
           </div>
 
           <div>

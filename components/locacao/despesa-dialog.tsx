@@ -19,12 +19,13 @@ import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { createDespesa } from "@/lib/locacao-actions";
+import type { LocacaoVeiculo } from "@/types";
 
 function hoje() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function DespesaDialog() {
+export function DespesaDialog({ veiculos }: { veiculos: Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[] }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -86,6 +87,30 @@ export function DespesaDialog() {
                 Fornecedor
               </Label>
               <Input id="fornecedor" name="fornecedor" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="mb-1.5 block">Veículo (opcional)</Label>
+              <Select name="veiculo_id" defaultValue="nenhum">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhum">Nenhum</SelectItem>
+                  {veiculos.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.marca} {v.modelo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="km" className="mb-1.5 block">
+                KM na manutenção (opcional)
+              </Label>
+              <Input id="km" name="km" type="number" inputMode="numeric" placeholder="Ex: 1500" />
             </div>
           </div>
           <div>
