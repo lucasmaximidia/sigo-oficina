@@ -53,6 +53,19 @@
   --sidebar-border: #eceefa;
   --sidebar-active: #e9ecfa;
   --sidebar-active-foreground: #2542b8;
+
+  /* Identidade visual da Locação (VoltCity) — violeta "elétrico" com um
+     verde-limão de contraste, deliberadamente distante do azul da oficina
+     pra ler como uma área separada à primeira vista. */
+  --locacao-primary: #7c3aed;
+  --locacao-primary-hover: #6d28d9;
+  --locacao-primary-foreground: #ffffff;
+  --locacao-accent: #f3e8ff;
+  --locacao-accent-foreground: #6d28d9;
+  --locacao-sidebar-active: #f3e8ff;
+  --locacao-sidebar-active-foreground: #6d28d9;
+  --locacao-spark: #84cc16;
+  --locacao-spark-foreground: #1a2e05;
 }
 
 .dark {
@@ -103,6 +116,32 @@
   --sidebar-border: #20243a;
   --sidebar-active: #1c2246;
   --sidebar-active-foreground: #b9c6ff;
+
+  --locacao-primary: #a78bfa;
+  --locacao-primary-hover: #c4b5fd;
+  --locacao-primary-foreground: #1e1b4b;
+  --locacao-accent: #2e1065;
+  --locacao-accent-foreground: #ddd6fe;
+  --locacao-sidebar-active: #2e1065;
+  --locacao-sidebar-active-foreground: #ddd6fe;
+  --locacao-spark: #bef264;
+  --locacao-spark-foreground: #1a2e05;
+}
+
+/* Escopo de tema da Locação (VoltCity) — sobrescreve só os tokens de marca
+   (primary/accent/ring/sidebar-active), então todo componente que já usa
+   essas classes (Button, Badge, StatCard, sidebar...) herda a nova cor
+   automaticamente dentro de qualquer elemento com essa classe, sem precisar
+   duplicar componente nenhum. */
+.locacao-theme {
+  --primary: var(--locacao-primary);
+  --primary-hover: var(--locacao-primary-hover);
+  --primary-foreground: var(--locacao-primary-foreground);
+  --ring: var(--locacao-primary);
+  --accent: var(--locacao-accent);
+  --accent-foreground: var(--locacao-accent-foreground);
+  --sidebar-active: var(--locacao-sidebar-active);
+  --sidebar-active-foreground: var(--locacao-sidebar-active-foreground);
 }
 
 @theme inline {
@@ -143,6 +182,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-locacao-spark: var(--locacao-spark);
+  --color-locacao-spark-foreground: var(--locacao-spark-foreground);
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 2px);
