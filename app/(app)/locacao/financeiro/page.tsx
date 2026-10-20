@@ -36,7 +36,7 @@ export default async function LocacaoFinanceiroPage() {
     { data: ajustes },
     { data: outrasEntradas },
   ] = await Promise.all([
-    supabase.from("locacao_alugueis").select("valor_pago").eq("status_pagamento", "pago").gte("data_pagamento", inicioMes),
+    supabase.from("locacao_aluguel_pagamentos").select("valor").gte("data", inicioMes),
     supabase
       .from("locacao_despesas")
       .select("*, locacao_veiculos(marca, modelo)")
@@ -48,7 +48,7 @@ export default async function LocacaoFinanceiroPage() {
   ]);
 
   const outrasEntradasMes = (outrasEntradas ?? []).filter((e) => e.data >= inicioMes).reduce((acc, r) => acc + r.valor, 0);
-  const entradasMes = (alugueisPagosMes ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0) + outrasEntradasMes;
+  const entradasMes = (alugueisPagosMes ?? []).reduce((acc, r) => acc + r.valor, 0) + outrasEntradasMes;
   const despesasMes = (despesas ?? []).filter((d) => d.data >= inicioMes);
   const saidasMes = despesasMes.reduce((acc, r) => acc + r.valor, 0);
   const saldoMes = entradasMes - saidasMes;

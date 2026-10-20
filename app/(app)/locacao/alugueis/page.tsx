@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
 import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
+import type { LocacaoAluguelPagamento } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -41,11 +42,17 @@ export default async function LocacaoAlugueisPage({
   if (filtro === "pendente") query = query.neq("status_pagamento", "pago");
   if (filtro === "pago") query = query.eq("status_pagamento", "pago");
 
-  const [{ data: alugueis }, { data: veiculos }, { data: clientes }] = await Promise.all([
+  const [{ data: alugueis }, { data: veiculos }, { data: clientes }, { data: pagamentos }] = await Promise.all([
     query,
     supabase.from("locacao_veiculos").select("id, marca, modelo, chassi").order("marca", { ascending: true }),
     supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
+    supabase.from("locacao_aluguel_pagamentos").select("*").order("data", { ascending: false }),
   ]);
+
+  const pagamentosPorAluguel = new Map<string, LocacaoAluguelPagamento[]>();
+  for (const p of pagamentos ?? []) {
+    pagamentosPorAluguel.set(p.aluguel_id, [...(pagamentosPorAluguel.get(p.aluguel_id) ?? []), p]);
+  }
 
   return (
     <div>
@@ -88,8 +95,10 @@ export default async function LocacaoAlugueisPage({
                       Atrasado
                     </Badge>
                   )}
-                  <Badge variant={a.status_pagamento === "pago" ? "success" : "warning"}>
-                    {a.status_pagamento === "pago" ? "Pago" : "Pendente"}
+                  <Badge
+                    variant={a.status_pagamento === "pago" ? "success" : a.status_pagamento === "parcial" ? "warning" : "secondary"}
+                  >
+                    {a.status_pagamento === "pago" ? "Pago" : a.status_pagamento === "parcial" ? "Parcial" : "Pendente"}
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -109,7 +118,11 @@ export default async function LocacaoAlugueisPage({
               <div className="flex items-center gap-3">
                 <p className="text-sm font-semibold text-foreground">{formatCurrency(a.valor)}</p>
                 {a.status_pagamento !== "pago" && (
-                  <RegistrarPagamentoDialog aluguelId={a.id} valor={a.valor - a.valor_pago} />
+                  <RegistrarPagamentoDialog
+                    aluguelId={a.id}
+                    valorTotal={a.valor}
+                    pagamentos={pagamentosPorAluguel.get(a.id) ?? []}
+                  />
                 )}
                 <EditarAluguelDialog aluguel={a} veiculos={veiculos ?? []} clientes={clientes ?? []} />
               </div>

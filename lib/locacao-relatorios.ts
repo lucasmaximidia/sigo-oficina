@@ -42,9 +42,10 @@ export interface FluxoCaixaMensal {
 // da retirada) e "FLUXO DE CAIXA" (regime de caixa — mês em que o dinheiro
 // realmente entrou/saiu) da planilha de controle de caixa original.
 export async function getRelatoriosLocacao(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const [{ data: alugueis }, { data: despesas }, { data: ajustes }, { data: outrasEntradas }, { data: config }] =
+  const [{ data: alugueis }, { data: pagamentosAluguel }, { data: despesas }, { data: ajustes }, { data: outrasEntradas }, { data: config }] =
     await Promise.all([
-      supabase.from("locacao_alugueis").select("data_retirada, data_pagamento, valor, valor_pago, status_pagamento"),
+      supabase.from("locacao_alugueis").select("data_retirada, valor, valor_pago"),
+      supabase.from("locacao_aluguel_pagamentos").select("data, valor"),
       supabase.from("locacao_despesas").select("data, valor"),
       supabase.from("locacao_ajustes_caixa").select("data, valor"),
       supabase.from("locacao_outras_entradas").select("data, valor"),
@@ -66,11 +67,9 @@ export async function getRelatoriosLocacao(supabase: Awaited<ReturnType<typeof c
   }
 
   const alugueisRecebidosPorMes = new Map<string, number>();
-  for (const a of alugueis ?? []) {
-    if (a.status_pagamento === "pago" && a.data_pagamento) {
-      const mes = mesKey(a.data_pagamento);
-      alugueisRecebidosPorMes.set(mes, (alugueisRecebidosPorMes.get(mes) ?? 0) + a.valor_pago);
-    }
+  for (const p of pagamentosAluguel ?? []) {
+    const mes = mesKey(p.data);
+    alugueisRecebidosPorMes.set(mes, (alugueisRecebidosPorMes.get(mes) ?? 0) + p.valor);
   }
   const outrasEntradasPorMes = new Map<string, number>();
   for (const e of outrasEntradas ?? []) {

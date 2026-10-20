@@ -36,6 +36,7 @@ export type LocacaoDespesa = Database["public"]["Tables"]["locacao_despesas"]["R
 export type LocacaoConfig = Database["public"]["Tables"]["locacao_config"]["Row"];
 export type LocacaoAjusteCaixa = Database["public"]["Tables"]["locacao_ajustes_caixa"]["Row"];
 export type LocacaoOutraEntrada = Database["public"]["Tables"]["locacao_outras_entradas"]["Row"];
+export type LocacaoAluguelPagamento = Database["public"]["Tables"]["locacao_aluguel_pagamentos"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;

@@ -15,9 +15,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
-import { Switch } from "@/components/ui/switch";
 import { ClienteCombobox } from "@/components/clientes/cliente-combobox";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { atualizarAluguel } from "@/lib/locacao-actions";
 import type { LocacaoAluguel, LocacaoFormaPagamento } from "@/types";
 
@@ -47,7 +46,6 @@ export function EditarAluguelDialog({
   const [veiculoId, setVeiculoId] = useState(aluguel.veiculo_id);
   const [clienteId, setClienteId] = useState(aluguel.cliente_id);
   const [formaPagamento, setFormaPagamento] = useState<LocacaoFormaPagamento>(aluguel.forma_pagamento);
-  const [pago, setPago] = useState(aluguel.status_pagamento === "pago");
   const [isPending, startTransition] = useTransition();
 
   const veiculosOpcoes = veiculos.map((v) => ({ id: v.id, nome: `${v.marca} ${v.modelo} · ${v.chassi}` }));
@@ -56,7 +54,6 @@ export function EditarAluguelDialog({
     startTransition(async () => {
       try {
         const valor = parseFloat(String(formData.get("valor") ?? "0").replace(",", ".")) || 0;
-        const valorPago = parseFloat(String(formData.get("valor_pago") ?? "0").replace(",", ".")) || 0;
         await atualizarAluguel(aluguel.id, {
           veiculoId,
           clienteId,
@@ -64,9 +61,6 @@ export function EditarAluguelDialog({
           dataPrevistaDevolucao: new Date(String(formData.get("data_prevista"))).toISOString(),
           valor,
           formaPagamento,
-          statusPagamento: pago ? "pago" : "pendente",
-          valorPago,
-          dataPagamento: pago ? (String(formData.get("data_pagamento") ?? "") || new Date().toISOString().slice(0, 10)) : null,
           kmInicio: formData.get("km_inicio") ? parseInt(String(formData.get("km_inicio")), 10) : null,
           kmFim: formData.get("km_fim") ? parseInt(String(formData.get("km_fim")), 10) : null,
           observacoes: String(formData.get("observacoes") ?? "") || null,
@@ -153,23 +147,18 @@ export function EditarAluguelDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="valor" className="mb-1.5 block">
-                Valor (R$)
-              </Label>
-              <NumericInput id="valor" name="valor" defaultValue={aluguel.valor} required />
-            </div>
-            <div>
-              <Label htmlFor="valor_pago" className="mb-1.5 block">
-                Valor pago (R$)
-              </Label>
-              <NumericInput id="valor_pago" name="valor_pago" defaultValue={aluguel.valor_pago} />
-            </div>
+          <div>
+            <Label htmlFor="valor" className="mb-1.5 block">
+              Valor (R$)
+            </Label>
+            <NumericInput id="valor" name="valor" defaultValue={aluguel.valor} required />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Pagamentos já recebidos ({formatCurrency(aluguel.valor_pago)}) ficam em “Pagamento”, na lista de aluguéis.
+            </p>
           </div>
 
           <div>
-            <Label className="mb-1.5 block">Forma de pagamento</Label>
+            <Label className="mb-1.5 block">Forma de pagamento combinada</Label>
             <div className="grid grid-cols-4 gap-2">
               {formasPagamento.map((fp) => {
                 const Icon = fp.icon;
@@ -191,25 +180,6 @@ export function EditarAluguelDialog({
               })}
             </div>
           </div>
-
-          <label className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
-            <span className="text-sm text-foreground">Cliente já pagou</span>
-            <Switch checked={pago} onCheckedChange={setPago} />
-          </label>
-
-          {pago && (
-            <div>
-              <Label htmlFor="data_pagamento" className="mb-1.5 block">
-                Data do pagamento
-              </Label>
-              <Input
-                id="data_pagamento"
-                name="data_pagamento"
-                type="date"
-                defaultValue={aluguel.data_pagamento ?? new Date().toISOString().slice(0, 10)}
-              />
-            </div>
-          )}
 
           <div>
             <Label htmlFor="observacoes" className="mb-1.5 block">

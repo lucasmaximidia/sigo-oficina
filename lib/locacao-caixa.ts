@@ -14,12 +14,16 @@ export async function getSaldoEmCaixa(supabase: Awaited<ReturnType<typeof create
   const saldoInicial = config?.saldo_inicial ?? 0;
   const dataInicio = config?.data_inicio_caixa ?? null;
 
-  let pagosQuery = supabase.from("locacao_alugueis").select("valor_pago").eq("status_pagamento", "pago");
+  // Lê de locacao_aluguel_pagamentos (não de locacao_alugueis.valor_pago):
+  // cada pagamento tem sua própria data, o que importa pra um aluguel pago
+  // em partes em datas diferentes — inclusive antes/depois da data de
+  // início do caixa.
+  let pagosQuery = supabase.from("locacao_aluguel_pagamentos").select("valor");
   let despesasQuery = supabase.from("locacao_despesas").select("valor");
   let ajustesQuery = supabase.from("locacao_ajustes_caixa").select("valor");
   let outrasEntradasQuery = supabase.from("locacao_outras_entradas").select("valor");
   if (dataInicio) {
-    pagosQuery = pagosQuery.gte("data_pagamento", dataInicio);
+    pagosQuery = pagosQuery.gte("data", dataInicio);
     despesasQuery = despesasQuery.gte("data", dataInicio);
     ajustesQuery = ajustesQuery.gte("data", dataInicio);
     outrasEntradasQuery = outrasEntradasQuery.gte("data", dataInicio);
@@ -32,7 +36,7 @@ export async function getSaldoEmCaixa(supabase: Awaited<ReturnType<typeof create
     outrasEntradasQuery,
   ]);
 
-  const entradasAlugueis = (pagos ?? []).reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
+  const entradasAlugueis = (pagos ?? []).reduce((acc, r) => acc + r.valor, 0);
   const entradasOutras = (outrasEntradas ?? []).reduce((acc, r) => acc + r.valor, 0);
   const entradas = entradasAlugueis + entradasOutras;
   const saidas = (despesas ?? []).reduce((acc, r) => acc + r.valor, 0);

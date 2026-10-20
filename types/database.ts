@@ -1481,6 +1481,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_aluguel_pagamentos: {
+        Row: {
+          id: string;
+          aluguel_id: string;
+          forma_pagamento: LocacaoFormaPagamento;
+          valor: number;
+          data: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          aluguel_id: string;
+          forma_pagamento: LocacaoFormaPagamento;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          aluguel_id?: string;
+          forma_pagamento?: LocacaoFormaPagamento;
+          valor?: number;
+          data?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       vw_garantias: {

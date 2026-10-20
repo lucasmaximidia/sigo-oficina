@@ -19,7 +19,7 @@ export default async function LocacaoPage() {
       supabase
         .from("locacao_alugueis")
         .select(
-          "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, km_inicio, locacao_clientes(nome)"
+          "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, valor_pago, km_inicio, locacao_clientes(nome)"
         )
         .is("data_devolucao_real", null),
       supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
@@ -50,7 +50,7 @@ export default async function LocacaoPage() {
       status_pagamento: a.status_pagamento,
       km_inicio: a.km_inicio,
     };
-    if (a.status_pagamento !== "pago") aReceber += a.valor;
+    if (a.status_pagamento !== "pago") aReceber += a.valor - a.valor_pago;
     const prevista = new Date(a.data_prevista_devolucao);
     prevista.setHours(0, 0, 0, 0);
     if (prevista.getTime() < hoje.getTime()) emAtraso += 1;
