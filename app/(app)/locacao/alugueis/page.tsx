@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
+import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
 import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -34,15 +35,17 @@ export default async function LocacaoAlugueisPage({
 
   let query = supabase
     .from("locacao_alugueis")
-    .select(
-      "id, numero, data_retirada, data_prevista_devolucao, data_devolucao_real, valor, valor_pago, forma_pagamento, status_pagamento, km_inicio, km_fim, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome)"
-    )
+    .select("*, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome)")
     .order("data_retirada", { ascending: false });
 
   if (filtro === "pendente") query = query.neq("status_pagamento", "pago");
   if (filtro === "pago") query = query.eq("status_pagamento", "pago");
 
-  const { data: alugueis } = await query;
+  const [{ data: alugueis }, { data: veiculos }, { data: clientes }] = await Promise.all([
+    query,
+    supabase.from("locacao_veiculos").select("id, marca, modelo, chassi").order("marca", { ascending: true }),
+    supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
+  ]);
 
   return (
     <div>
@@ -108,6 +111,7 @@ export default async function LocacaoAlugueisPage({
                 {a.status_pagamento !== "pago" && (
                   <RegistrarPagamentoDialog aluguelId={a.id} valor={a.valor - a.valor_pago} />
                 )}
+                <EditarAluguelDialog aluguel={a} veiculos={veiculos ?? []} clientes={clientes ?? []} />
               </div>
             </Card>
           );

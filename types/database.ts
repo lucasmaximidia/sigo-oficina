@@ -1403,6 +1403,51 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_config: {
+        Row: {
+          id: number;
+          saldo_inicial: number;
+          data_inicio_caixa: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          saldo_inicial?: number;
+          data_inicio_caixa?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          saldo_inicial?: number;
+          data_inicio_caixa?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_ajustes_caixa: {
+        Row: {
+          id: string;
+          data: string;
+          motivo: string;
+          valor: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          data?: string;
+          motivo: string;
+          valor: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          data?: string;
+          motivo?: string;
+          valor?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       vw_garantias: {

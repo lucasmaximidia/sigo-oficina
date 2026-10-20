@@ -33,6 +33,8 @@ export type LocacaoVeiculo = Database["public"]["Tables"]["locacao_veiculos"]["R
 export type LocacaoCliente = Database["public"]["Tables"]["locacao_clientes"]["Row"];
 export type LocacaoAluguel = Database["public"]["Tables"]["locacao_alugueis"]["Row"];
 export type LocacaoDespesa = Database["public"]["Tables"]["locacao_despesas"]["Row"];
+export type LocacaoConfig = Database["public"]["Tables"]["locacao_config"]["Row"];
+export type LocacaoAjusteCaixa = Database["public"]["Tables"]["locacao_ajustes_caixa"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
