@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bike, Scooter, CalendarClock, AlertTriangle, User, Wrench, PlayCircle } from "lucide-react";
+import { Bike, Scooter, CalendarClock, AlertTriangle, User, Wrench, PlayCircle, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
@@ -26,6 +26,44 @@ const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning
   inativo: { label: "Inativo", variant: "secondary" },
 };
 
+// Pinta o emblema do veículo com a cor real cadastrada, pra cada card ficar
+// visualmente diferente e reconhecível à primeira vista (em vez de todos os
+// cards terem o mesmo emblema neutro) — cai pro gradiente da marca quando a
+// cor não é reconhecida ou não foi informada.
+const CORES_VEICULO: Record<string, { bg: string; fg: string }> = {
+  preto: { bg: "#111827", fg: "#ffffff" },
+  preta: { bg: "#111827", fg: "#ffffff" },
+  branco: { bg: "#f1f5f9", fg: "#334155" },
+  branca: { bg: "#f1f5f9", fg: "#334155" },
+  cinza: { bg: "#6b7280", fg: "#ffffff" },
+  grafite: { bg: "#374151", fg: "#ffffff" },
+  prata: { bg: "#94a3b8", fg: "#1e293b" },
+  vermelho: { bg: "#dc2626", fg: "#ffffff" },
+  vermelha: { bg: "#dc2626", fg: "#ffffff" },
+  azul: { bg: "#2563eb", fg: "#ffffff" },
+  verde: { bg: "#16a34a", fg: "#ffffff" },
+  amarelo: { bg: "#eab308", fg: "#422006" },
+  amarela: { bg: "#eab308", fg: "#422006" },
+  laranja: { bg: "#ea580c", fg: "#ffffff" },
+  roxo: { bg: "#9333ea", fg: "#ffffff" },
+  roxa: { bg: "#9333ea", fg: "#ffffff" },
+  rosa: { bg: "#ec4899", fg: "#ffffff" },
+  marrom: { bg: "#78350f", fg: "#ffffff" },
+  dourado: { bg: "#ca8a04", fg: "#422006" },
+  dourada: { bg: "#ca8a04", fg: "#422006" },
+};
+
+function corVeiculo(cor: string | null) {
+  if (!cor) return null;
+  const chave = cor
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .split(/\s+/)[0];
+  return CORES_VEICULO[chave] ?? null;
+}
+
 function diasRestantes(dataPrevista: string) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -47,6 +85,7 @@ export function VeiculoCard({
   const [devolverOpen, setDevolverOpen] = useState(false);
   const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
   const status = STATUS_INFO[veiculo.status] ?? STATUS_INFO.disponivel;
+  const cor = corVeiculo(veiculo.cor);
   const dias = aluguel ? diasRestantes(aluguel.data_prevista_devolucao) : null;
   const atrasado = dias !== null && dias < 0;
 
@@ -61,11 +100,16 @@ export function VeiculoCard({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-xl",
-              veiculo.status === "alugado" ? "bg-info/10 text-info" : "bg-secondary text-muted-foreground"
+              "relative flex size-13 shrink-0 items-center justify-center rounded-2xl shadow-sm",
+              !cor && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
+              veiculo.status === "alugado" && "ring-2 ring-info/50 ring-offset-2 ring-offset-card"
             )}
+            style={cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
           >
-            <Icon className="size-5" />
+            <Icon className="size-6" strokeWidth={1.75} />
+            <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-locacao-spark text-locacao-spark-foreground shadow-sm ring-2 ring-card">
+              <Zap className="size-3" strokeWidth={2.5} fill="currentColor" />
+            </span>
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">

@@ -13,15 +13,17 @@ export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () 
       {navItems.map((item, index) => {
         const active = pathname === item.href || pathname.startsWith(item.href + "/");
         const Icon = item.icon;
-        const iniciaSecao = item.secao && navItems[index - 1]?.secao !== item.secao;
+        const secaoAnterior = navItems[index - 1]?.secao;
+        const mudaSecao = index > 0 && item.secao !== secaoAnterior;
+        const ehLocacao = item.secao === "locacao";
         return (
-          <div key={item.href}>
-            {iniciaSecao && (
+          <div key={item.href} className={cn(ehLocacao && "locacao-theme")}>
+            {mudaSecao && (
               <div
                 className={cn("mx-0.5 mb-1 mt-2 border-t border-sidebar-border/60", collapsed ? "pt-2" : "pb-1 pt-2.5")}
               >
-                {!collapsed && (
-                  <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wide text-sidebar-foreground/40">
+                {!collapsed && item.secao && (
+                  <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary/70">
                     Locação
                   </p>
                 )}
@@ -36,7 +38,9 @@ export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () 
                 collapsed && "justify-center px-0",
                 active
                   ? "bg-sidebar-active text-sidebar-active-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-secondary hover:text-sidebar-foreground"
+                  : ehLocacao
+                    ? "text-primary/80 hover:bg-accent hover:text-primary"
+                    : "text-sidebar-foreground/80 hover:bg-secondary hover:text-sidebar-foreground"
               )}
             >
               <Icon className="size-5 shrink-0" strokeWidth={2} />
