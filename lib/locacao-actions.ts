@@ -179,19 +179,23 @@ export async function criarAluguel(input: {
   }
   if (!clienteId) throw new Error("Selecione ou cadastre um cliente");
 
-  const { error: aluguelError } = await supabase.from("locacao_alugueis").insert({
-    veiculo_id: input.veiculoId,
-    cliente_id: clienteId,
-    data_retirada: input.dataRetirada ?? undefined,
-    data_prevista_devolucao: input.dataPrevistaDevolucao,
-    valor: input.valor,
-    forma_pagamento: input.formaPagamento,
-    status_pagamento: input.statusPagamento,
-    valor_pago: input.statusPagamento === "pago" ? input.valor : 0,
-    data_pagamento: input.statusPagamento === "pago" ? hojeBR() : null,
-    km_inicio: input.kmInicio ?? null,
-    observacoes: input.observacoes ?? null,
-  });
+  const { data: novoAluguel, error: aluguelError } = await supabase
+    .from("locacao_alugueis")
+    .insert({
+      veiculo_id: input.veiculoId,
+      cliente_id: clienteId,
+      data_retirada: input.dataRetirada ?? undefined,
+      data_prevista_devolucao: input.dataPrevistaDevolucao,
+      valor: input.valor,
+      forma_pagamento: input.formaPagamento,
+      status_pagamento: "pendente",
+      valor_pago: 0,
+      data_pagamento: null,
+      km_inicio: input.kmInicio ?? null,
+      observacoes: input.observacoes ?? null,
+    })
+    .select("id")
+    .single();
   if (aluguelError) throw new Error(aluguelError.message);
 
   const { error: veiculoError } = await supabase
@@ -199,6 +203,17 @@ export async function criarAluguel(input: {
     .update({ status: "alugado", updated_at: new Date().toISOString() })
     .eq("id", input.veiculoId);
   if (veiculoError) throw new Error(veiculoError.message);
+
+  if (input.statusPagamento === "pago") {
+    const { error: pagamentoError } = await supabase.from("locacao_aluguel_pagamentos").insert({
+      aluguel_id: novoAluguel.id,
+      forma_pagamento: input.formaPagamento,
+      valor: input.valor,
+      data: hojeBR(),
+    });
+    if (pagamentoError) throw new Error(pagamentoError.message);
+    await recalcularPagamentoAluguel(novoAluguel.id);
+  }
 
   revalidarLocacao();
 }
@@ -212,9 +227,6 @@ export async function atualizarAluguel(
     dataPrevistaDevolucao: string;
     valor: number;
     formaPagamento: LocacaoFormaPagamento;
-    statusPagamento: LocacaoStatusPagamento;
-    valorPago: number;
-    dataPagamento?: string | null;
     kmInicio?: number | null;
     kmFim?: number | null;
     observacoes?: string | null;
@@ -251,9 +263,6 @@ export async function atualizarAluguel(
       data_prevista_devolucao: input.dataPrevistaDevolucao,
       valor: input.valor,
       forma_pagamento: input.formaPagamento,
-      status_pagamento: input.statusPagamento,
-      valor_pago: input.valorPago,
-      data_pagamento: input.dataPagamento ?? null,
       km_inicio: input.kmInicio ?? null,
       km_fim: input.kmFim ?? null,
       observacoes: input.observacoes ?? null,
@@ -261,6 +270,10 @@ export async function atualizarAluguel(
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
+
+  // O valor total pode ter mudado — refaz o status (pago/parcial/pendente)
+  // a partir da soma já lançada em locacao_aluguel_pagamentos.
+  await recalcularPagamentoAluguel(id);
 
   if (estaAberto && veiculoMudou) {
     await supabase
@@ -303,18 +316,67 @@ export async function registrarDevolucao(
   revalidarLocacao();
 }
 
-export async function marcarAluguelPago(aluguelId: string, valorPago: number) {
+// ---------- Pagamentos do aluguel (à vista ou em partes) ----------
+
+// Recalcula o cache de pagamento em locacao_alugueis (valor_pago,
+// status_pagamento, data_pagamento, forma_pagamento) a partir da soma dos
+// lançamentos em locacao_aluguel_pagamentos — chamado depois de qualquer
+// inserção/remoção de pagamento, ou de uma edição que mude o valor total.
+async function recalcularPagamentoAluguel(aluguelId: string) {
   const supabase = await createClient();
+  const [{ data: aluguel }, { data: pagamentos }] = await Promise.all([
+    supabase.from("locacao_alugueis").select("valor").eq("id", aluguelId).single(),
+    supabase
+      .from("locacao_aluguel_pagamentos")
+      .select("valor, data, forma_pagamento")
+      .eq("aluguel_id", aluguelId)
+      .order("data", { ascending: false })
+      .order("created_at", { ascending: false }),
+  ]);
+  if (!aluguel) throw new Error("Aluguel não encontrado");
+
+  const totalPago = (pagamentos ?? []).reduce((acc, p) => acc + p.valor, 0);
+  const statusPagamento: LocacaoStatusPagamento =
+    totalPago >= aluguel.valor - 0.001 ? "pago" : totalPago > 0 ? "parcial" : "pendente";
+  const ultimoPagamento = pagamentos?.[0] ?? null;
+
   const { error } = await supabase
     .from("locacao_alugueis")
     .update({
-      status_pagamento: "pago",
-      valor_pago: valorPago,
-      data_pagamento: hojeBR(),
+      valor_pago: totalPago,
+      status_pagamento: statusPagamento,
+      data_pagamento: ultimoPagamento?.data ?? null,
+      ...(ultimoPagamento ? { forma_pagamento: ultimoPagamento.forma_pagamento } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq("id", aluguelId);
   if (error) throw new Error(error.message);
+}
+
+export async function registrarPagamentoAluguel(
+  aluguelId: string,
+  input: { formaPagamento: LocacaoFormaPagamento; valor: number; data: string }
+) {
+  if (input.valor <= 0) throw new Error("Informe um valor válido");
+  const supabase = await createClient();
+  const { error } = await supabase.from("locacao_aluguel_pagamentos").insert({
+    aluguel_id: aluguelId,
+    forma_pagamento: input.formaPagamento,
+    valor: input.valor,
+    data: input.data,
+  });
+  if (error) throw new Error(error.message);
+
+  await recalcularPagamentoAluguel(aluguelId);
+  revalidarLocacao();
+}
+
+export async function deletePagamentoAluguel(id: string, aluguelId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("locacao_aluguel_pagamentos").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await recalcularPagamentoAluguel(aluguelId);
   revalidarLocacao();
 }
 
