@@ -40,7 +40,10 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
 
   if (!contrato) {
     return (
-      <div style={{ background: "#f7f9fb", minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div
+        className="h-dvh overflow-y-auto overscroll-contain"
+        style={{ background: "#f7f9fb", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+      >
         <div style={{ textAlign: "center", maxWidth: 360 }}>
           <FileX size={56} color="#dc2626" style={{ margin: "0 auto 16px" }} />
           <h1 style={{ fontSize: 18, margin: "0 0 8px", color: "#191c1e" }}>Contrato não encontrado</h1>
@@ -53,7 +56,7 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
   }
 
   return (
-    <div style={{ background: "#f7f9fb", minHeight: "100dvh", padding: "24px 16px" }}>
+    <div className="h-dvh overflow-y-auto overscroll-contain" style={{ background: "#f7f9fb", padding: "24px 16px" }}>
       <div style={{ maxWidth: 680, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ background: "#ffffff", borderRadius: 16, padding: 24, boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08)" }}>
           <p style={{ fontSize: 20, fontWeight: 800, color: "#1a7a3c", margin: 0, letterSpacing: -0.5 }}>VOLTCITY</p>
