@@ -162,7 +162,7 @@ export function VeiculoCard({
 }: {
   veiculo: LocacaoVeiculo;
   aluguel: AluguelAtivo | null;
-  clientes: { id: string; nome: string }[];
+  clientes: { id: string; nome: string; telefone: string | null }[];
   kmAtual?: number | null;
   icones: LocacaoIcone[];
 }) {

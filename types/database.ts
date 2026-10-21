@@ -1376,6 +1376,8 @@ export interface Database {
           km_fim: number | null;
           observacoes: string | null;
           diarias_extras_atraso: number;
+          aceite_online_em: string | null;
+          aceite_online_nome: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1396,6 +1398,8 @@ export interface Database {
           km_fim?: number | null;
           observacoes?: string | null;
           diarias_extras_atraso?: number;
+          aceite_online_em?: string | null;
+          aceite_online_nome?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1416,6 +1420,8 @@ export interface Database {
           km_fim?: number | null;
           observacoes?: string | null;
           diarias_extras_atraso?: number;
+          aceite_online_em?: string | null;
+          aceite_online_nome?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1719,6 +1725,22 @@ export interface Database {
       };
       aceitar_renovacao_locacao: {
         Args: { p_token: string };
+        Returns: { sucesso: boolean; mensagem: string }[];
+      };
+      obter_contrato_aceite: {
+        Args: { p_aluguel_id: string };
+        Returns: {
+          numero: number;
+          cliente_nome: string;
+          status_pagamento: string;
+          valor: number;
+          valor_pago: number;
+          aceite_online_em: string | null;
+          aceite_online_nome: string | null;
+        }[];
+      };
+      aceitar_contrato_locacao: {
+        Args: { p_aluguel_id: string; p_nome: string };
         Returns: { sucesso: boolean; mensagem: string }[];
       };
     };

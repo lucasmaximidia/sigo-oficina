@@ -14,7 +14,7 @@ export function VeiculosGrid({
   veiculos: LocacaoVeiculo[];
   alugueisPorVeiculo: Record<string, AluguelAtivo>;
   kmPorVeiculo: Record<string, number>;
-  clientes: { id: string; nome: string }[];
+  clientes: { id: string; nome: string; telefone: string | null }[];
   icones: LocacaoIcone[];
 }) {
   return (

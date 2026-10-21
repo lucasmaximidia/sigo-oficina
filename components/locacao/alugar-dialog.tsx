@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Wallet, QrCode, CreditCard, Landmark, UserPlus } from "lucide-react";
+import { Wallet, QrCode, CreditCard, Landmark, UserPlus, Printer, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,7 +54,7 @@ export function AlugarDialog({
   onOpenChange,
 }: {
   veiculo: LocacaoVeiculo;
-  clientes: { id: string; nome: string }[];
+  clientes: { id: string; nome: string; telefone: string | null }[];
   kmAtual?: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -64,6 +64,19 @@ export function AlugarDialog({
   const [formaPagamento, setFormaPagamento] = useState<LocacaoFormaPagamento>("pix");
   const [jaPago, setJaPago] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [criado, setCriado] = useState<{ aluguelId: string; clienteNome: string; clienteTelefone: string | null } | null>(
+    null
+  );
+
+  function fecharTudo(nextOpen: boolean) {
+    onOpenChange(nextOpen);
+    if (!nextOpen) {
+      setClienteId("");
+      setNovoCliente(false);
+      setJaPago(false);
+      setCriado(null);
+    }
+  }
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -72,14 +85,18 @@ export function AlugarDialog({
           toast.error("Selecione ou cadastre um cliente");
           return;
         }
+        const clienteNomeNovo = String(formData.get("cliente_nome") ?? "");
+        const clienteTelefoneNovo = String(formData.get("cliente_telefone") ?? "") || null;
+        const clienteExistente = clientes.find((c) => c.id === clienteId);
+
         const { id: aluguelId } = await criarAluguel({
           veiculoId: veiculo.id,
           clienteId: novoCliente ? null : clienteId,
           clienteNovo: novoCliente
             ? {
-                nome: String(formData.get("cliente_nome") ?? ""),
+                nome: clienteNomeNovo,
                 cpf: String(formData.get("cliente_cpf") ?? "") || null,
-                telefone: String(formData.get("cliente_telefone") ?? "") || null,
+                telefone: clienteTelefoneNovo,
               }
             : null,
           dataRetirada: new Date(String(formData.get("data_retirada") ?? agora())).toISOString(),
@@ -91,19 +108,72 @@ export function AlugarDialog({
           observacoes: String(formData.get("observacoes") ?? "") || null,
         });
         toast.success("Aluguel registrado");
-        window.open(`/api/locacao/${aluguelId}/contrato`, "_blank");
-        onOpenChange(false);
-        setClienteId("");
-        setNovoCliente(false);
-        setJaPago(false);
+        setCriado({
+          aluguelId,
+          clienteNome: novoCliente ? clienteNomeNovo : clienteExistente?.nome ?? "Cliente",
+          clienteTelefone: novoCliente ? clienteTelefoneNovo : clienteExistente?.telefone ?? null,
+        });
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao registrar aluguel");
       }
     });
   }
 
+  function enviarContratoOnline() {
+    if (!criado) return;
+    const link = `${window.location.origin}/locacao/contrato/${criado.aluguelId}`;
+    const telefone = criado.clienteTelefone?.replace(/\D/g, "");
+    const mensagem = encodeURIComponent(
+      `Olá ${criado.clienteNome}! Aqui está o contrato da sua locação na VoltCity. Dá uma olhada e clique em "Aceitar contrato" pra confirmar: ${link}`
+    );
+    const url = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : `https://wa.me/?text=${mensagem}`;
+    window.open(url, "_blank");
+  }
+
+  if (criado) {
+    return (
+      <Dialog open={open} onOpenChange={fecharTudo}>
+        <DialogContent className="locacao-theme">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="size-5 text-success" />
+              Aluguel registrado
+            </DialogTitle>
+            <DialogDescription>Escolha como formalizar o contrato com {criado.clienteNome}.</DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="justify-start gap-2"
+              onClick={() => window.open(`/api/locacao/${criado.aluguelId}/contrato`, "_blank")}
+            >
+              <Printer className="size-4" />
+              Imprimir contrato
+            </Button>
+            <Button type="button" className="justify-start gap-2" onClick={enviarContratoOnline}>
+              <Send className="size-4" />
+              Enviar link online (WhatsApp)
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            No link online, o cliente lê o contrato, confirma o nome e aceita — e já vê se o pagamento está pendente ou
+            confirmado.
+          </p>
+
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => fecharTudo(false)}>
+              Concluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={fecharTudo}>
       <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>Alugar {veiculo.marca} {veiculo.modelo}</DialogTitle>
