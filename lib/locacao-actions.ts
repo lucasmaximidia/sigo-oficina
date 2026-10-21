@@ -494,6 +494,52 @@ export async function deletePagamentoAluguel(id: string, aluguelId: string) {
   revalidarLocacao();
 }
 
+// ---------- Renovação por link ----------
+
+export async function gerarLinkRenovacao(aluguelId: string, diasAdicionais: number) {
+  if (!Number.isFinite(diasAdicionais) || diasAdicionais <= 0) throw new Error("Informe ao menos 1 dia");
+  const supabase = await createClient();
+
+  const { data: aluguel } = await supabase
+    .from("locacao_alugueis")
+    .select("data_prevista_devolucao, data_devolucao_real, locacao_veiculos(valor_diaria)")
+    .eq("id", aluguelId)
+    .single();
+  if (!aluguel) throw new Error("Aluguel não encontrado");
+  if (aluguel.data_devolucao_real) throw new Error("Esse aluguel já foi encerrado");
+
+  const veiculo = aluguel.locacao_veiculos as unknown as { valor_diaria: number | null } | null;
+  if (!veiculo?.valor_diaria) throw new Error("Cadastre o valor da diária do veículo antes de gerar a renovação");
+
+  const valorAdicional = diasAdicionais * veiculo.valor_diaria;
+  const novaData = new Date(new Date(aluguel.data_prevista_devolucao).getTime() + diasAdicionais * 86_400_000);
+  const expiraEm = new Date(Date.now() + 24 * 3_600_000);
+
+  // Qualquer link pendente anterior desse aluguel vira obsoleto — evita que
+  // dois links diferentes sejam aceitos separadamente e somem a extensão em
+  // dobro.
+  await supabase
+    .from("locacao_renovacoes")
+    .update({ status: "cancelada" })
+    .eq("aluguel_id", aluguelId)
+    .eq("status", "pendente");
+
+  const { data: renovacao, error } = await supabase
+    .from("locacao_renovacoes")
+    .insert({
+      aluguel_id: aluguelId,
+      dias_adicionais: diasAdicionais,
+      valor_adicional: valorAdicional,
+      nova_data_devolucao: novaData.toISOString(),
+      expira_em: expiraEm.toISOString(),
+    })
+    .select("token")
+    .single();
+  if (error) throw new Error(error.message);
+
+  return { token: renovacao.token as string, valorAdicional, novaData: novaData.toISOString() };
+}
+
 export async function updateAluguelObservacoes(aluguelId: string, observacoes: string | null) {
   const supabase = await createClient();
   const { error } = await supabase

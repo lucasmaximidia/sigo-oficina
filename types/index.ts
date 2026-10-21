@@ -38,6 +38,7 @@ export type LocacaoConfig = Database["public"]["Tables"]["locacao_config"]["Row"
 export type LocacaoAjusteCaixa = Database["public"]["Tables"]["locacao_ajustes_caixa"]["Row"];
 export type LocacaoOutraEntrada = Database["public"]["Tables"]["locacao_outras_entradas"]["Row"];
 export type LocacaoAluguelPagamento = Database["public"]["Tables"]["locacao_aluguel_pagamentos"]["Row"];
+export type LocacaoRenovacao = Database["public"]["Tables"]["locacao_renovacoes"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
