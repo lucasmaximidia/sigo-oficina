@@ -1815,14 +1815,18 @@ export async function enviarNotificacaoTeste() {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Usuário não autenticado");
 
-  const { count } = await supabase
-    .from("push_subscriptions")
-    .select("id", { count: "exact", head: true });
-  if (!count) throw new Error("Nenhum dispositivo com notificações ativadas ainda");
-
-  await enviarPushParaTodos({
+  const resultado = await enviarPushParaTodos({
     title: "Notificação de teste",
     body: "Se você está vendo isso, as notificações push estão funcionando.",
     url: "/configuracoes",
   });
+
+  if (resultado.semChaves) throw new Error("Chaves VAPID não configuradas no servidor — fale com quem mantém o sistema");
+  if (resultado.semDispositivos) throw new Error("Nenhum dispositivo com notificações ativadas ainda");
+  if (resultado.falhas > 0 && resultado.enviados === 0) {
+    throw new Error(`Falha ao enviar pros ${resultado.falhas} dispositivo(s) cadastrado(s) — veja os logs do servidor`);
+  }
+  if (resultado.falhas > 0) {
+    throw new Error(`Só chegou em ${resultado.enviados} de ${resultado.enviados + resultado.falhas} dispositivo(s) — os outros falharam`);
+  }
 }
