@@ -27,7 +27,9 @@ export default async function LocacaoRelatoriosPage() {
       <Card className="p-0">
         <div className="border-b border-border p-4">
           <p className="text-sm font-semibold text-foreground">Resumo mensal dos aluguéis</p>
-          <p className="text-xs text-muted-foreground">Por competência — mês em que o aluguel foi retirado.</p>
+          <p className="text-xs text-muted-foreground">
+            Por competência — aluguéis que atravessam a virada do mês têm o valor dividido por dia entre os meses.
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
