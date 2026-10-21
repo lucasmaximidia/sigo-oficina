@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, History } from "lucide-react";
+import { AlertTriangle, FileText, History } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
 import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
@@ -117,6 +118,11 @@ export default async function LocacaoAlugueisPage({
 
               <div className="flex items-center gap-3">
                 <p className="text-sm font-semibold text-foreground">{formatCurrency(a.valor)}</p>
+                <Button type="button" variant="outline" size="icon" asChild title="Ver contrato em PDF">
+                  <a href={`/api/locacao/${a.id}/contrato`} target="_blank" rel="noopener noreferrer">
+                    <FileText className="size-4" />
+                  </a>
+                </Button>
                 {a.status_pagamento !== "pago" && (
                   <RegistrarPagamentoDialog
                     aluguelId={a.id}

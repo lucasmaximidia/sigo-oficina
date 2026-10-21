@@ -321,6 +321,7 @@ export async function criarAluguel(input: {
   }
 
   revalidarLocacao();
+  return { id: novoAluguel.id };
 }
 
 export async function atualizarAluguel(
@@ -543,6 +544,9 @@ export async function updateLocacaoConfig(formData: FormData) {
       data_inicio_caixa: str(formData, "data_inicio_caixa"),
       extensao_atraso_ativo: formData.get("extensao_atraso_ativo") === "on",
       extensao_atraso_horas: intOuNull(formData, "extensao_atraso_horas") ?? 12,
+      locadora_razao_social: str(formData, "locadora_razao_social") ?? undefined,
+      locadora_cnpj: str(formData, "locadora_cnpj") ?? undefined,
+      locadora_endereco: str(formData, "locadora_endereco") ?? undefined,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);

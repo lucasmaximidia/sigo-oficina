@@ -46,7 +46,11 @@ export default async function LocacaoFinanceiroPage() {
     getSaldoEmCaixa(supabase),
     supabase.from("locacao_ajustes_caixa").select("*").order("data", { ascending: false }),
     supabase.from("locacao_outras_entradas").select("*").order("data", { ascending: false }),
-    supabase.from("locacao_config").select("extensao_atraso_ativo, extensao_atraso_horas").eq("id", 1).single(),
+    supabase
+      .from("locacao_config")
+      .select("extensao_atraso_ativo, extensao_atraso_horas, locadora_razao_social, locadora_cnpj, locadora_endereco")
+      .eq("id", 1)
+      .single(),
   ]);
 
   const outrasEntradasMes = (outrasEntradas ?? []).filter((e) => e.data >= inicioMes).reduce((acc, r) => acc + r.valor, 0);
@@ -80,6 +84,9 @@ export default async function LocacaoFinanceiroPage() {
           dataInicio={saldoCaixa.dataInicio}
           extensaoAtrasoAtivo={configLocacao?.extensao_atraso_ativo ?? true}
           extensaoAtrasoHoras={configLocacao?.extensao_atraso_horas ?? 12}
+          locadoraRazaoSocial={configLocacao?.locadora_razao_social ?? ""}
+          locadoraCnpj={configLocacao?.locadora_cnpj ?? ""}
+          locadoraEndereco={configLocacao?.locadora_endereco ?? ""}
         />
       </Card>
 

@@ -1470,6 +1470,9 @@ export interface Database {
           data_inicio_caixa: string | null;
           extensao_atraso_ativo: boolean;
           extensao_atraso_horas: number;
+          locadora_razao_social: string;
+          locadora_cnpj: string;
+          locadora_endereco: string;
           updated_at: string;
         };
         Insert: {
@@ -1478,6 +1481,9 @@ export interface Database {
           data_inicio_caixa?: string | null;
           extensao_atraso_ativo?: boolean;
           extensao_atraso_horas?: number;
+          locadora_razao_social?: string;
+          locadora_cnpj?: string;
+          locadora_endereco?: string;
           updated_at?: string;
         };
         Update: {
@@ -1486,6 +1492,9 @@ export interface Database {
           data_inicio_caixa?: string | null;
           extensao_atraso_ativo?: boolean;
           extensao_atraso_horas?: number;
+          locadora_razao_social?: string;
+          locadora_cnpj?: string;
+          locadora_endereco?: string;
           updated_at?: string;
         };
         Relationships: [];

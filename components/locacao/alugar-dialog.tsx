@@ -72,7 +72,7 @@ export function AlugarDialog({
           toast.error("Selecione ou cadastre um cliente");
           return;
         }
-        await criarAluguel({
+        const { id: aluguelId } = await criarAluguel({
           veiculoId: veiculo.id,
           clienteId: novoCliente ? null : clienteId,
           clienteNovo: novoCliente
@@ -91,6 +91,7 @@ export function AlugarDialog({
           observacoes: String(formData.get("observacoes") ?? "") || null,
         });
         toast.success("Aluguel registrado");
+        window.open(`/api/locacao/${aluguelId}/contrato`, "_blank");
         onOpenChange(false);
         setClienteId("");
         setNovoCliente(false);

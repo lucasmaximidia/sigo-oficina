@@ -24,11 +24,17 @@ export function CaixaConfigDialog({
   dataInicio,
   extensaoAtrasoAtivo,
   extensaoAtrasoHoras,
+  locadoraRazaoSocial,
+  locadoraCnpj,
+  locadoraEndereco,
 }: {
   saldoInicial: number;
   dataInicio: string | null;
   extensaoAtrasoAtivo: boolean;
   extensaoAtrasoHoras: number;
+  locadoraRazaoSocial: string;
+  locadoraCnpj: string;
+  locadoraEndereco: string;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -99,6 +105,31 @@ export function CaixaConfigDialog({
               Passado esse tempo de atraso, o próprio aluguel é estendido por mais 1 dia (valor sobe 1 diária,
               mantendo o que já foi pago registrado) — repete a cada 24h adicionais enquanto não devolver.
             </p>
+          </div>
+
+          <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Dados da locadora (contrato)
+            </p>
+            <div>
+              <Label htmlFor="locadora_razao_social" className="mb-1.5 block">
+                Razão social
+              </Label>
+              <Input id="locadora_razao_social" name="locadora_razao_social" defaultValue={locadoraRazaoSocial} />
+            </div>
+            <div>
+              <Label htmlFor="locadora_cnpj" className="mb-1.5 block">
+                CNPJ
+              </Label>
+              <Input id="locadora_cnpj" name="locadora_cnpj" defaultValue={locadoraCnpj} />
+            </div>
+            <div>
+              <Label htmlFor="locadora_endereco" className="mb-1.5 block">
+                Endereço
+              </Label>
+              <Input id="locadora_endereco" name="locadora_endereco" defaultValue={locadoraEndereco} />
+            </div>
+            <p className="text-xs text-muted-foreground">Usados no contrato de locação (PDF) gerado a cada aluguel.</p>
           </div>
 
           <DialogFooter>
