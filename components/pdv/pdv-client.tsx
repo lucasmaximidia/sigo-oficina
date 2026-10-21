@@ -40,9 +40,11 @@ const CENTAVO = 0.01;
 export function PdvClient({
   pecas,
   vendasRecentes,
+  nfseObrigatoriaAtiva,
 }: {
   pecas: Peca[];
   vendasRecentes: (VendaPdv & { venda_itens: { descricao: string; quantidade: number }[] })[];
+  nfseObrigatoriaAtiva: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -70,7 +72,7 @@ export function PdvClient({
   const totalAlocado = pagamentosEfetivos.reduce((acc, p) => acc + p.valor, 0);
   const restante = Math.round((total - totalAlocado) * 100) / 100;
   const pagamentosBatem = Math.abs(restante) < CENTAVO;
-  const notaObrigatoria = nfseObrigatoria(pagamentosEfetivos.map((p) => p.forma_pagamento));
+  const notaObrigatoria = nfseObrigatoria(pagamentosEfetivos.map((p) => p.forma_pagamento), nfseObrigatoriaAtiva);
   const notaOk = notaObrigatoria || clienteDesejaNota !== null;
 
   function togglePagamento(forma: FormaPagamento) {

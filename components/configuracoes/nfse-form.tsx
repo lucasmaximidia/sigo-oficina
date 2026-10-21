@@ -49,6 +49,17 @@ export function NfseForm({ config }: { config: Configuracao }) {
             NOTAAS_API_KEY) — enquanto isso, as notas continuam sendo lançadas como pendentes, sem tentar emitir.
           </p>
 
+          <div className="border-t border-border pt-4">
+            <label className="flex items-center gap-2.5">
+              <Checkbox name="nfse_obrigatoria_cartao_pix" defaultChecked={config.nfse_obrigatoria_cartao_pix} />
+              <span className="text-sm text-foreground">Nota fiscal obrigatória pra pagamento em cartão/PIX</span>
+            </label>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Deixe desmarcado enquanto isso ainda não for exigido pela prefeitura. Com o cliente pagando em
+              dinheiro, a nota continua sempre opcional (quem decide é o cliente), independente desse interruptor.
+            </p>
+          </div>
+
           <div className="max-w-xs">
             <Label htmlFor="nfse_codigo_servico" className="mb-1.5 block">
               Código do serviço (prefeitura)

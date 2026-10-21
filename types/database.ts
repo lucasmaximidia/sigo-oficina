@@ -990,6 +990,7 @@ export interface Database {
           nfse_codigo_servico: string | null;
           nfse_descricao_padrao: string;
           nfse_aliquota_iss: number | null;
+          nfse_obrigatoria_cartao_pix: boolean;
           push_contas_vencer_ativo: boolean;
           push_contas_vencer_dias: number;
           push_contas_vencer_horario: string;
@@ -1036,6 +1037,7 @@ export interface Database {
           nfse_codigo_servico?: string | null;
           nfse_descricao_padrao?: string;
           nfse_aliquota_iss?: number | null;
+          nfse_obrigatoria_cartao_pix?: boolean;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
           push_contas_vencer_horario?: string;
@@ -1082,6 +1084,7 @@ export interface Database {
           nfse_codigo_servico?: string | null;
           nfse_descricao_padrao?: string;
           nfse_aliquota_iss?: number | null;
+          nfse_obrigatoria_cartao_pix?: boolean;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
           push_contas_vencer_horario?: string;

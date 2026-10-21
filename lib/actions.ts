@@ -1606,6 +1606,7 @@ export async function updateConfiguracoesNfse(formData: FormData) {
       nfse_codigo_servico: str(formData, "nfse_codigo_servico"),
       nfse_descricao_padrao: str(formData, "nfse_descricao_padrao") ?? "Serviço de assistência técnica em eletrodomésticos.",
       nfse_aliquota_iss: aliquota ? Number(aliquota.replace(",", ".")) : null,
+      nfse_obrigatoria_cartao_pix: formData.get("nfse_obrigatoria_cartao_pix") === "on",
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);
