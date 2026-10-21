@@ -50,6 +50,7 @@ export default async function LocacaoPage() {
       data_prevista_devolucao: a.data_prevista_devolucao,
       status_pagamento: a.status_pagamento,
       km_inicio: a.km_inicio,
+      valor: a.valor,
     };
     if (a.status_pagamento !== "pago") aReceber += a.valor - a.valor_pago;
     const prevista = new Date(a.data_prevista_devolucao);
