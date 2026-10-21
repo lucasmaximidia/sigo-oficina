@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { AppShellSidebar } from "@/components/layout/app-shell-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
@@ -14,29 +15,30 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const hojeStr = hojeBR();
   const limiteLembreteStr = diasAPartirDe(hojeStr, 2);
 
-  // Reforço dos avisos push diários: o Cron do Vercel (plano gratuito) não
-  // dispara sempre, então quem abre o app em qualquer página também conta
-  // como gatilho — cada aviso só roda 1x por dia (ver
-  // lib/notificacoes-diarias.ts), então abrir várias páginas não duplica. Na
-  // grande maioria das vezes é só 1 consulta rápida (nenhum aviso está no
-  // horário ainda); aguarda aqui (em vez de "disparar e esquecer") porque uma
-  // função serverless pode ser encerrada assim que a resposta é enviada, sem
-  // garantir que um trabalho em segundo plano termine. Nunca derruba a
-  // navegação: um erro aqui só fica registrado no console do servidor.
-  try {
-    await processarNotificacoesDiarias();
-  } catch (error) {
-    console.error("Erro ao processar notificações diárias:", error);
-  }
-
-  // Mesmo reforço acima, pra quem está atrasado na devolução de um aluguel:
-  // o Cron sozinho não é confiável, então abrir o app também dispara o
-  // lançamento da diária extra (ver lib/locacao-atraso.ts).
-  try {
-    await processarExtensaoAlugueisAtrasados();
-  } catch (error) {
-    console.error("Erro ao processar extensão de aluguéis atrasados:", error);
-  }
+  // Reforço dos avisos push diários + da extensão de aluguéis atrasados: o
+  // Cron do Vercel (plano gratuito) não dispara sempre, então quem abre o
+  // app em qualquer página também conta como gatilho (cada verificação é
+  // idempotente, então abrir várias páginas não duplica nada). Roda com
+  // after() — depois da resposta já ter sido enviada — em vez de aguardar
+  // aqui: antes disso travava TODA navegação no app esperando essas duas
+  // consultas, mesmo em páginas sem nada a ver com cobrança ou locação. O
+  // after() do Next.js resolve exatamente o motivo de antes ter sido feito
+  // de forma bloqueante (a função serverless podia ser encerrada assim que a
+  // resposta fosse enviada) sem pagar o preço de travar a página. Nunca
+  // derruba a navegação: um erro aqui só fica registrado no console do
+  // servidor.
+  after(async () => {
+    try {
+      await processarNotificacoesDiarias();
+    } catch (error) {
+      console.error("Erro ao processar notificações diárias:", error);
+    }
+    try {
+      await processarExtensaoAlugueisAtrasados();
+    } catch (error) {
+      console.error("Erro ao processar extensão de aluguéis atrasados:", error);
+    }
+  });
 
   const [{ data: config }, { data: contasVencendo }, { data: contasParaLembrete }, { data: pecas }] =
     await Promise.all([
