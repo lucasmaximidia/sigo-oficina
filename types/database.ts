@@ -992,8 +992,15 @@ export interface Database {
           nfse_aliquota_iss: number | null;
           push_contas_vencer_ativo: boolean;
           push_contas_vencer_dias: number;
+          push_contas_vencer_horario: string;
+          push_contas_vencer_ultimo_envio: string | null;
           push_agenda_hoje_ativo: boolean;
+          push_agenda_hoje_horario: string;
+          push_agenda_hoje_ultimo_envio: string | null;
           push_locacao_devolucao_ativo: boolean;
+          push_locacao_devolucao_dias: number;
+          push_locacao_devolucao_horario: string;
+          push_locacao_devolucao_ultimo_envio: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1031,8 +1038,15 @@ export interface Database {
           nfse_aliquota_iss?: number | null;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
+          push_contas_vencer_horario?: string;
+          push_contas_vencer_ultimo_envio?: string | null;
           push_agenda_hoje_ativo?: boolean;
+          push_agenda_hoje_horario?: string;
+          push_agenda_hoje_ultimo_envio?: string | null;
           push_locacao_devolucao_ativo?: boolean;
+          push_locacao_devolucao_dias?: number;
+          push_locacao_devolucao_horario?: string;
+          push_locacao_devolucao_ultimo_envio?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1070,8 +1084,15 @@ export interface Database {
           nfse_aliquota_iss?: number | null;
           push_contas_vencer_ativo?: boolean;
           push_contas_vencer_dias?: number;
+          push_contas_vencer_horario?: string;
+          push_contas_vencer_ultimo_envio?: string | null;
           push_agenda_hoje_ativo?: boolean;
+          push_agenda_hoje_horario?: string;
+          push_agenda_hoje_ultimo_envio?: string | null;
           push_locacao_devolucao_ativo?: boolean;
+          push_locacao_devolucao_dias?: number;
+          push_locacao_devolucao_horario?: string;
+          push_locacao_devolucao_ultimo_envio?: string | null;
           updated_at?: string;
         };
         Relationships: [];

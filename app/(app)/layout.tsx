@@ -6,11 +6,27 @@ import { LembreteContasToast } from "@/components/layout/lembrete-contas-toast";
 import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/notificacoes-bell";
 import { dataLembreteVencimento, diasAPartirDe, hojeBR } from "@/lib/utils";
+import { processarNotificacoesDiarias } from "@/lib/notificacoes-diarias";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const hojeStr = hojeBR();
   const limiteLembreteStr = diasAPartirDe(hojeStr, 2);
+
+  // Reforço dos avisos push diários: o Cron do Vercel (plano gratuito) não
+  // dispara sempre, então quem abre o app em qualquer página também conta
+  // como gatilho — cada aviso só roda 1x por dia (ver
+  // lib/notificacoes-diarias.ts), então abrir várias páginas não duplica. Na
+  // grande maioria das vezes é só 1 consulta rápida (nenhum aviso está no
+  // horário ainda); aguarda aqui (em vez de "disparar e esquecer") porque uma
+  // função serverless pode ser encerrada assim que a resposta é enviada, sem
+  // garantir que um trabalho em segundo plano termine. Nunca derruba a
+  // navegação: um erro aqui só fica registrado no console do servidor.
+  try {
+    await processarNotificacoesDiarias();
+  } catch (error) {
+    console.error("Erro ao processar notificações diárias:", error);
+  }
 
   const [{ data: config }, { data: contasVencendo }, { data: contasParaLembrete }, { data: pecas }] =
     await Promise.all([
