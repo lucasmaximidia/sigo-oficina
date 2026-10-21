@@ -55,16 +55,33 @@ interface EstadoCard {
 const ESTADO_AGUARDANDO: EstadoCard = { anelCor: "var(--border)", anelPct: 100, legenda: " ", stats: null };
 
 // useSyncExternalStore (mesmo padrão do NotificacoesBell) pra ler "agora" sem
-// mismatch de hidratação — não precisa de inscrição de verdade (não é um
-// relógio ao vivo, só uma leitura única assim que chega no cliente), e o
-// valor fica em cache pra sempre devolver o mesmo número nas várias chamadas
-// que o React faz durante a mesma renderização.
-let agoraCache: number | null = null;
-function inscreverRelogio() {
-  return () => {};
+// mismatch de hidratação. O valor fica em cache entre atualizações — pra não
+// mudar a cada chamada do React dentro da mesma renderização — mas o cache é
+// renovado a cada minuto via setInterval, avisando quem estiver inscrito.
+// Sem isso, quem deixa a aba aberta (sem recarregar, já que a navegação do
+// Next.js não recarrega a página) fica com o anel/contagem "congelados" no
+// horário em que a página carregou, mesmo horas ou dias depois.
+let agoraCache = Date.now();
+const ouvintesRelogio = new Set<() => void>();
+let intervaloRelogio: ReturnType<typeof setInterval> | null = null;
+
+function inscreverRelogio(ouvinte: () => void) {
+  ouvintesRelogio.add(ouvinte);
+  if (!intervaloRelogio) {
+    intervaloRelogio = setInterval(() => {
+      agoraCache = Date.now();
+      ouvintesRelogio.forEach((cb) => cb());
+    }, 60_000);
+  }
+  return () => {
+    ouvintesRelogio.delete(ouvinte);
+    if (ouvintesRelogio.size === 0 && intervaloRelogio) {
+      clearInterval(intervaloRelogio);
+      intervaloRelogio = null;
+    }
+  };
 }
 function agoraCliente(): number {
-  if (agoraCache == null) agoraCache = Date.now();
   return agoraCache;
 }
 function agoraServidor(): number | null {
