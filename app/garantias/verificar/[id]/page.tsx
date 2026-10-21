@@ -17,7 +17,7 @@ export default async function VerificarGarantiaPage({ params }: { params: Promis
   const valido = garantia && (garantia.status_garantia === "ativa" || garantia.status_garantia === "critica");
 
   return (
-    <div style={{ background: "#f7f9fb" }}>
+    <div className="h-dvh overflow-y-auto overscroll-contain" style={{ background: "#f7f9fb" }}>
       <div
         style={{
           minHeight: "100dvh",

@@ -13,7 +13,10 @@ function formatarDataHora(iso: string) {
 
 function Estado({ icon, cor, titulo, texto }: { icon: React.ReactNode; cor: string; titulo: string; texto: string }) {
   return (
-    <div style={{ background: "#f7f9fb", minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div
+      className="h-dvh overflow-y-auto overscroll-contain"
+      style={{ background: "#f7f9fb", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+    >
       <div style={{ textAlign: "center", maxWidth: 360 }}>
         <div style={{ color: cor, margin: "0 auto 16px" }}>{icon}</div>
         <h1 style={{ fontSize: 18, margin: "0 0 8px", color: "#191c1e" }}>{titulo}</h1>
@@ -79,7 +82,7 @@ export default async function RenovarAluguelPage({ params }: { params: Promise<{
   const novoTotal = r.valor_atual + r.valor_adicional;
 
   return (
-    <div style={{ background: "#f7f9fb", minHeight: "100dvh", padding: "24px 16px" }}>
+    <div className="h-dvh overflow-y-auto overscroll-contain" style={{ background: "#f7f9fb", padding: "24px 16px" }}>
       <div style={{ maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ background: "#ffffff", borderRadius: 16, padding: 24, boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08)" }}>
           <p style={{ fontSize: 20, fontWeight: 800, color: "#1a7a3c", margin: 0, letterSpacing: -0.5 }}>VOLTCITY</p>
