@@ -7,6 +7,7 @@ import { ServiceWorkerRegister } from "@/components/layout/service-worker-regist
 import type { NotificacaoConta, NotificacaoPeca } from "@/components/layout/notificacoes-bell";
 import { dataLembreteVencimento, diasAPartirDe, hojeBR } from "@/lib/utils";
 import { processarNotificacoesDiarias } from "@/lib/notificacoes-diarias";
+import { processarExtensaoAlugueisAtrasados } from "@/lib/locacao-atraso";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -26,6 +27,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     await processarNotificacoesDiarias();
   } catch (error) {
     console.error("Erro ao processar notificações diárias:", error);
+  }
+
+  // Mesmo reforço acima, pra quem está atrasado na devolução de um aluguel:
+  // o Cron sozinho não é confiável, então abrir o app também dispara o
+  // lançamento da diária extra (ver lib/locacao-atraso.ts).
+  try {
+    await processarExtensaoAlugueisAtrasados();
+  } catch (error) {
+    console.error("Erro ao processar extensão de aluguéis atrasados:", error);
   }
 
   const [{ data: config }, { data: contasVencendo }, { data: contasParaLembrete }, { data: pecas }] =
