@@ -15,15 +15,20 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { updateLocacaoConfig } from "@/lib/locacao-actions";
 
 export function CaixaConfigDialog({
   saldoInicial,
   dataInicio,
+  extensaoAtrasoAtivo,
+  extensaoAtrasoHoras,
 }: {
   saldoInicial: number;
   dataInicio: string | null;
+  extensaoAtrasoAtivo: boolean;
+  extensaoAtrasoHoras: number;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -32,7 +37,7 @@ export function CaixaConfigDialog({
     startTransition(async () => {
       try {
         await updateLocacaoConfig(formData);
-        toast.success("Saldo inicial do caixa atualizado");
+        toast.success("Configurações salvas");
         setOpen(false);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao salvar");
@@ -45,18 +50,16 @@ export function CaixaConfigDialog({
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm" className="gap-1.5">
           <Settings className="size-3.5" />
-          Configurar saldo inicial
+          Configurações
         </Button>
       </DialogTrigger>
       <DialogContent className="locacao-theme">
         <DialogHeader>
-          <DialogTitle>Saldo inicial do caixa</DialogTitle>
-          <DialogDescription>
-            Quanto dinheiro você já tinha em caixa antes de começar a usar o sistema, e a partir de qual data passar a
-            somar entradas e saídas daqui.
-          </DialogDescription>
+          <DialogTitle>Configurações da Locação</DialogTitle>
+          <DialogDescription>Saldo inicial do caixa e regras de atraso na devolução.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="flex flex-col gap-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Saldo em caixa</p>
           <div>
             <Label htmlFor="saldo_inicial" className="mb-1.5 block">
               Saldo inicial (R$)
@@ -72,6 +75,32 @@ export function CaixaConfigDialog({
               Lançamentos antes dessa data não entram na conta do saldo em caixa — já estão dentro do saldo inicial.
             </p>
           </div>
+
+          <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Diária extra por atraso
+            </p>
+            <label className="flex items-center gap-2.5">
+              <Checkbox name="extensao_atraso_ativo" defaultChecked={extensaoAtrasoAtivo} />
+              <span className="text-sm text-foreground">Lançar diária extra automaticamente em aluguéis atrasados</span>
+            </label>
+            <div className="max-w-[calc(50%-0.375rem)]">
+              <Label htmlFor="extensao_atraso_horas" className="mb-1.5 block">
+                Tolerância antes de lançar (horas)
+              </Label>
+              <NumericInput
+                id="extensao_atraso_horas"
+                name="extensao_atraso_horas"
+                decimal={false}
+                defaultValue={extensaoAtrasoHoras}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Passado esse tempo de atraso, o próprio aluguel é estendido por mais 1 dia (valor sobe 1 diária,
+              mantendo o que já foi pago registrado) — repete a cada 24h adicionais enquanto não devolver.
+            </p>
+          </div>
+
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Salvar"}

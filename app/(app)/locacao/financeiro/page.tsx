@@ -35,6 +35,7 @@ export default async function LocacaoFinanceiroPage() {
     saldoCaixa,
     { data: ajustes },
     { data: outrasEntradas },
+    { data: configLocacao },
   ] = await Promise.all([
     supabase.from("locacao_aluguel_pagamentos").select("valor").gte("data", inicioMes),
     supabase
@@ -45,6 +46,7 @@ export default async function LocacaoFinanceiroPage() {
     getSaldoEmCaixa(supabase),
     supabase.from("locacao_ajustes_caixa").select("*").order("data", { ascending: false }),
     supabase.from("locacao_outras_entradas").select("*").order("data", { ascending: false }),
+    supabase.from("locacao_config").select("extensao_atraso_ativo, extensao_atraso_horas").eq("id", 1).single(),
   ]);
 
   const outrasEntradasMes = (outrasEntradas ?? []).filter((e) => e.data >= inicioMes).reduce((acc, r) => acc + r.valor, 0);
@@ -73,7 +75,12 @@ export default async function LocacaoFinanceiroPage() {
               : "Nenhuma data de início configurada — somando toda a movimentação já lançada."}
           </p>
         </div>
-        <CaixaConfigDialog saldoInicial={saldoCaixa.saldoInicial} dataInicio={saldoCaixa.dataInicio} />
+        <CaixaConfigDialog
+          saldoInicial={saldoCaixa.saldoInicial}
+          dataInicio={saldoCaixa.dataInicio}
+          extensaoAtrasoAtivo={configLocacao?.extensao_atraso_ativo ?? true}
+          extensaoAtrasoHoras={configLocacao?.extensao_atraso_horas ?? 12}
+        />
       </Card>
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">

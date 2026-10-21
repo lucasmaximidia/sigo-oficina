@@ -25,6 +25,11 @@ type ColunaUltimoEnvio =
   | "push_agenda_hoje_ultimo_envio"
   | "push_locacao_devolucao_ultimo_envio";
 
+type ColunaUltimoResultado =
+  | "push_contas_vencer_ultimo_resultado"
+  | "push_agenda_hoje_ultimo_resultado"
+  | "push_locacao_devolucao_ultimo_resultado";
+
 const formatarHora = (iso: string) =>
   new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(new Date(iso));
 
@@ -43,6 +48,27 @@ async function marcarRodadoHoje(supabase: Supabase, coluna: ColunaUltimoEnvio, h
         ? { push_agenda_hoje_ultimo_envio: hojeStr }
         : { push_locacao_devolucao_ultimo_envio: hojeStr };
   await supabase.from("configuracoes").update(update).eq("id", 1);
+}
+
+// Guarda o resultado real do disparo (enviado, nada a notificar, ou erro) —
+// antes disso não tinha como saber, sem olhar log de servidor, se um aviso
+// realmente chegou a algum dispositivo ou só "rodou" sem efeito nenhum.
+async function registrarResultado(supabase: Supabase, coluna: ColunaUltimoResultado, resultado: string) {
+  const update =
+    coluna === "push_contas_vencer_ultimo_resultado"
+      ? { push_contas_vencer_ultimo_resultado: resultado }
+      : coluna === "push_agenda_hoje_ultimo_resultado"
+        ? { push_agenda_hoje_ultimo_resultado: resultado }
+        : { push_locacao_devolucao_ultimo_resultado: resultado };
+  await supabase.from("configuracoes").update(update).eq("id", 1);
+}
+
+function resultadoEnvio(resultado: Awaited<ReturnType<typeof enviarPushParaTodos>>, descricao: string) {
+  if (resultado.semChaves) return "Erro: chaves VAPID não configuradas";
+  if (resultado.semDispositivos) return "Nenhum dispositivo cadastrado";
+  if (resultado.enviados === 0) return `Erro: falha ao enviar pros ${resultado.falhas} dispositivo(s)`;
+  if (resultado.falhas > 0) return `${descricao} (parcial: ${resultado.enviados}/${resultado.enviados + resultado.falhas})`;
+  return descricao;
 }
 
 async function avisarContasAVencer(supabase: Supabase, dias: number) {
@@ -65,7 +91,7 @@ async function avisarContasAVencer(supabase: Supabase, dias: number) {
 
   const vencidas = contasVencendo ?? [];
   const lembreteHoje = (contasParaLembrete ?? []).filter((conta) => dataLembreteVencimento(conta.vencimento) === hojeStr);
-  if (vencidas.length === 0 && lembreteHoje.length === 0) return;
+  if (vencidas.length === 0 && lembreteHoje.length === 0) return "Nenhuma conta vencendo";
 
   let title: string;
   let body: string;
@@ -79,7 +105,8 @@ async function avisarContasAVencer(supabase: Supabase, dias: number) {
     body = `Total de ${formatCurrency(total)} a pagar nos próximos dias.`;
   }
 
-  await enviarPushParaTodos({ title, body, url: "/financeiro" });
+  const resultado = await enviarPushParaTodos({ title, body, url: "/financeiro" });
+  return resultadoEnvio(resultado, `Enviado: ${title}`);
 }
 
 async function avisarAgendaDoDia(supabase: Supabase) {
@@ -94,7 +121,7 @@ async function avisarAgendaDoDia(supabase: Supabase) {
     .not("status", "in", "(concluido,cancelado)")
     .order("data_hora_inicio", { ascending: true });
 
-  if (!eventos || eventos.length === 0) return;
+  if (!eventos || eventos.length === 0) return "Nenhum agendamento hoje";
 
   const title = eventos.length === 1 ? "1 agendamento hoje" : `${eventos.length} agendamentos hoje`;
   const body =
@@ -102,7 +129,8 @@ async function avisarAgendaDoDia(supabase: Supabase) {
       ? `${formatarHora(eventos[0].data_hora_inicio)} — ${eventos[0].titulo}`
       : `Primeiro às ${formatarHora(eventos[0].data_hora_inicio)}: ${eventos[0].titulo}.`;
 
-  await enviarPushParaTodos({ title, body, url: "/agenda" });
+  const resultado = await enviarPushParaTodos({ title, body, url: "/agenda" });
+  return resultadoEnvio(resultado, `Enviado: ${title}`);
 }
 
 async function avisarDevolucoesLocacao(supabase: Supabase, dias: number) {
@@ -138,7 +166,7 @@ async function avisarDevolucoesLocacao(supabase: Supabase, dias: number) {
     titulo = "devolução em breve";
   }
 
-  if (devolucoes.length === 0) return;
+  if (devolucoes.length === 0) return "Nenhuma devolução prevista";
 
   const primeiro = devolucoes[0];
   const veiculo = primeiro.locacao_veiculos as unknown as { marca: string; modelo: string } | null;
@@ -151,7 +179,8 @@ async function avisarDevolucoesLocacao(supabase: Supabase, dias: number) {
       ? `${formatarHora(primeiro.data_prevista_devolucao)} — ${veiculo?.marca ?? ""} ${veiculo?.modelo ?? ""} (${cliente?.nome ?? "cliente"})`
       : `Primeira às ${formatarHora(primeiro.data_prevista_devolucao)}: ${veiculo?.marca ?? ""} ${veiculo?.modelo ?? ""}.`;
 
-  await enviarPushParaTodos({ title, body, url: "/locacao/alugueis" });
+  const resultado = await enviarPushParaTodos({ title, body, url: "/locacao/alugueis" });
+  return resultadoEnvio(resultado, `Enviado: ${title}`);
 }
 
 // Ponto único de disparo dos avisos push diários — chamado tanto pelo cron
@@ -184,15 +213,31 @@ export async function processarNotificacoesDiarias() {
 
   if (deveRodarAgora(c.push_contas_vencer_ativo, c.push_contas_vencer_horario, c.push_contas_vencer_ultimo_envio, hojeStr, horaAtual)) {
     tarefas.push(
-      marcarRodadoHoje(supabase, "push_contas_vencer_ultimo_envio", hojeStr).then(() =>
-        avisarContasAVencer(supabase, c.push_contas_vencer_dias)
-      )
+      marcarRodadoHoje(supabase, "push_contas_vencer_ultimo_envio", hojeStr)
+        .then(() => avisarContasAVencer(supabase, c.push_contas_vencer_dias))
+        .then((resultado) => registrarResultado(supabase, "push_contas_vencer_ultimo_resultado", resultado))
+        .catch((error) =>
+          registrarResultado(
+            supabase,
+            "push_contas_vencer_ultimo_resultado",
+            `Erro: ${error instanceof Error ? error.message : String(error)}`
+          )
+        )
     );
   }
 
   if (deveRodarAgora(c.push_agenda_hoje_ativo, c.push_agenda_hoje_horario, c.push_agenda_hoje_ultimo_envio, hojeStr, horaAtual)) {
     tarefas.push(
-      marcarRodadoHoje(supabase, "push_agenda_hoje_ultimo_envio", hojeStr).then(() => avisarAgendaDoDia(supabase))
+      marcarRodadoHoje(supabase, "push_agenda_hoje_ultimo_envio", hojeStr)
+        .then(() => avisarAgendaDoDia(supabase))
+        .then((resultado) => registrarResultado(supabase, "push_agenda_hoje_ultimo_resultado", resultado))
+        .catch((error) =>
+          registrarResultado(
+            supabase,
+            "push_agenda_hoje_ultimo_resultado",
+            `Erro: ${error instanceof Error ? error.message : String(error)}`
+          )
+        )
     );
   }
 
@@ -206,9 +251,16 @@ export async function processarNotificacoesDiarias() {
     )
   ) {
     tarefas.push(
-      marcarRodadoHoje(supabase, "push_locacao_devolucao_ultimo_envio", hojeStr).then(() =>
-        avisarDevolucoesLocacao(supabase, c.push_locacao_devolucao_dias)
-      )
+      marcarRodadoHoje(supabase, "push_locacao_devolucao_ultimo_envio", hojeStr)
+        .then(() => avisarDevolucoesLocacao(supabase, c.push_locacao_devolucao_dias))
+        .then((resultado) => registrarResultado(supabase, "push_locacao_devolucao_ultimo_resultado", resultado))
+        .catch((error) =>
+          registrarResultado(
+            supabase,
+            "push_locacao_devolucao_ultimo_resultado",
+            `Erro: ${error instanceof Error ? error.message : String(error)}`
+          )
+        )
     );
   }
 

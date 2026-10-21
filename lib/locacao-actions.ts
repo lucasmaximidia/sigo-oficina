@@ -541,6 +541,8 @@ export async function updateLocacaoConfig(formData: FormData) {
     .update({
       saldo_inicial: num(formData, "saldo_inicial"),
       data_inicio_caixa: str(formData, "data_inicio_caixa"),
+      extensao_atraso_ativo: formData.get("extensao_atraso_ativo") === "on",
+      extensao_atraso_horas: intOuNull(formData, "extensao_atraso_horas") ?? 12,
       updated_at: new Date().toISOString(),
     })
     .eq("id", 1);

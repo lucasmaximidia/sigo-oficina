@@ -995,13 +995,16 @@ export interface Database {
           push_contas_vencer_dias: number;
           push_contas_vencer_horario: string;
           push_contas_vencer_ultimo_envio: string | null;
+          push_contas_vencer_ultimo_resultado: string | null;
           push_agenda_hoje_ativo: boolean;
           push_agenda_hoje_horario: string;
           push_agenda_hoje_ultimo_envio: string | null;
+          push_agenda_hoje_ultimo_resultado: string | null;
           push_locacao_devolucao_ativo: boolean;
           push_locacao_devolucao_dias: number;
           push_locacao_devolucao_horario: string;
           push_locacao_devolucao_ultimo_envio: string | null;
+          push_locacao_devolucao_ultimo_resultado: string | null;
           updated_at: string;
         };
         Insert: {
@@ -1042,13 +1045,16 @@ export interface Database {
           push_contas_vencer_dias?: number;
           push_contas_vencer_horario?: string;
           push_contas_vencer_ultimo_envio?: string | null;
+          push_contas_vencer_ultimo_resultado?: string | null;
           push_agenda_hoje_ativo?: boolean;
           push_agenda_hoje_horario?: string;
           push_agenda_hoje_ultimo_envio?: string | null;
+          push_agenda_hoje_ultimo_resultado?: string | null;
           push_locacao_devolucao_ativo?: boolean;
           push_locacao_devolucao_dias?: number;
           push_locacao_devolucao_horario?: string;
           push_locacao_devolucao_ultimo_envio?: string | null;
+          push_locacao_devolucao_ultimo_resultado?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1089,13 +1095,16 @@ export interface Database {
           push_contas_vencer_dias?: number;
           push_contas_vencer_horario?: string;
           push_contas_vencer_ultimo_envio?: string | null;
+          push_contas_vencer_ultimo_resultado?: string | null;
           push_agenda_hoje_ativo?: boolean;
           push_agenda_hoje_horario?: string;
           push_agenda_hoje_ultimo_envio?: string | null;
+          push_agenda_hoje_ultimo_resultado?: string | null;
           push_locacao_devolucao_ativo?: boolean;
           push_locacao_devolucao_dias?: number;
           push_locacao_devolucao_horario?: string;
           push_locacao_devolucao_ultimo_envio?: string | null;
+          push_locacao_devolucao_ultimo_resultado?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -1366,6 +1375,7 @@ export interface Database {
           km_inicio: number | null;
           km_fim: number | null;
           observacoes: string | null;
+          diarias_extras_atraso: number;
           created_at: string;
           updated_at: string;
         };
@@ -1385,6 +1395,7 @@ export interface Database {
           km_inicio?: number | null;
           km_fim?: number | null;
           observacoes?: string | null;
+          diarias_extras_atraso?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1404,6 +1415,7 @@ export interface Database {
           km_inicio?: number | null;
           km_fim?: number | null;
           observacoes?: string | null;
+          diarias_extras_atraso?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1456,18 +1468,24 @@ export interface Database {
           id: number;
           saldo_inicial: number;
           data_inicio_caixa: string | null;
+          extensao_atraso_ativo: boolean;
+          extensao_atraso_horas: number;
           updated_at: string;
         };
         Insert: {
           id?: number;
           saldo_inicial?: number;
           data_inicio_caixa?: string | null;
+          extensao_atraso_ativo?: boolean;
+          extensao_atraso_horas?: number;
           updated_at?: string;
         };
         Update: {
           id?: number;
           saldo_inicial?: number;
           data_inicio_caixa?: string | null;
+          extensao_atraso_ativo?: boolean;
+          extensao_atraso_horas?: number;
           updated_at?: string;
         };
         Relationships: [];

@@ -7,8 +7,8 @@ type Supabase = ReturnType<typeof createServiceClient>;
 // veículo por mais 1 dia. Em vez de só mostrar "atrasado", lançamos essa
 // diária extra no próprio aluguel (valor total sobe; o que já foi pago
 // continua registrado, então o status vira "parcial" em vez de voltar a
-// "pendente"). A tolerância de 12h evita estender por um atraso de minutos.
-const TOLERANCIA_ATRASO_MS = 12 * 3_600_000;
+// "pendente"). A tolerância (padrão 12h, configurável) evita estender por
+// um atraso de minutos.
 const DIA_MS = 24 * 3_600_000;
 
 async function totalPagoDoAluguel(supabase: Supabase, aluguelId: string) {
@@ -26,11 +26,20 @@ async function totalPagoDoAluguel(supabase: Supabase, aluguelId: string) {
 // concorrentes.
 export async function processarExtensaoAlugueisAtrasados() {
   const supabase = createServiceClient();
+
+  const { data: config } = await supabase
+    .from("locacao_config")
+    .select("extensao_atraso_ativo, extensao_atraso_horas")
+    .eq("id", 1)
+    .single();
+  if (!config?.extensao_atraso_ativo) return;
+  const toleranciaMs = config.extensao_atraso_horas * 3_600_000;
+
   const agora = Date.now();
 
   const { data: alugueis } = await supabase
     .from("locacao_alugueis")
-    .select("id, valor, data_prevista_devolucao, locacao_veiculos(valor_diaria)")
+    .select("id, valor, data_prevista_devolucao, diarias_extras_atraso, locacao_veiculos(valor_diaria)")
     .is("data_devolucao_real", null);
 
   for (const aluguel of alugueis ?? []) {
@@ -40,7 +49,7 @@ export async function processarExtensaoAlugueisAtrasados() {
 
     let novaPrevista = new Date(aluguel.data_prevista_devolucao).getTime();
     let diasAdicionados = 0;
-    while (novaPrevista + TOLERANCIA_ATRASO_MS <= agora) {
+    while (novaPrevista + toleranciaMs <= agora) {
       novaPrevista += DIA_MS;
       diasAdicionados++;
     }
@@ -55,6 +64,7 @@ export async function processarExtensaoAlugueisAtrasados() {
       .update({
         data_prevista_devolucao: new Date(novaPrevista).toISOString(),
         valor: novoValor,
+        diarias_extras_atraso: aluguel.diarias_extras_atraso + diasAdicionados,
         status_pagamento: statusPagamento,
         updated_at: new Date().toISOString(),
       })

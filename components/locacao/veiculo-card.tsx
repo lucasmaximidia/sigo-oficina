@@ -20,6 +20,7 @@ export interface AluguelAtivo {
   status_pagamento: string;
   km_inicio: number | null;
   valor: number;
+  diarias_extras_atraso: number;
 }
 
 const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning" | "secondary" | "info" }> = {
@@ -230,6 +231,11 @@ export function VeiculoCard({
       <div className="flex flex-wrap justify-center gap-1.5">
         <Badge variant={status.variant}>{status.label}</Badge>
         {aluguel && aluguel.status_pagamento !== "pago" && <Badge variant="warning">Pagamento pendente</Badge>}
+        {aluguel && aluguel.diarias_extras_atraso > 0 && (
+          <Badge variant="destructive">
+            +{aluguel.diarias_extras_atraso} diária{aluguel.diarias_extras_atraso === 1 ? "" : "s"} (atraso)
+          </Badge>
+        )}
       </div>
 
       {estado.stats && (
