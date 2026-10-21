@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processarNotificacoesDiarias } from "@/lib/notificacoes-diarias";
+import { processarExtensaoAlugueisAtrasados } from "@/lib/locacao-atraso";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  await processarNotificacoesDiarias();
+  await Promise.all([processarNotificacoesDiarias(), processarExtensaoAlugueisAtrasados()]);
 
   return NextResponse.json({ enviado: true });
 }
