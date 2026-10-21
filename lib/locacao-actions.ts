@@ -398,14 +398,22 @@ export async function registrarDevolucao(
   aluguelId: string,
   veiculoId: string,
   novoStatusVeiculo: "disponivel" | "manutencao",
-  kmFim?: number | null
+  kmFim?: number | null,
+  dataDevolucao?: string | null
 ) {
   const supabase = await createClient();
+
+  // Permite registrar a devolução com data/hora retroativa (ex.: esqueceu de
+  // marcar na hora) — só não pode ser no futuro.
+  const dataDevolucaoFinal = dataDevolucao ?? new Date().toISOString();
+  if (new Date(dataDevolucaoFinal).getTime() > Date.now()) {
+    throw new Error("A data de devolução não pode ser no futuro");
+  }
 
   const { error: aluguelError } = await supabase
     .from("locacao_alugueis")
     .update({
-      data_devolucao_real: new Date().toISOString(),
+      data_devolucao_real: dataDevolucaoFinal,
       km_fim: kmFim ?? null,
       updated_at: new Date().toISOString(),
     })

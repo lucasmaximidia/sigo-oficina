@@ -16,6 +16,17 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { registrarDevolucao } from "@/lib/locacao-actions";
 
+// Formata em horário local (não UTC) no formato que <input type="datetime-local">
+// espera — new Date(valorDoInput) depois interpreta de volta como horário local.
+function paraDatetimeLocal(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function agora() {
+  return paraDatetimeLocal(new Date());
+}
+
 export function DevolverDialog({
   aluguelId,
   veiculoId,
@@ -30,6 +41,7 @@ export function DevolverDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [kmFim, setKmFim] = useState("");
+  const [dataDevolucao, setDataDevolucao] = useState(agora());
   const [isPending, startTransition] = useTransition();
 
   function confirmar(status: "disponivel" | "manutencao") {
@@ -40,10 +52,11 @@ export function DevolverDialog({
     }
     startTransition(async () => {
       try {
-        await registrarDevolucao(aluguelId, veiculoId, status, km);
+        await registrarDevolucao(aluguelId, veiculoId, status, km, new Date(dataDevolucao).toISOString());
         toast.success("Devolução registrada");
         onOpenChange(false);
         setKmFim("");
+        setDataDevolucao(agora());
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao registrar devolução");
       }
@@ -57,6 +70,20 @@ export function DevolverDialog({
           <DialogTitle>Registrar devolução</DialogTitle>
           <DialogDescription>Informe o KM final e em que condição o veículo foi devolvido.</DialogDescription>
         </DialogHeader>
+
+        <div>
+          <Label htmlFor="data_devolucao" className="mb-1.5 block">
+            Data e hora da devolução
+          </Label>
+          <Input
+            id="data_devolucao"
+            type="datetime-local"
+            max={agora()}
+            value={dataDevolucao}
+            onChange={(e) => setDataDevolucao(e.target.value)}
+          />
+          <p className="mt-1.5 text-xs text-muted-foreground">Esqueceu de registrar na hora? Ajuste aqui pra data/hora real.</p>
+        </div>
 
         <div>
           <Label htmlFor="km_fim" className="mb-1.5 block">
