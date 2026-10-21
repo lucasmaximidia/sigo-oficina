@@ -105,9 +105,22 @@ export default async function RenovarAluguelPage({ params }: { params: Promise<{
           </div>
 
           <form action={aceitarRenovacaoPublica.bind(null, token)} style={{ marginTop: 20 }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                name="ciente"
+                required
+                style={{ marginTop: 2, width: 16, height: 16, accentColor: "#1a7a3c", flexShrink: 0 }}
+              />
+              <span style={{ fontSize: 12, color: "#3a4246", lineHeight: 1.4 }}>
+                Li e estou ciente dos novos termos desta renovação (nova devolução, valor adicional e novo valor
+                total do aluguel).
+              </span>
+            </label>
             <button
               type="submit"
               style={{
+                marginTop: 14,
                 width: "100%",
                 background: "#1a7a3c",
                 color: "#ffffff",
