@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Bike, Scooter, CalendarClock, AlertTriangle, User, Wrench, PlayCircle, Zap, Gauge } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
+import { Bike, Scooter, PlayCircle, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
@@ -9,7 +9,7 @@ import { AlugarDialog } from "@/components/locacao/alugar-dialog";
 import { DevolverDialog } from "@/components/locacao/devolver-dialog";
 import { updateVeiculoStatus } from "@/lib/locacao-actions";
 import { corVeiculo } from "@/lib/locacao-cores";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import type { LocacaoIcone, LocacaoVeiculo } from "@/types";
 
 export interface AluguelAtivo {
@@ -19,6 +19,7 @@ export interface AluguelAtivo {
   data_prevista_devolucao: string;
   status_pagamento: string;
   km_inicio: number | null;
+  valor: number;
 }
 
 const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning" | "secondary" | "info" }> = {
@@ -31,18 +32,105 @@ const STATUS_INFO: Record<string, { label: string; variant: "success" | "warning
 const formatarHora = (iso: string) =>
   new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
-function statusDevolucao(dataPrevista: string) {
-  const agora = new Date();
-  const prevista = new Date(dataPrevista);
-  const atrasado = prevista.getTime() < agora.getTime();
+// Duração curta ("8h", "2d") pra caber no rodapé do card.
+function formatarDuracao(ms: number) {
+  const horas = ms / 3_600_000;
+  if (horas <= 0) return "0h";
+  if (horas < 24) return `${Math.max(1, Math.round(horas))}h`;
+  return `${Math.ceil(horas / 24)}d`;
+}
 
-  const hojeCal = new Date();
-  hojeCal.setHours(0, 0, 0, 0);
-  const prevCal = new Date(dataPrevista);
-  prevCal.setHours(0, 0, 0, 0);
-  const dias = Math.round((prevCal.getTime() - hojeCal.getTime()) / 86400000);
+interface EstadoCard {
+  anelCor: string;
+  anelPct: number;
+  legenda: string;
+  stats: { valor: string; rotulo: string; alerta?: boolean }[] | null;
+}
 
-  return { atrasado, dias, hora: formatarHora(dataPrevista) };
+// Estado "neutro", igual no servidor e no primeiro render do cliente — o
+// anel depende da hora atual, que nunca é a mesma nos dois lados (o servidor
+// renderiza num instante, a hidratação no cliente roda um pouco depois), e
+// usar Date.now() direto aqui causaria erro de hidratação. Esse estado some
+// assim que o efeito abaixo roda e marca a hora real.
+const ESTADO_AGUARDANDO: EstadoCard = { anelCor: "var(--border)", anelPct: 100, legenda: " ", stats: null };
+
+// useSyncExternalStore (mesmo padrão do NotificacoesBell) pra ler "agora" sem
+// mismatch de hidratação — não precisa de inscrição de verdade (não é um
+// relógio ao vivo, só uma leitura única assim que chega no cliente), e o
+// valor fica em cache pra sempre devolver o mesmo número nas várias chamadas
+// que o React faz durante a mesma renderização.
+let agoraCache: number | null = null;
+function inscreverRelogio() {
+  return () => {};
+}
+function agoraCliente(): number {
+  if (agoraCache == null) agoraCache = Date.now();
+  return agoraCache;
+}
+function agoraServidor(): number | null {
+  return null;
+}
+
+function calcularEstado(
+  veiculo: LocacaoVeiculo,
+  aluguel: AluguelAtivo | null,
+  agora: number | null,
+  kmAtual?: number | null
+): EstadoCard {
+  if (agora == null) return ESTADO_AGUARDANDO;
+  if (!aluguel) {
+    if (veiculo.status === "manutencao") {
+      return { anelCor: "var(--warning)", anelPct: 100, legenda: "Em manutenção", stats: null };
+    }
+    if (veiculo.status === "inativo") {
+      return { anelCor: "var(--muted-foreground)", anelPct: 100, legenda: "Inativo", stats: null };
+    }
+    return {
+      anelCor: "var(--success)",
+      anelPct: 100,
+      legenda: "Pronta pra alugar",
+      stats: [
+        { valor: kmAtual != null ? `${kmAtual} km` : "—", rotulo: "Rodados" },
+        { valor: veiculo.valor_diaria != null ? formatCurrency(veiculo.valor_diaria) : "—", rotulo: "Diária" },
+      ],
+    };
+  }
+
+  const prevista = new Date(aluguel.data_prevista_devolucao).getTime();
+  const atrasado = prevista < agora;
+
+  if (atrasado) {
+    const hojeCal = new Date(agora);
+    hojeCal.setHours(0, 0, 0, 0);
+    const prevCal = new Date(aluguel.data_prevista_devolucao);
+    prevCal.setHours(0, 0, 0, 0);
+    const dias = Math.round((prevCal.getTime() - hojeCal.getTime()) / 86_400_000);
+    const diasAtraso = Math.abs(dias);
+    return {
+      anelCor: "var(--destructive)",
+      anelPct: 100,
+      legenda: dias < 0 ? `Atrasado há ${diasAtraso} dia${diasAtraso === 1 ? "" : "s"}` : `Atrasado desde ${formatarHora(aluguel.data_prevista_devolucao)}`,
+      stats: [
+        { valor: dias < 0 ? `${diasAtraso}d` : "Hoje", rotulo: "Atraso", alerta: true },
+        { valor: formatCurrency(aluguel.valor), rotulo: "Valor" },
+      ],
+    };
+  }
+
+  const inicio = new Date(aluguel.data_retirada).getTime();
+  const total = prevista - inicio;
+  const restanteMs = prevista - agora;
+  const pct = total > 0 ? Math.max(0, Math.min(100, (restanteMs / total) * 100)) : 0;
+
+  return {
+    anelCor: pct < 25 ? "var(--warning)" : "var(--success)",
+    anelPct: pct,
+    legenda: `Faltam ${formatarDuracao(restanteMs)} pra devolver`,
+    stats: [
+      { valor: formatarDuracao(restanteMs), rotulo: "Restantes" },
+      { valor: formatCurrency(aluguel.valor), rotulo: "Valor" },
+    ],
+  };
 }
 
 export function VeiculoCard({
@@ -61,108 +149,86 @@ export function VeiculoCard({
   const [alugarOpen, setAlugarOpen] = useState(false);
   const [devolverOpen, setDevolverOpen] = useState(false);
   const [iconeComErro, setIconeComErro] = useState(false);
+  const agora = useSyncExternalStore(inscreverRelogio, agoraCliente, agoraServidor);
   const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
   const mostrarIcone = !!veiculo.foto_url && !iconeComErro;
   const status = STATUS_INFO[veiculo.status] ?? STATUS_INFO.disponivel;
   const cor = corVeiculo(veiculo.cor);
-  const devolucao = aluguel ? statusDevolucao(aluguel.data_prevista_devolucao) : null;
-  const atrasado = devolucao?.atrasado ?? false;
+  const estado = calcularEstado(veiculo, aluguel, agora, kmAtual);
+  const atrasado = estado.anelCor === "var(--destructive)";
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm transition-colors",
+        "relative flex flex-col items-center gap-2.5 rounded-2xl border bg-card p-4 text-center shadow-sm transition-colors",
         atrasado ? "border-destructive/40" : "border-border"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl shadow-sm",
-              !cor && !mostrarIcone && "bg-gradient-to-br from-primary to-primary-hover text-primary-foreground",
-              veiculo.status === "alugado" && "ring-2 ring-info/50 ring-offset-2 ring-offset-card"
-            )}
-            style={!mostrarIcone && cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
-          >
-            {mostrarIcone ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={veiculo.foto_url!}
-                alt={`${veiculo.marca} ${veiculo.modelo}`}
-                className="size-full object-contain"
-                onError={() => setIconeComErro(true)}
-              />
-            ) : (
-              <Icon className="size-7" strokeWidth={1.75} />
-            )}
-            <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-locacao-spark text-locacao-spark-foreground shadow-sm ring-2 ring-card">
-              <Zap className="size-3" strokeWidth={2.5} fill="currentColor" />
-            </span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              {veiculo.marca} {veiculo.modelo}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {veiculo.cor ? `${veiculo.cor} · ` : ""}
-              {veiculo.chassi}
-            </p>
-          </div>
-        </div>
+      <div className="absolute right-2.5 top-2.5">
         <VeiculoDialog veiculo={veiculo} icones={icones} />
       </div>
 
-      <Badge variant={status.variant} className="w-fit">
-        {status.label}
-      </Badge>
-
-      {aluguel ? (
-        <div className="flex flex-col gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
-          <div className="flex items-center gap-1.5 font-medium text-foreground">
-            <User className="size-3.5 text-muted-foreground" />
-            {aluguel.cliente_nome}
-          </div>
-          <div
-            className={cn(
-              "flex items-center gap-1.5",
-              atrasado ? "font-semibold text-destructive" : "text-muted-foreground"
-            )}
-          >
-            {atrasado ? <AlertTriangle className="size-3.5" /> : <CalendarClock className="size-3.5" />}
-            {atrasado
-              ? devolucao!.dias < 0
-                ? `Atrasado há ${Math.abs(devolucao!.dias)} dia${Math.abs(devolucao!.dias) === 1 ? "" : "s"}`
-                : `Atrasado desde ${devolucao!.hora}`
-              : devolucao!.dias === 0
-                ? `Devolução hoje às ${devolucao!.hora}`
-                : `${devolucao!.dias} dia${devolucao!.dias === 1 ? "" : "s"} para devolver (${devolucao!.hora})`}
-          </div>
-          {aluguel.status_pagamento !== "pago" && (
-            <Badge variant="warning" className="w-fit">
-              Pagamento pendente
-            </Badge>
-          )}
-          {aluguel.km_inicio != null && (
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Gauge className="size-3.5" />
-              Saiu com {aluguel.km_inicio} km
-            </div>
+      <div
+        className="mt-1 size-24 shrink-0 rounded-full p-[5px] transition-[background]"
+        style={{ background: `conic-gradient(${estado.anelCor} ${estado.anelPct}%, var(--border) 0)` }}
+      >
+        <div
+          className="flex size-full items-center justify-center overflow-hidden rounded-full bg-card"
+          style={!mostrarIcone && cor ? { backgroundColor: cor.bg, color: cor.fg } : undefined}
+        >
+          {mostrarIcone ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={veiculo.foto_url!}
+              alt={`${veiculo.marca} ${veiculo.modelo}`}
+              className="size-[78%] object-contain"
+              onError={() => setIconeComErro(true)}
+            />
+          ) : (
+            <Icon className="size-8" strokeWidth={1.75} />
           )}
         </div>
-      ) : (
-        <>
-          {veiculo.observacoes && <p className="text-xs text-muted-foreground">{veiculo.observacoes}</p>}
-          {kmAtual != null && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Gauge className="size-3.5" />
-              {kmAtual} km rodados
+      </div>
+      <span className="text-[11px] font-bold" style={{ color: estado.anelCor }}>
+        {estado.legenda}
+      </span>
+
+      <div>
+        <p className="text-sm font-semibold text-foreground">
+          {veiculo.marca} {veiculo.modelo}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {veiculo.cor ? `${veiculo.cor} · ` : ""}
+          {veiculo.chassi}
+        </p>
+      </div>
+
+      {aluguel && (
+        <p className="text-xs text-muted-foreground">
+          Com <span className="font-medium text-foreground">{aluguel.cliente_nome}</span>
+        </p>
+      )}
+      {!aluguel && veiculo.observacoes && <p className="text-xs text-muted-foreground">{veiculo.observacoes}</p>}
+
+      <div className="flex flex-wrap justify-center gap-1.5">
+        <Badge variant={status.variant}>{status.label}</Badge>
+        {aluguel && aluguel.status_pagamento !== "pago" && <Badge variant="warning">Pagamento pendente</Badge>}
+      </div>
+
+      {estado.stats && (
+        <div className="mt-0.5 grid w-full grid-cols-2 divide-x divide-border border-t border-border pt-2.5">
+          {estado.stats.map((s) => (
+            <div key={s.rotulo} className="flex flex-col items-center gap-0.5">
+              <span className={cn("font-display text-sm font-bold tabular-nums", s.alerta && "text-destructive")}>
+                {s.valor}
+              </span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{s.rotulo}</span>
             </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
 
-      <div className="mt-auto flex gap-2 pt-1">
+      <div className="mt-auto flex w-full gap-2 pt-1">
         {veiculo.status === "disponivel" && (
           <Button type="button" size="sm" className="flex-1 gap-1.5" onClick={() => setAlugarOpen(true)}>
             <PlayCircle className="size-3.5" />
