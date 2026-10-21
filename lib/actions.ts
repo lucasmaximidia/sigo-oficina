@@ -1795,8 +1795,12 @@ export async function updateConfiguracoesPush(formData: FormData) {
     .update({
       push_contas_vencer_ativo: formData.get("push_contas_vencer_ativo") === "on",
       push_contas_vencer_dias: num(formData, "push_contas_vencer_dias"),
+      push_contas_vencer_horario: str(formData, "push_contas_vencer_horario") ?? "08:00",
       push_agenda_hoje_ativo: formData.get("push_agenda_hoje_ativo") === "on",
+      push_agenda_hoje_horario: str(formData, "push_agenda_hoje_horario") ?? "08:00",
       push_locacao_devolucao_ativo: formData.get("push_locacao_devolucao_ativo") === "on",
+      push_locacao_devolucao_dias: num(formData, "push_locacao_devolucao_dias"),
+      push_locacao_devolucao_horario: str(formData, "push_locacao_devolucao_horario") ?? "08:00",
     })
     .eq("id", 1);
   if (error) throw new Error(error.message);

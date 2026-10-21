@@ -89,6 +89,22 @@ export function agoraMs(): number {
   return Date.now();
 }
 
+// Hora atual (HH:mm) no fuso do Brasil — mesmo motivo do hojeBR(), usado
+// pra comparar com o horário configurado de cada aviso push (ver
+// lib/notificacoes-diarias.ts). hourCycle "h23" evita o bug conhecido de
+// `hour12: false` devolver "24" em vez de "00" à meia-noite.
+export function horaBR(): string {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: FUSO_BRASIL,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const hora = partes.find((p) => p.type === "hour")?.value ?? "00";
+  const minuto = partes.find((p) => p.type === "minute")?.value ?? "00";
+  return `${hora}:${minuto}`;
+}
+
 export function formatPhoneBR(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length === 0) return "";

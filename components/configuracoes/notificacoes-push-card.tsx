@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { descreverDispositivo, formatDateTime } from "@/lib/utils";
@@ -45,7 +46,14 @@ export function NotificacoesPushCard({
 }: {
   config: Pick<
     Configuracao,
-    "push_contas_vencer_ativo" | "push_contas_vencer_dias" | "push_agenda_hoje_ativo" | "push_locacao_devolucao_ativo"
+    | "push_contas_vencer_ativo"
+    | "push_contas_vencer_dias"
+    | "push_contas_vencer_horario"
+    | "push_agenda_hoje_ativo"
+    | "push_agenda_hoje_horario"
+    | "push_locacao_devolucao_ativo"
+    | "push_locacao_devolucao_dias"
+    | "push_locacao_devolucao_horario"
   >;
   dispositivos: DispositivoPush[];
 }) {
@@ -211,37 +219,98 @@ export function NotificacoesPushCard({
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Aviso de contas a vencer
           </p>
-          <form action={salvarConfig} className="flex flex-col gap-3">
-            <label className="flex items-center gap-2.5">
-              <Checkbox name="push_contas_vencer_ativo" defaultChecked={config.push_contas_vencer_ativo} />
-              <span className="text-sm text-foreground">Enviar notificação (independente do sino no topo do app)</span>
-            </label>
-            <div className="max-w-xs">
-              <Label htmlFor="push_contas_vencer_dias" className="mb-1.5 block">
-                Avisar com quantos dias de antecedência
-              </Label>
-              <NumericInput
-                id="push_contas_vencer_dias"
-                name="push_contas_vencer_dias"
-                decimal={false}
-                defaultValue={config.push_contas_vencer_dias}
-              />
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                Contas já vencidas ou vencendo hoje sempre avisam, independente desse número.
+          <form action={salvarConfig} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2.5">
+              <label className="flex items-center gap-2.5">
+                <Checkbox name="push_contas_vencer_ativo" defaultChecked={config.push_contas_vencer_ativo} />
+                <span className="text-sm text-foreground">Avisar contas a vencer</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="push_contas_vencer_dias" className="mb-1.5 block text-xs">
+                    Dias de antecedência
+                  </Label>
+                  <NumericInput
+                    id="push_contas_vencer_dias"
+                    name="push_contas_vencer_dias"
+                    decimal={false}
+                    defaultValue={config.push_contas_vencer_dias}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="push_contas_vencer_horario" className="mb-1.5 block text-xs">
+                    Horário do aviso
+                  </Label>
+                  <Input
+                    id="push_contas_vencer_horario"
+                    name="push_contas_vencer_horario"
+                    type="time"
+                    defaultValue={config.push_contas_vencer_horario.slice(0, 5)}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Contas já vencidas ou vencendo hoje sempre avisam, independente dos dias de antecedência.
               </p>
             </div>
 
-            <label className="mt-2 flex items-center gap-2.5 border-t border-border pt-4">
-              <Checkbox name="push_agenda_hoje_ativo" defaultChecked={config.push_agenda_hoje_ativo} />
-              <span className="text-sm text-foreground">Avisar agendamentos do dia (manhã, com o resumo do dia)</span>
-            </label>
+            <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+              <label className="flex items-center gap-2.5">
+                <Checkbox name="push_agenda_hoje_ativo" defaultChecked={config.push_agenda_hoje_ativo} />
+                <span className="text-sm text-foreground">Avisar agendamentos do dia (resumo do dia)</span>
+              </label>
+              <div className="max-w-[calc(50%-0.375rem)]">
+                <Label htmlFor="push_agenda_hoje_horario" className="mb-1.5 block text-xs">
+                  Horário do aviso
+                </Label>
+                <Input
+                  id="push_agenda_hoje_horario"
+                  name="push_agenda_hoje_horario"
+                  type="time"
+                  defaultValue={config.push_agenda_hoje_horario.slice(0, 5)}
+                />
+              </div>
+            </div>
 
-            <label className="flex items-center gap-2.5 border-t border-border pt-4">
-              <Checkbox name="push_locacao_devolucao_ativo" defaultChecked={config.push_locacao_devolucao_ativo} />
-              <span className="text-sm text-foreground">
-                Avisar devoluções de locação do dia (manhã, com o horário previsto)
-              </span>
-            </label>
+            <div className="flex flex-col gap-2.5 border-t border-border pt-4">
+              <label className="flex items-center gap-2.5">
+                <Checkbox name="push_locacao_devolucao_ativo" defaultChecked={config.push_locacao_devolucao_ativo} />
+                <span className="text-sm text-foreground">Avisar devoluções de locação (com o horário previsto)</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="push_locacao_devolucao_dias" className="mb-1.5 block text-xs">
+                    Dias de antecedência
+                  </Label>
+                  <NumericInput
+                    id="push_locacao_devolucao_dias"
+                    name="push_locacao_devolucao_dias"
+                    decimal={false}
+                    defaultValue={config.push_locacao_devolucao_dias}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="push_locacao_devolucao_horario" className="mb-1.5 block text-xs">
+                    Horário do aviso
+                  </Label>
+                  <Input
+                    id="push_locacao_devolucao_horario"
+                    name="push_locacao_devolucao_horario"
+                    type="time"
+                    defaultValue={config.push_locacao_devolucao_horario.slice(0, 5)}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                0 = só avisa no dia da devolução. Com, por exemplo, 1 dia de antecedência, avisa também no dia
+                anterior.
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              O aviso roda assim que alguém abre o sistema depois do horário configurado (não depende só do
+              servidor disparar sozinho).
+            </p>
 
             <div className="flex justify-end">
               <Button type="submit" size="sm" disabled={isPendingConfig}>
