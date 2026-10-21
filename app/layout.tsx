@@ -29,6 +29,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#2542b8",
+  // Sem isso, o teclado virtual simplesmente sobrepõe a tela (o viewport não
+  // encolhe) — qualquer modal ancorado embaixo (como os diálogos no celular)
+  // fica escondido atrás do teclado assim que um campo de texto é focado.
+  interactiveWidget: "resizes-content",
 };
 
 const THEME_INIT_SCRIPT = `
