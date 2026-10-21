@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { ContratoLocacaoPdf } from "@/components/locacao/contrato-pdf";
 import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo } from "@/types";
@@ -23,20 +24,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
   const supabase = await createClient();
   const { aluguelId } = await params;
 
-  const [{ data: aluguel }, { data: config }] = await Promise.all([
-    supabase
-      .from("locacao_alugueis")
-      .select<string, AluguelComRelacoes>(
-        "numero, data_retirada, data_prevista_devolucao, valor, forma_pagamento, status_pagamento, observacoes, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
-      )
-      .eq("id", aluguelId)
-      .maybeSingle(),
-    supabase.from("locacao_config").select("locadora_razao_social, locadora_cnpj, locadora_endereco").eq("id", 1).single(),
-  ]);
+  const { data: aluguel } = await supabase
+    .from("locacao_alugueis")
+    .select<string, AluguelComRelacoes>(
+      "numero, data_retirada, data_prevista_devolucao, valor, forma_pagamento, status_pagamento, observacoes, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
+    )
+    .eq("id", aluguelId)
+    .maybeSingle();
 
-  if (!aluguel || !aluguel.locacao_clientes || !aluguel.locacao_veiculos || !config) {
+  if (!aluguel || !aluguel.locacao_clientes || !aluguel.locacao_veiculos) {
     return NextResponse.json({ error: "Aluguel não encontrado" }, { status: 404 });
   }
+
+  const origin = new URL(request.url).origin;
+  const contratoUrl = `${origin}/locacao/contrato/${aluguelId}`;
+  const qrCodeDataUrl = await QRCode.toDataURL(contratoUrl, { margin: 1, width: 200 });
 
   const buffer = await renderToBuffer(
     ContratoLocacaoPdf({
@@ -49,11 +51,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
       formaPagamento: aluguel.forma_pagamento,
       statusPagamento: aluguel.status_pagamento,
       observacoes: aluguel.observacoes,
-      locadora: {
-        razaoSocial: config.locadora_razao_social,
-        cnpj: config.locadora_cnpj,
-        endereco: config.locadora_endereco,
-      },
+      contratoUrl,
+      qrCodeDataUrl,
     })
   );
 

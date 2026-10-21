@@ -1640,6 +1640,29 @@ export interface Database {
           status_garantia: GarantiaStatus;
         }[];
       };
+      verificar_contrato_locacao: {
+        Args: { p_aluguel_id: string };
+        Returns: {
+          numero: number;
+          cliente_nome: string;
+          cliente_cpf: string | null;
+          cliente_telefone: string | null;
+          veiculo_tipo: string;
+          veiculo_marca: string;
+          veiculo_modelo: string;
+          veiculo_cor: string | null;
+          veiculo_chassi: string;
+          data_retirada: string;
+          data_prevista_devolucao: string;
+          valor: number;
+          forma_pagamento: string;
+          status_pagamento: string;
+          observacoes: string | null;
+          locadora_razao_social: string | null;
+          locadora_cnpj: string | null;
+          locadora_endereco: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
