@@ -40,6 +40,12 @@ export interface DispositivoPush {
 
 type Suporte = "verificando" | "sem_suporte" | "suportado";
 
+function UltimoResultado({ resultado }: { resultado: string | null }) {
+  if (!resultado) return null;
+  const erro = resultado.startsWith("Erro");
+  return <p className={`text-xs ${erro ? "text-destructive" : "text-muted-foreground"}`}>Último disparo: {resultado}</p>;
+}
+
 export function NotificacoesPushCard({
   config,
   dispositivos,
@@ -49,11 +55,14 @@ export function NotificacoesPushCard({
     | "push_contas_vencer_ativo"
     | "push_contas_vencer_dias"
     | "push_contas_vencer_horario"
+    | "push_contas_vencer_ultimo_resultado"
     | "push_agenda_hoje_ativo"
     | "push_agenda_hoje_horario"
+    | "push_agenda_hoje_ultimo_resultado"
     | "push_locacao_devolucao_ativo"
     | "push_locacao_devolucao_dias"
     | "push_locacao_devolucao_horario"
+    | "push_locacao_devolucao_ultimo_resultado"
   >;
   dispositivos: DispositivoPush[];
 }) {
@@ -252,6 +261,7 @@ export function NotificacoesPushCard({
               <p className="text-xs text-muted-foreground">
                 Contas já vencidas ou vencendo hoje sempre avisam, independente dos dias de antecedência.
               </p>
+              <UltimoResultado resultado={config.push_contas_vencer_ultimo_resultado} />
             </div>
 
             <div className="flex flex-col gap-2.5 border-t border-border pt-4">
@@ -270,6 +280,7 @@ export function NotificacoesPushCard({
                   defaultValue={config.push_agenda_hoje_horario.slice(0, 5)}
                 />
               </div>
+              <UltimoResultado resultado={config.push_agenda_hoje_ultimo_resultado} />
             </div>
 
             <div className="flex flex-col gap-2.5 border-t border-border pt-4">
@@ -305,6 +316,7 @@ export function NotificacoesPushCard({
                 0 = só avisa no dia da devolução. Com, por exemplo, 1 dia de antecedência, avisa também no dia
                 anterior.
               </p>
+              <UltimoResultado resultado={config.push_locacao_devolucao_ultimo_resultado} />
             </div>
 
             <p className="text-xs text-muted-foreground">
