@@ -20,12 +20,14 @@ export function OsNotaFiscal({
   total,
   formasPagamento,
   nota,
+  nfseObrigatoriaAtiva,
 }: {
   osId: string;
   status: OsStatus;
   total: number;
   formasPagamento: FormaPagamento[];
   nota: NotaFiscal | null;
+  nfseObrigatoriaAtiva: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -128,7 +130,7 @@ export function OsNotaFiscal({
     );
   }
 
-  const obrigatoria = nfseObrigatoria(formasPagamento);
+  const obrigatoria = nfseObrigatoria(formasPagamento, nfseObrigatoriaAtiva);
   if (obrigatoria) {
     return (
       <div className="flex flex-col gap-2.5">

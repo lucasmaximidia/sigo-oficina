@@ -44,6 +44,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     { data: empresasAutorizadas },
     { data: maoObraItens },
     { data: notaFiscal },
+    { data: configNfse },
   ] = await Promise.all([
     supabase
       .from("ordens_servico")
@@ -61,6 +62,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
     supabase.from("empresas_autorizadas").select("*").eq("ativo", true).order("nome", { ascending: true }),
     supabase.from("os_mao_obra_itens").select("*").eq("os_id", id).order("created_at", { ascending: true }),
     supabase.from("notas_fiscais").select("*").eq("os_id", id).neq("status", "cancelada").maybeSingle(),
+    supabase.from("configuracoes").select("nfse_obrigatoria_cartao_pix").eq("id", 1).single(),
   ]);
 
   if (!os) notFound();
@@ -240,6 +242,7 @@ export default async function OrdemServicoDetalhePage({ params }: { params: Prom
                         total={total}
                         formasPagamento={(pagamentos ?? []).map((p) => p.forma_pagamento)}
                         nota={notaFiscal}
+                        nfseObrigatoriaAtiva={configNfse?.nfse_obrigatoria_cartao_pix ?? false}
                       />
                     </div>
                   </div>

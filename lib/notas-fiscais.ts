@@ -1,10 +1,13 @@
 // Regras de emissão de NFS-e compartilhadas entre telas (client) e server
-// actions: por lei, pagamento em cartão ou PIX deixa rastro eletrônico e
-// exige nota fiscal; em dinheiro, quem decide é o cliente.
+// actions: quando a obrigatoriedade está ativa (configurações > Nota
+// Fiscal), pagamento em cartão ou PIX deixa rastro eletrônico e exige nota
+// fiscal; em dinheiro, quem decide é o cliente. A obrigatoriedade em si é
+// configurável porque ainda não é lei pra essa oficina — está sendo
+// preparada com antecedência pra quando entrar em vigor.
 import type { FormaPagamento, NotaFiscalMotivo, NotaFiscalStatus } from "@/types";
 
-export function nfseObrigatoria(formasPagamento: FormaPagamento[]): boolean {
-  return formasPagamento.some((forma) => forma === "cartao" || forma === "pix");
+export function nfseObrigatoria(formasPagamento: FormaPagamento[], obrigatoriaAtiva: boolean): boolean {
+  return obrigatoriaAtiva && formasPagamento.some((forma) => forma === "cartao" || forma === "pix");
 }
 
 export function motivoNotaFiscal(obrigatoria: boolean, clienteDeseja: boolean): NotaFiscalMotivo {

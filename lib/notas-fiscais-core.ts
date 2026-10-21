@@ -82,8 +82,16 @@ export async function criarNotaFiscal(input: {
   return nota.id as string;
 }
 
-// Decide se a nota é obrigatória (cartão/PIX) ou opcional (dinheiro) a
-// partir das formas de pagamento e cria a linha de acordo.
+async function getNfseObrigatoriaAtiva(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("configuracoes").select("nfse_obrigatoria_cartao_pix").eq("id", 1).single();
+  return data?.nfse_obrigatoria_cartao_pix ?? false;
+}
+
+// Decide se a nota é obrigatória (cartão/PIX, só quando a obrigatoriedade
+// está ativa em Configurações) ou opcional (dinheiro, ou cartão/PIX com a
+// obrigatoriedade desativada) a partir das formas de pagamento, e cria a
+// linha de acordo.
 export async function criarNotaFiscalComDecisao(input: {
   origem: "os" | "venda_pdv";
   osId?: string | null;
@@ -95,7 +103,8 @@ export async function criarNotaFiscalComDecisao(input: {
   formasPagamento: FormaPagamento[];
   clienteDesejaNota: boolean | null;
 }) {
-  const obrigatoria = nfseObrigatoria(input.formasPagamento);
+  const obrigatoriaAtiva = await getNfseObrigatoriaAtiva();
+  const obrigatoria = nfseObrigatoria(input.formasPagamento, obrigatoriaAtiva);
   const motivo = motivoNotaFiscal(obrigatoria, obrigatoria ? true : (input.clienteDesejaNota ?? false));
   return criarNotaFiscal({ ...input, motivo });
 }

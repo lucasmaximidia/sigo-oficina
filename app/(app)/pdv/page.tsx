@@ -12,7 +12,7 @@ interface VendaComItens extends VendaPdv {
 
 export default async function PdvPage() {
   const supabase = await createClient();
-  const [{ data: pecas }, { data: vendas }] = await Promise.all([
+  const [{ data: pecas }, { data: vendas }, { data: config }] = await Promise.all([
     supabase.from("pecas").select("*").order("nome", { ascending: true }),
     supabase
       .from("vendas_pdv")
@@ -20,6 +20,7 @@ export default async function PdvPage() {
       .is("deletado_em", null)
       .order("created_at", { ascending: false })
       .limit(6),
+    supabase.from("configuracoes").select("nfse_obrigatoria_cartao_pix").eq("id", 1).single(),
   ]);
 
   return (
@@ -33,7 +34,11 @@ export default async function PdvPage() {
           </Badge>
         }
       />
-      <PdvClient pecas={pecas ?? []} vendasRecentes={vendas ?? []} />
+      <PdvClient
+        pecas={pecas ?? []}
+        vendasRecentes={vendas ?? []}
+        nfseObrigatoriaAtiva={config?.nfse_obrigatoria_cartao_pix ?? false}
+      />
     </div>
   );
 }
