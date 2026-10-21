@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
 import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
+import { EnviarContratoOnlineButton } from "@/components/locacao/enviar-contrato-online-button";
 import { cn, formatCurrency, formatDate, formatDateTime, diasAPartirDe, hojeBR } from "@/lib/utils";
 import type { LocacaoAluguelPagamento } from "@/types";
 
@@ -50,7 +51,7 @@ export default async function LocacaoAlugueisPage({
 
   let query = supabase
     .from("locacao_alugueis")
-    .select("*, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome)")
+    .select("*, locacao_veiculos(marca, modelo, chassi), locacao_clientes(nome, telefone)")
     .order("data_retirada", { ascending: false });
 
   if (filtro === "pendente") query = query.neq("status_pagamento", "pago");
@@ -124,7 +125,7 @@ export default async function LocacaoAlugueisPage({
       <div className="flex flex-col gap-3">
         {(alugueis ?? []).map((a) => {
           const veiculo = a.locacao_veiculos as unknown as { marca: string; modelo: string; chassi: string } | null;
-          const cliente = a.locacao_clientes as unknown as { nome: string } | null;
+          const cliente = a.locacao_clientes as unknown as { nome: string; telefone: string | null } | null;
           const aberto = !a.data_devolucao_real;
           const atrasado = aberto && new Date(a.data_prevista_devolucao) < new Date();
 
@@ -170,6 +171,11 @@ export default async function LocacaoAlugueisPage({
                     <FileText className="size-4" />
                   </a>
                 </Button>
+                <EnviarContratoOnlineButton
+                  aluguelId={a.id}
+                  clienteNome={cliente?.nome ?? "Cliente"}
+                  clienteTelefone={cliente?.telefone ?? null}
+                />
                 {a.status_pagamento !== "pago" && (
                   <RegistrarPagamentoDialog
                     aluguelId={a.id}

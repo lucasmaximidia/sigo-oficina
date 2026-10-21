@@ -22,7 +22,7 @@ export default async function LocacaoPage() {
           "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, valor_pago, km_inicio, diarias_extras_atraso, locacao_clientes(nome, telefone)"
         )
         .is("data_devolucao_real", null),
-      supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
+      supabase.from("locacao_clientes").select("id, nome, telefone").order("nome", { ascending: true }),
       supabase.from("locacao_alugueis").select("veiculo_id, km_fim").not("km_fim", "is", null),
       supabase.from("locacao_icones").select("*").order("created_at", { ascending: true }),
       getSaldoEmCaixa(supabase),
