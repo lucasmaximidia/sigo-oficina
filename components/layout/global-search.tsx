@@ -96,6 +96,18 @@ export function GlobalSearch() {
 
   return (
     <>
+      {/* No mobile a barra larga não cabe no topbar — vira um botão só com o
+          ícone, senão a busca ficava só acessível pelo atalho de teclado
+          (Ctrl K), que não existe no celular. */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Buscar"
+        className="flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary sm:hidden"
+      >
+        <Search className="size-4.5" />
+      </button>
+
       <button
         type="button"
         onClick={() => setOpen(true)}
