@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
 import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
-import { cn, formatCurrency, formatDateTime } from "@/lib/utils";
+import { cn, formatCurrency, formatDate, formatDateTime, diasAPartirDe, hojeBR } from "@/lib/utils";
 import type { LocacaoAluguelPagamento } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,16 @@ const FILTROS = [
   { value: "todos", label: "Todos" },
   { value: "pendente", label: "Pendentes" },
   { value: "pago", label: "Pagos" },
+] as const;
+
+// Aluguéis em aberto sempre aparecem, não importa a antiguidade — só os já
+// encerrados são afetados pelo período, pra limitar quanto histórico a
+// página carrega de uma vez (ver PR de performance).
+const PERIODOS = [
+  { value: "3m", label: "3 meses", dias: 90 },
+  { value: "6m", label: "6 meses", dias: 180 },
+  { value: "12m", label: "12 meses", dias: 365 },
+  { value: "tudo", label: "Tudo", dias: null },
 ] as const;
 
 const FORMA_LABEL: Record<string, string> = {
@@ -29,11 +39,14 @@ const FORMA_LABEL: Record<string, string> = {
 export default async function LocacaoAlugueisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; periodo?: string }>;
 }) {
   const supabase = await createClient();
-  const { status } = await searchParams;
+  const { status, periodo } = await searchParams;
   const filtro = status === "pendente" || status === "pago" ? status : "todos";
+  const periodoAtivo = PERIODOS.find((p) => p.value === periodo)?.value ?? "3m";
+  const dias = PERIODOS.find((p) => p.value === periodoAtivo)!.dias;
+  const desdeStr = dias != null ? diasAPartirDe(hojeBR(), -dias) : null;
 
   let query = supabase
     .from("locacao_alugueis")
@@ -42,13 +55,20 @@ export default async function LocacaoAlugueisPage({
 
   if (filtro === "pendente") query = query.neq("status_pagamento", "pago");
   if (filtro === "pago") query = query.eq("status_pagamento", "pago");
+  if (desdeStr) query = query.or(`data_devolucao_real.is.null,data_retirada.gte.${desdeStr}`);
 
-  const [{ data: alugueis }, { data: veiculos }, { data: clientes }, { data: pagamentos }] = await Promise.all([
+  const [{ data: alugueis }, { data: veiculos }, { data: clientes }] = await Promise.all([
     query,
     supabase.from("locacao_veiculos").select("id, marca, modelo, chassi").order("marca", { ascending: true }),
     supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
-    supabase.from("locacao_aluguel_pagamentos").select("*").order("data", { ascending: false }),
   ]);
+
+  // Só os pagamentos dos aluguéis que de fato vão aparecer na lista — antes
+  // carregava a tabela inteira de pagamentos de todo o histórico.
+  const aluguelIds = (alugueis ?? []).map((a) => a.id);
+  const { data: pagamentos } = aluguelIds.length
+    ? await supabase.from("locacao_aluguel_pagamentos").select("*").in("aluguel_id", aluguelIds).order("data", { ascending: false })
+    : { data: [] as LocacaoAluguelPagamento[] };
 
   const pagamentosPorAluguel = new Map<string, LocacaoAluguelPagamento[]>();
   for (const p of pagamentos ?? []) {
@@ -59,20 +79,47 @@ export default async function LocacaoAlugueisPage({
     <div>
       <PageHeader title="Aluguéis" description="Histórico completo de locações" />
 
-      <div className="mb-4 inline-flex items-center gap-1 rounded-xl bg-muted p-1">
-        {FILTROS.map((f) => (
-          <Link
-            key={f.value}
-            href={f.value === "todos" ? "/locacao/alugueis" : `/locacao/alugueis?status=${f.value}`}
-            className={cn(
-              "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
-              filtro === f.value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {f.label}
-          </Link>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+          {FILTROS.map((f) => (
+            <Link
+              key={f.value}
+              href={{
+                pathname: "/locacao/alugueis",
+                query: { ...(f.value !== "todos" && { status: f.value }), ...(periodoAtivo !== "3m" && { periodo: periodoAtivo }) },
+              }}
+              className={cn(
+                "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                filtro === f.value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </Link>
+          ))}
+        </div>
+        <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+          {PERIODOS.map((p) => (
+            <Link
+              key={p.value}
+              href={{
+                pathname: "/locacao/alugueis",
+                query: { ...(filtro !== "todos" && { status: filtro }), ...(p.value !== "3m" && { periodo: p.value }) },
+              }}
+              className={cn(
+                "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                periodoAtivo === p.value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.label}
+            </Link>
+          ))}
+        </div>
       </div>
+      {desdeStr && (
+        <p className="-mt-2 mb-4 text-xs text-muted-foreground">
+          Mostrando encerrados desde {formatDate(desdeStr)} · aluguéis em aberto sempre aparecem.
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         {(alugueis ?? []).map((a) => {

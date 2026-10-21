@@ -29,7 +29,7 @@ import { AjustesCaixaTab } from "@/components/financeiro/ajustes-caixa-tab";
 import { FretesTab } from "@/components/financeiro/fretes-tab";
 import { FaturamentoChart } from "@/components/financeiro/faturamento-chart";
 import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-card";
-import { agoraBR, dataBR, diasAPartirDe, formatCurrency, hojeBR, cn } from "@/lib/utils";
+import { agoraBR, cn, dataBR, diasAPartirDe, formatCurrency, formatDate, hojeBR } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
 import type { ParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
@@ -47,6 +47,22 @@ interface OsEntradaRow {
   clientes: { nome: string } | null;
 }
 
+// Versão enxuta de OsEntradaRow/VendaEntradaRow — sem join de cliente, só o
+// necessário pra somar valores. Usada pros totais (saldo em caixa, gráfico
+// de 6 meses, mês anterior etc.), que precisam do histórico inteiro, nunca
+// só do período escolhido na tela — diferente da lista de "Entradas", que
+// é só o que aparece na tela e pode ficar limitada ao período.
+interface OsStatsRow {
+  id: string;
+  data_pagamento: string | null;
+  data_finalizacao: string | null;
+  forma_pagamento: string | null;
+  valor_mao_obra: number;
+  valor_frete: number;
+  desconto: number;
+  valor_recebido_liquido: number | null;
+}
+
 interface VendaEntradaRow {
   id: string;
   numero: number;
@@ -55,6 +71,26 @@ interface VendaEntradaRow {
   total: number;
   cliente_nome_avulso: string | null;
   clientes: { nome: string } | null;
+}
+
+interface VendaStatsRow {
+  id: string;
+  created_at: string;
+  forma_pagamento: string;
+  total: number;
+}
+
+interface FreteStatsRow {
+  id: string;
+  status: string;
+  data_pagamento: string | null;
+  valor_custo: number;
+  ordens_servico: {
+    valor_frete: number;
+    data_pagamento: string | null;
+    data_finalizacao: string | null;
+    forma_pagamento: string | null;
+  } | null;
 }
 
 interface ItemParceiroPendenteRow {
@@ -82,10 +118,68 @@ interface OsAutorizadaPendenteRow {
 
 export const dynamic = "force-dynamic";
 
-export default async function FinanceiroPage() {
+// Limita quanto histórico as listas da tela carregam de uma vez (contas já
+// pagas, despesas, entradas, retiradas, ajustes) — sem isso, cada visita
+// carregava a tabela inteira desde o início do sistema, ficando mais lenta
+// conforme o histórico cresce. Contas em aberto e fretes pendentes sempre
+// aparecem, não importa a antiguidade; só o que já foi resolvido é afetado.
+// Os totais que dependem do histórico completo (saldo em caixa, gráfico de
+// 6 meses) usam consultas enxutas separadas, nunca limitadas pelo período.
+const PERIODOS = [
+  { value: "3m", label: "3 meses", dias: 90 },
+  { value: "6m", label: "6 meses", dias: 180 },
+  { value: "12m", label: "12 meses", dias: 365 },
+  { value: "tudo", label: "Tudo", dias: null },
+] as const;
+
+export default async function FinanceiroPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periodo?: string }>;
+}) {
   const supabase = await createClient();
   const hojeStr = hojeBR();
   const em7diasStr = diasAPartirDe(hojeStr, 7);
+  const { periodo } = await searchParams;
+  const periodoAtivo = PERIODOS.find((p) => p.value === periodo)?.value ?? "3m";
+  const dias = PERIODOS.find((p) => p.value === periodoAtivo)!.dias;
+  const desdeStr = dias != null ? diasAPartirDe(hojeStr, -dias) : null;
+
+  let contasQuery = supabase.from("financeiro_contas").select("*").is("deletado_em", null).order("vencimento", { ascending: true });
+  if (desdeStr) contasQuery = contasQuery.or(`status.neq.pago,vencimento.gte.${desdeStr}`);
+
+  let despesasQuery = supabase.from("financeiro_despesas").select("*").is("deletado_em", null).order("data", { ascending: false });
+  if (desdeStr) despesasQuery = despesasQuery.gte("data", desdeStr);
+
+  let fretesQuery = supabase
+    .from("fretes")
+    .select<string, FreteComRelacoes>(
+      "id, os_id, valor_custo, status, tipo, data_pagamento, created_at, ordens_servico(numero, valor_frete, data_pagamento, data_finalizacao, forma_pagamento), prestadores_frete(nome)"
+    )
+    .order("created_at", { ascending: false });
+  if (desdeStr) fretesQuery = fretesQuery.or(`status.eq.pendente,data_pagamento.gte.${desdeStr}`);
+
+  let osPagasQuery = supabase
+    .from("ordens_servico")
+    .select<string, OsEntradaRow>(
+      "id, numero, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido, clientes(nome)"
+    )
+    .not("forma_pagamento", "is", null)
+    .order("data_pagamento", { ascending: false });
+  if (desdeStr) osPagasQuery = osPagasQuery.gte("data_finalizacao", desdeStr);
+
+  let vendasQuery = supabase
+    .from("vendas_pdv")
+    .select<string, VendaEntradaRow>("id, numero, created_at, forma_pagamento, total, cliente_nome_avulso, clientes(nome)")
+    .is("deletado_em", null)
+    .order("created_at", { ascending: false });
+  if (desdeStr) vendasQuery = vendasQuery.gte("created_at", desdeStr);
+
+  let retiradasQuery = supabase.from("financeiro_retiradas").select("*").is("deletado_em", null).order("data", { ascending: false });
+  if (desdeStr) retiradasQuery = retiradasQuery.gte("data", desdeStr);
+
+  let ajustesCaixaQuery = supabase.from("financeiro_ajustes_caixa").select("*").is("deletado_em", null).order("data", { ascending: false });
+  if (desdeStr) ajustesCaixaQuery = ajustesCaixaQuery.gte("data", desdeStr);
 
   const [
     { data: contas },
@@ -97,57 +191,69 @@ export default async function FinanceiroPage() {
     { data: itensParceiroPendentes },
     { data: osAutorizadaPendentes },
     { data: ajustesCaixa },
+    { data: despesasTotalRows },
+    { data: osPagasStats },
+    { data: vendasStats },
+    { data: fretesStats },
+    { data: contasPagasTotalRows },
+    { data: retiradasTotalRows },
+    { data: ajustesTotalRows },
   ] = await Promise.all([
-      supabase.from("financeiro_contas").select("*").is("deletado_em", null).order("vencimento", { ascending: true }),
-      supabase.from("financeiro_despesas").select("*").is("deletado_em", null).order("data", { ascending: false }),
-      supabase
-        .from("fretes")
-        .select<string, FreteComRelacoes>(
-          "id, os_id, valor_custo, status, tipo, data_pagamento, created_at, ordens_servico(numero, valor_frete, data_pagamento, data_finalizacao, forma_pagamento), prestadores_frete(nome)"
-        )
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("ordens_servico")
-        .select<string, OsEntradaRow>(
-          "id, numero, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido, clientes(nome)"
-        )
-        .not("forma_pagamento", "is", null)
-        .order("data_pagamento", { ascending: false }),
-      supabase
-        .from("vendas_pdv")
-        .select<string, VendaEntradaRow>("id, numero, created_at, forma_pagamento, total, cliente_nome_avulso, clientes(nome)")
-        .is("deletado_em", null)
-        .order("created_at", { ascending: false }),
-      supabase.from("financeiro_retiradas").select("*").is("deletado_em", null).order("data", { ascending: false }),
-      supabase
-        .from("os_itens")
-        .select<string, ItemParceiroPendenteRow>(
-          "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero, forma_pagamento), lojas_parceiras(nome)"
-        )
-        .eq("origem", "loja_parceira")
-        .is("pago_em", null),
-      supabase
-        .from("ordens_servico")
-        .select<string, OsAutorizadaPendenteRow>(
-          "id, numero, valor_mao_obra, valor_frete, desconto, data_finalizacao, empresa_autorizada_id, empresas_autorizadas(nome), os_itens(quantidade, valor_unitario), os_pagamentos(valor)"
-        )
-        .eq("status", "finalizado")
-        .is("forma_pagamento", null)
-        .not("empresa_autorizada_id", "is", null),
-      supabase.from("financeiro_ajustes_caixa").select("*").is("deletado_em", null).order("data", { ascending: false }),
-    ]);
+    contasQuery,
+    despesasQuery,
+    fretesQuery,
+    osPagasQuery,
+    vendasQuery,
+    retiradasQuery,
+    supabase
+      .from("os_itens")
+      .select<string, ItemParceiroPendenteRow>(
+        "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero, forma_pagamento), lojas_parceiras(nome)"
+      )
+      .eq("origem", "loja_parceira")
+      .is("pago_em", null),
+    supabase
+      .from("ordens_servico")
+      .select<string, OsAutorizadaPendenteRow>(
+        "id, numero, valor_mao_obra, valor_frete, desconto, data_finalizacao, empresa_autorizada_id, empresas_autorizadas(nome), os_itens(quantidade, valor_unitario), os_pagamentos(valor)"
+      )
+      .eq("status", "finalizado")
+      .is("forma_pagamento", null)
+      .not("empresa_autorizada_id", "is", null),
+    ajustesCaixaQuery,
+    supabase.from("financeiro_despesas").select("valor").is("deletado_em", null),
+    supabase
+      .from("ordens_servico")
+      .select<string, OsStatsRow>(
+        "id, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido"
+      )
+      .not("forma_pagamento", "is", null),
+    supabase.from("vendas_pdv").select<string, VendaStatsRow>("id, created_at, forma_pagamento, total").is("deletado_em", null),
+    supabase
+      .from("fretes")
+      .select<string, FreteStatsRow>(
+        "id, status, data_pagamento, valor_custo, ordens_servico(valor_frete, data_pagamento, data_finalizacao, forma_pagamento)"
+      ),
+    supabase.from("financeiro_contas").select("valor").is("deletado_em", null).eq("status", "pago"),
+    supabase.from("financeiro_retiradas").select("valor").is("deletado_em", null),
+    supabase.from("financeiro_ajustes_caixa").select("valor").is("deletado_em", null),
+  ]);
 
-  const osIdsPagas = (osPagas ?? []).map((os) => os.id);
-  const vendaIds = (vendas ?? []).map((v) => v.id);
+  // Itens/pagamentos pro cálculo do valor de cada OS/venda — a partir do
+  // histórico COMPLETO (osPagasStats/vendasStats), não só do que aparece na
+  // tela, já que o saldo em caixa precisa do total real desde sempre. Os ids
+  // da lista exibida (osPagas/vendas) sempre são um subconjunto desses.
+  const osIdsStats = (osPagasStats ?? []).map((os) => os.id);
+  const vendaIdsStats = (vendasStats ?? []).map((v) => v.id);
   const [{ data: itensDasOsPagas }, { data: pagamentosDasVendas }] = await Promise.all([
-    osIdsPagas.length
-      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsPagas)
+    osIdsStats.length
+      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsStats)
       : Promise.resolve({ data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] }),
-    vendaIds.length
+    vendaIdsStats.length
       ? supabase
           .from("venda_pagamentos")
           .select("venda_id, forma_pagamento, valor, valor_recebido_liquido")
-          .in("venda_id", vendaIds)
+          .in("venda_id", vendaIdsStats)
       : Promise.resolve({
           data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[],
         }),
@@ -168,21 +274,23 @@ export default async function FinanceiroPage() {
     totalItensPorOs.set(item.os_id, (totalItensPorOs.get(item.os_id) ?? 0) + item.quantidade * item.valor_unitario);
   }
 
-  const entradasOs: Entrada[] = (osPagas ?? []).map((os) => {
+  function valorOs(os: { id: string; forma_pagamento: string | null; valor_mao_obra: number; valor_frete: number; desconto: number; valor_recebido_liquido: number | null }) {
     const totalItens = totalItensPorOs.get(os.id) ?? 0;
     const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
-    const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
-    return {
-      id: os.id,
-      tipo: "os",
-      origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
-      cliente: os.clientes?.nome ?? "—",
-      data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
-      formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
-      formaPagamentoChave: os.forma_pagamento ?? "outro",
-      valor,
-    };
-  });
+    return os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
+  }
+
+  // Lista exibida na aba "Entradas" — só o período escolhido.
+  const entradasOs: Entrada[] = (osPagas ?? []).map((os) => ({
+    id: os.id,
+    tipo: "os",
+    origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
+    cliente: os.clientes?.nome ?? "—",
+    data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
+    formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
+    formaPagamentoChave: os.forma_pagamento ?? "outro",
+    valor: valorOs(os),
+  }));
 
   const entradasPdv: Entrada[] = (vendas ?? []).map((venda) => ({
     id: venda.id,
@@ -196,22 +304,33 @@ export default async function FinanceiroPage() {
   }));
 
   const entradas = [...entradasOs, ...entradasPdv].sort((a, b) => (a.data < b.data ? 1 : -1));
-  const totalRecebidoNoMes = entradas
-    .filter((e) => e.data.startsWith(hojeStr.slice(0, 7)))
-    .reduce((acc, e) => acc + e.valor, 0);
 
-  const entradasMesAtual = entradas.filter((e) => e.data.startsWith(hojeStr.slice(0, 7)));
+  // Entradas "de verdade" (histórico completo) — usadas só pros totais
+  // (saldo em caixa, gráfico, mês anterior etc.), nunca pra lista exibida.
+  const entradasOsStats = (osPagasStats ?? []).map((os) => ({
+    data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
+    formaPagamentoChave: os.forma_pagamento ?? "outro",
+    valor: valorOs(os),
+  }));
+  const entradasPdvStats = (vendasStats ?? []).map((venda) => ({
+    data: dataBR(venda.created_at),
+    formaPagamentoChave: venda.forma_pagamento,
+    valor: valorLiquidoPorVenda.get(venda.id) ?? venda.total,
+  }));
+  const entradasStats = [...entradasOsStats, ...entradasPdvStats];
+
+  const totalRecebidoNoMes = entradasStats.filter((e) => e.data.startsWith(hojeStr.slice(0, 7))).reduce((acc, e) => acc + e.valor, 0);
+
+  const entradasMesAtual = entradasStats.filter((e) => e.data.startsWith(hojeStr.slice(0, 7)));
   const { ano: anoAtual, mes: mesAtualNum } = agoraBR();
   const mesAtualData = new Date(anoAtual, mesAtualNum - 1, 1);
   const mesAnteriorData = new Date(anoAtual, mesAtualNum - 1 - 1, 1);
   const mesAnteriorStr = `${mesAnteriorData.getFullYear()}-${String(mesAnteriorData.getMonth() + 1).padStart(2, "0")}`;
-  const totalMesAnterior = entradas
-    .filter((e) => e.data.startsWith(mesAnteriorStr))
-    .reduce((acc, e) => acc + e.valor, 0);
+  const totalMesAnterior = entradasStats.filter((e) => e.data.startsWith(mesAnteriorStr)).reduce((acc, e) => acc + e.valor, 0);
   const ticketMedio = entradasMesAtual.length > 0 ? totalRecebidoNoMes / entradasMesAtual.length : 0;
   const variacaoMes = totalMesAnterior > 0 ? ((totalRecebidoNoMes - totalMesAnterior) / totalMesAnterior) * 100 : null;
 
-  const totalMaoObraNoMes = (osPagas ?? [])
+  const totalMaoObraNoMes = (osPagasStats ?? [])
     .filter((os) => {
       const data = os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : "");
       return data.startsWith(hojeStr.slice(0, 7));
@@ -222,7 +341,7 @@ export default async function FinanceiroPage() {
     const d = new Date(anoAtual, mesAtualNum - 1 - (5 - i), 1);
     const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const label = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(d).replace(".", "");
-    const valor = entradas.filter((e) => e.data.startsWith(chave)).reduce((acc, e) => acc + e.valor, 0);
+    const valor = entradasStats.filter((e) => e.data.startsWith(chave)).reduce((acc, e) => acc + e.valor, 0);
     return { label: label.charAt(0).toUpperCase() + label.slice(1), valor };
   });
 
@@ -233,10 +352,13 @@ export default async function FinanceiroPage() {
     }))
     .filter((f) => f.valor > 0);
 
-  const fretesPendentes = (fretes ?? []).filter((f) => f.status === "pendente");
+  // Fretes: pendentes, mês pago e lucro do mês sempre a partir do histórico
+  // completo (fretesStats) — a lista exibida (fretes) pode estar limitada
+  // ao período, mas esses números não podem depender disso.
+  const fretesPendentes = (fretesStats ?? []).filter((f) => f.status === "pendente");
   const totalFretePendente = fretesPendentes.reduce((acc, f) => acc + f.valor_custo, 0);
   const mesAtual = hojeStr.slice(0, 7);
-  const totalFretePagoNoMes = (fretes ?? [])
+  const totalFretePagoNoMes = (fretesStats ?? [])
     .filter((f) => f.status === "pago" && f.data_pagamento?.startsWith(mesAtual))
     .reduce((acc, f) => acc + f.valor_custo, 0);
   // O mês do lucro segue o mês em que o cliente pagou a OS (mesmo critério
@@ -244,7 +366,7 @@ export default async function FinanceiroPage() {
   // frete foi pago ao prestador — o freteiro pode ter sido pago antes de a
   // OS ser finalizada/paga pelo cliente, e o lucro só existe quando as duas
   // pontas (cobrado e pago) já são conhecidas.
-  const lucroFreteNoMes = (fretes ?? [])
+  const lucroFreteNoMes = (fretesStats ?? [])
     .filter((f) => {
       const os = f.ordens_servico;
       if (!os || !os.forma_pagamento) return false;
@@ -253,26 +375,24 @@ export default async function FinanceiroPage() {
     })
     .reduce((acc, f) => acc + (f.ordens_servico?.valor_frete ?? 0) - f.valor_custo, 0);
 
-  const vencendoHojeOuAtrasado = (contas ?? []).filter(
-    (c) => c.status !== "pago" && c.vencimento <= hojeStr
-  );
-  const proximos7dias = (contas ?? []).filter(
-    (c) => c.status !== "pago" && c.vencimento > hojeStr && c.vencimento <= em7diasStr
-  );
+  const vencendoHojeOuAtrasado = (contas ?? []).filter((c) => c.status !== "pago" && c.vencimento <= hojeStr);
+  const proximos7dias = (contas ?? []).filter((c) => c.status !== "pago" && c.vencimento > hojeStr && c.vencimento <= em7diasStr);
 
   const totalVencendo = vencendoHojeOuAtrasado.reduce((acc, c) => acc + c.valor, 0);
   const totalProximos = proximos7dias.reduce((acc, c) => acc + c.valor, 0);
 
   // Saldo em caixa: soma de tudo que já entrou (desde o início) menos tudo
   // que já saiu (despesas, contas pagas, fretes pagos e retiradas), mais os
-  // ajustes manuais (ex: saldo em caixa anterior ao sistema).
-  const totalEntradasGeral = entradas.reduce((acc, e) => acc + e.valor, 0);
-  const totalDespesasGeral = (despesas ?? []).reduce((acc, d) => acc + d.valor, 0);
-  const totalContasPagasGeral = (contas ?? []).filter((c) => c.status === "pago").reduce((acc, c) => acc + c.valor, 0);
-  const totalFretesPagosGeral = (fretes ?? []).filter((f) => f.status === "pago").reduce((acc, f) => acc + f.valor_custo, 0);
-  const totalRetiradasGeral = (retiradas ?? []).reduce((acc, r) => acc + r.valor, 0);
+  // ajustes manuais (ex: saldo em caixa anterior ao sistema) — sempre a
+  // partir do histórico completo (consultas enxutas acima, "...TotalRows"/
+  // "...Stats"), nunca do período escolhido na tela.
+  const totalEntradasGeral = entradasStats.reduce((acc, e) => acc + e.valor, 0);
+  const totalDespesasGeral = (despesasTotalRows ?? []).reduce((acc, d) => acc + d.valor, 0);
+  const totalContasPagasGeral = (contasPagasTotalRows ?? []).reduce((acc, c) => acc + c.valor, 0);
+  const totalFretesPagosGeral = (fretesStats ?? []).filter((f) => f.status === "pago").reduce((acc, f) => acc + f.valor_custo, 0);
+  const totalRetiradasGeral = (retiradasTotalRows ?? []).reduce((acc, r) => acc + r.valor, 0);
   const totalSaidasGeral = totalDespesasGeral + totalContasPagasGeral + totalFretesPagosGeral + totalRetiradasGeral;
-  const totalAjustesGeral = (ajustesCaixa ?? []).reduce((acc, a) => acc + a.valor, 0);
+  const totalAjustesGeral = (ajustesTotalRows ?? []).reduce((acc, a) => acc + a.valor, 0);
   const saldoCaixa = totalEntradasGeral - totalSaidasGeral + totalAjustesGeral;
 
   // O acerto só pode ser fechado com itens de OS que o cliente já pagou,
@@ -342,6 +462,29 @@ export default async function FinanceiroPage() {
           </>
         }
       />
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Período das listas:</span>
+        <div className="inline-flex items-center gap-1 rounded-xl bg-muted p-1">
+          {PERIODOS.map((p) => (
+            <Link
+              key={p.value}
+              href={p.value === "3m" ? "/financeiro" : `/financeiro?periodo=${p.value}`}
+              className={cn(
+                "rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                periodoAtivo === p.value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.label}
+            </Link>
+          ))}
+        </div>
+        {desdeStr && (
+          <span className="text-xs text-muted-foreground">
+            mostrando itens já resolvidos desde {formatDate(desdeStr)} · em aberto sempre aparece
+          </span>
+        )}
+      </div>
 
       <div className="mt-4 flex flex-col gap-4 rounded-xl border border-border bg-gradient-to-br from-card to-accent/25 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between md:p-5">
         <div className="flex items-center gap-3">
