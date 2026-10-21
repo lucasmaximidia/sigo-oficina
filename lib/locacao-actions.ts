@@ -430,6 +430,34 @@ export async function registrarDevolucao(
   revalidarLocacao();
 }
 
+export async function deleteAluguel(id: string) {
+  const supabase = await createClient();
+
+  const { data: aluguel } = await supabase
+    .from("locacao_alugueis")
+    .select("veiculo_id, data_devolucao_real")
+    .eq("id", id)
+    .single();
+  if (!aluguel) throw new Error("Aluguel não encontrado");
+
+  const { error } = await supabase.from("locacao_alugueis").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  // Se o aluguel ainda estava em aberto, o veículo ficaria preso em
+  // "alugado" sem nenhum aluguel apontando pra ele — devolve pra
+  // disponível. Se já tinha sido devolvido, o status do veículo já foi
+  // decidido lá (disponível ou manutenção) e não deve ser mexido aqui.
+  if (!aluguel.data_devolucao_real) {
+    const { error: veiculoError } = await supabase
+      .from("locacao_veiculos")
+      .update({ status: "disponivel", updated_at: new Date().toISOString() })
+      .eq("id", aluguel.veiculo_id);
+    if (veiculoError) throw new Error(veiculoError.message);
+  }
+
+  revalidarLocacao();
+}
+
 // ---------- Pagamentos do aluguel (à vista ou em partes) ----------
 
 // Recalcula o cache de pagamento em locacao_alugueis (valor_pago,

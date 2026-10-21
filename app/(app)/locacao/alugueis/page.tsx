@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrarPagamentoDialog } from "@/components/locacao/registrar-pagamento-dialog";
 import { EditarAluguelDialog } from "@/components/locacao/editar-aluguel-dialog";
 import { EnviarContratoOnlineButton } from "@/components/locacao/enviar-contrato-online-button";
+import { ExcluirAluguelDialog } from "@/components/locacao/excluir-aluguel-dialog";
 import { cn, formatCurrency, formatDate, formatDateTime, diasAPartirDe, hojeBR } from "@/lib/utils";
 import type { LocacaoAluguelPagamento } from "@/types";
 
@@ -184,6 +185,13 @@ export default async function LocacaoAlugueisPage({
                   />
                 )}
                 <EditarAluguelDialog aluguel={a} veiculos={veiculos ?? []} clientes={clientes ?? []} />
+                <ExcluirAluguelDialog
+                  aluguelId={a.id}
+                  numero={a.numero}
+                  clienteNome={cliente?.nome ?? "Cliente"}
+                  valorPago={a.valor_pago}
+                  emAberto={aberto}
+                />
               </div>
             </Card>
           );
