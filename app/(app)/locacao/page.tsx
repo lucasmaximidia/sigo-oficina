@@ -19,7 +19,7 @@ export default async function LocacaoPage() {
       supabase
         .from("locacao_alugueis")
         .select(
-          "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, valor_pago, km_inicio, diarias_extras_atraso, locacao_clientes(nome)"
+          "id, veiculo_id, data_retirada, data_prevista_devolucao, status_pagamento, valor, valor_pago, km_inicio, diarias_extras_atraso, locacao_clientes(nome, telefone)"
         )
         .is("data_devolucao_real", null),
       supabase.from("locacao_clientes").select("id, nome").order("nome", { ascending: true }),
@@ -42,10 +42,11 @@ export default async function LocacaoPage() {
   hoje.setHours(0, 0, 0, 0);
 
   for (const a of alugueisAbertos ?? []) {
-    const cliente = a.locacao_clientes as unknown as { nome: string } | null;
+    const cliente = a.locacao_clientes as unknown as { nome: string; telefone: string | null } | null;
     alugueisPorVeiculo[a.veiculo_id] = {
       id: a.id,
       cliente_nome: cliente?.nome ?? "Cliente",
+      cliente_telefone: cliente?.telefone ?? null,
       data_retirada: a.data_retirada,
       data_prevista_devolucao: a.data_prevista_devolucao,
       status_pagamento: a.status_pagamento,

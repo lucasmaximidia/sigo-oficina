@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { Bike, Scooter, PlayCircle, Wrench } from "lucide-react";
+import { Bike, Scooter, PlayCircle, Wrench, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
 import { AlugarDialog } from "@/components/locacao/alugar-dialog";
 import { DevolverDialog } from "@/components/locacao/devolver-dialog";
+import { RenovarAluguelDialog } from "@/components/locacao/renovar-aluguel-dialog";
 import { updateVeiculoStatus } from "@/lib/locacao-actions";
 import { corVeiculo } from "@/lib/locacao-cores";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -15,6 +16,7 @@ import type { LocacaoIcone, LocacaoVeiculo } from "@/types";
 export interface AluguelAtivo {
   id: string;
   cliente_nome: string;
+  cliente_telefone: string | null;
   data_retirada: string;
   data_prevista_devolucao: string;
   status_pagamento: string;
@@ -166,6 +168,7 @@ export function VeiculoCard({
 }) {
   const [alugarOpen, setAlugarOpen] = useState(false);
   const [devolverOpen, setDevolverOpen] = useState(false);
+  const [renovarOpen, setRenovarOpen] = useState(false);
   const [iconeComErro, setIconeComErro] = useState(false);
   const agora = useSyncExternalStore(inscreverRelogio, agoraCliente, agoraServidor);
   const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
@@ -259,9 +262,15 @@ export function VeiculoCard({
           </Button>
         )}
         {veiculo.status === "alugado" && aluguel && (
-          <Button type="button" size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => setDevolverOpen(true)}>
-            Registrar devolução
-          </Button>
+          <>
+            <Button type="button" size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => setRenovarOpen(true)}>
+              <Send className="size-3.5" />
+              Renovar
+            </Button>
+            <Button type="button" size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => setDevolverOpen(true)}>
+              Devolver
+            </Button>
+          </>
         )}
         {veiculo.status === "manutencao" && (
           <Button
@@ -293,6 +302,16 @@ export function VeiculoCard({
           kmInicio={aluguel.km_inicio}
           open={devolverOpen}
           onOpenChange={setDevolverOpen}
+        />
+      )}
+      {aluguel && (
+        <RenovarAluguelDialog
+          aluguelId={aluguel.id}
+          clienteNome={aluguel.cliente_nome}
+          clienteTelefone={aluguel.cliente_telefone}
+          valorDiaria={veiculo.valor_diaria}
+          open={renovarOpen}
+          onOpenChange={setRenovarOpen}
         />
       )}
     </div>

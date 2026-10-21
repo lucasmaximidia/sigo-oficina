@@ -7,9 +7,18 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 
 // Rotas acessíveis sem login: a tela de login, o site institucional público
 // (raiz + assets estáticos em /site), a consulta de garantia por telefone, a
-// verificação pública de garantia e o contrato de locação completo (ambos
-// acessados pelo cliente via QR code) — nenhuma exige conta no sistema.
-const ROTAS_PUBLICAS = ["/login", "/", "/site", "/garantias/verificar", "/garantias/consultar", "/locacao/contrato"];
+// verificação pública de garantia, o contrato de locação completo (acessados
+// pelo cliente via QR code) e a renovação de aluguel por link (mandado pelo
+// WhatsApp) — nenhuma exige conta no sistema.
+const ROTAS_PUBLICAS = [
+  "/login",
+  "/",
+  "/site",
+  "/garantias/verificar",
+  "/garantias/consultar",
+  "/locacao/contrato",
+  "/locacao/renovar",
+];
 
 function isRotaPublica(pathname: string) {
   return ROTAS_PUBLICAS.some((rota) => pathname === rota || pathname.startsWith(`${rota}/`));

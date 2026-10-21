@@ -1421,6 +1421,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_renovacoes: {
+        Row: {
+          id: string;
+          aluguel_id: string;
+          token: string;
+          dias_adicionais: number;
+          valor_adicional: number;
+          nova_data_devolucao: string;
+          status: string;
+          expira_em: string;
+          aceita_em: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          aluguel_id: string;
+          token?: string;
+          dias_adicionais: number;
+          valor_adicional: number;
+          nova_data_devolucao: string;
+          status?: string;
+          expira_em: string;
+          aceita_em?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          aluguel_id?: string;
+          token?: string;
+          dias_adicionais?: number;
+          valor_adicional?: number;
+          nova_data_devolucao?: string;
+          status?: string;
+          expira_em?: string;
+          aceita_em?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       locacao_despesas: {
         Row: {
           id: string;
@@ -1662,6 +1701,25 @@ export interface Database {
           locadora_cnpj: string | null;
           locadora_endereco: string | null;
         }[];
+      };
+      obter_renovacao_locacao: {
+        Args: { p_token: string };
+        Returns: {
+          numero: number;
+          cliente_nome: string;
+          veiculo_marca: string;
+          veiculo_modelo: string;
+          data_atual_devolucao: string;
+          dias_adicionais: number;
+          valor_adicional: number;
+          nova_data_devolucao: string;
+          valor_atual: number;
+          status: string;
+        }[];
+      };
+      aceitar_renovacao_locacao: {
+        Args: { p_token: string };
+        Returns: { sucesso: boolean; mensagem: string }[];
       };
     };
     Enums: Record<string, never>;
