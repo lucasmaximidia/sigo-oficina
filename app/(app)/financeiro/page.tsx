@@ -126,6 +126,7 @@ export const dynamic = "force-dynamic";
 // Os totais que dependem do histórico completo (saldo em caixa, gráfico de
 // 6 meses) usam consultas enxutas separadas, nunca limitadas pelo período.
 const PERIODOS = [
+  { value: "1m", label: "1 mês", dias: 30 },
   { value: "3m", label: "3 meses", dias: 90 },
   { value: "6m", label: "6 meses", dias: 180 },
   { value: "12m", label: "12 meses", dias: 365 },

@@ -74,7 +74,7 @@ export function OsDetalhesDialog({ osId, label }: { osId: string; label: string 
               <TableBody>
                 {detalhes.itens.map((item, i) => (
                   <TableRow key={i}>
-                    <TableCell className="text-foreground">{item.descricao}</TableCell>
+                    <TableCell className="whitespace-normal text-foreground">{item.descricao}</TableCell>
                     <TableCell className="text-muted-foreground">{item.quantidade}</TableCell>
                     <TableCell className="text-muted-foreground">{formatCurrency(item.valorUnitario)}</TableCell>
                     <TableCell className="text-foreground">
