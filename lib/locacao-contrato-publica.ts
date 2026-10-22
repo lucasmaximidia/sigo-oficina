@@ -12,8 +12,11 @@ import { enviarPushParaTodos } from "@/lib/push";
 // recarregamos a página pra mostrar o estado real.
 export async function aceitarContratoPublica(aluguelId: string, formData: FormData) {
   const nome = String(formData.get("nome") ?? "");
+  const telefone = String(formData.get("telefone") ?? "");
   const supabase = await createClient();
-  const { data } = await supabase.rpc("aceitar_contrato_locacao", { p_aluguel_id: aluguelId, p_nome: nome }).maybeSingle();
+  const { data } = await supabase
+    .rpc("aceitar_contrato_locacao", { p_aluguel_id: aluguelId, p_nome: nome, p_telefone: telefone })
+    .maybeSingle();
 
   if (data?.sucesso && data.mensagem === "Contrato aceito") {
     const { data: contrato } = await supabase.rpc("verificar_contrato_locacao", { p_aluguel_id: aluguelId }).maybeSingle();

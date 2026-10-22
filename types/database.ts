@@ -1378,6 +1378,7 @@ export interface Database {
           diarias_extras_atraso: number;
           aceite_online_em: string | null;
           aceite_online_nome: string | null;
+          aceite_online_telefone: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1400,6 +1401,7 @@ export interface Database {
           diarias_extras_atraso?: number;
           aceite_online_em?: string | null;
           aceite_online_nome?: string | null;
+          aceite_online_telefone?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1422,6 +1424,7 @@ export interface Database {
           diarias_extras_atraso?: number;
           aceite_online_em?: string | null;
           aceite_online_nome?: string | null;
+          aceite_online_telefone?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1740,7 +1743,7 @@ export interface Database {
         }[];
       };
       aceitar_contrato_locacao: {
-        Args: { p_aluguel_id: string; p_nome: string };
+        Args: { p_aluguel_id: string; p_nome: string; p_telefone: string };
         Returns: { sucesso: boolean; mensagem: string }[];
       };
     };
