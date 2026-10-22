@@ -1,8 +1,8 @@
-import { FileX } from "lucide-react";
+import { FileX, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils";
 import { CLAUSULAS_CONTRATO } from "@/lib/locacao-contrato-texto";
-import { aceitarContratoPublica } from "@/lib/locacao-contrato-publica";
+import { ContratoAceiteForm } from "@/components/locacao/contrato-aceite-form";
 
 export const dynamic = "force-dynamic";
 
@@ -100,60 +100,7 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
 
         <div style={{ background: "#ffffff", borderRadius: 16, padding: 24, boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08)" }}>
           {!aceite?.aceite_online_em ? (
-            <form action={aceitarContratoPublica.bind(null, aluguelId)}>
-              <h2 style={{ fontSize: 13, fontWeight: 700, color: "#191c1e", margin: "0 0 10px" }}>Aceite do contrato</h2>
-              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  name="ciente"
-                  required
-                  style={{ marginTop: 2, width: 16, height: 16, accentColor: "#1a7a3c", flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 12, color: "#3a4246", lineHeight: 1.4 }}>
-                  Li e concordo integralmente com o Contrato de Locação acima.
-                </span>
-              </label>
-
-              <label style={{ display: "block", marginTop: 14 }}>
-                <span style={{ fontSize: 10, color: "#9aa5a9", textTransform: "uppercase", letterSpacing: 0.3 }}>
-                  Confirme digitando seu nome completo
-                </span>
-                <input
-                  type="text"
-                  name="nome"
-                  required
-                  defaultValue={contrato.cliente_nome}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    marginTop: 4,
-                    border: "1px solid #d7dee1",
-                    borderRadius: 10,
-                    padding: "10px 12px",
-                    fontSize: 14,
-                    color: "#191c1e",
-                  }}
-                />
-              </label>
-
-              <button
-                type="submit"
-                style={{
-                  marginTop: 16,
-                  width: "100%",
-                  background: "#1a7a3c",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "13px 0",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Aceitar contrato
-              </button>
-            </form>
+            <ContratoAceiteForm aluguelId={aluguelId} />
           ) : (
             <>
               <p style={{ fontSize: 13, color: "#1a7a3c", fontWeight: 700, margin: 0 }}>
@@ -178,6 +125,30 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
               </div>
             </>
           )}
+
+          <a
+            href={`/api/locacao/${aluguelId}/contrato`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              marginTop: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              width: "100%",
+              background: "#ffffff",
+              color: "#1a7a3c",
+              border: "1px solid #bfe3cb",
+              borderRadius: 12,
+              padding: "11px 0",
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            <Download size={15} /> Baixar PDF do contrato
+          </a>
         </div>
 
         <p style={{ fontSize: 11, color: "#9aa5a9", textAlign: "center", margin: "0 0 8px" }}>

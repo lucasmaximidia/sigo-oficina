@@ -124,7 +124,7 @@ export function AlugarDialog({
     const link = `${window.location.origin}/locacao/contrato/${criado.aluguelId}`;
     const telefone = criado.clienteTelefone?.replace(/\D/g, "");
     const mensagem = encodeURIComponent(
-      `Olá ${criado.clienteNome}! Aqui está o contrato da sua locação na VoltCity. Dá uma olhada e clique em "Aceitar contrato" pra confirmar: ${link}`
+      `Olá ${criado.clienteNome}!\nAqui está o contrato da sua locação na VoltCity.\nDá uma lida e se concordar, clique em "Aceitar contrato", preencha com seu nome e telefone para confirmar.\n\n${link}`
     );
     const url = telefone ? `https://wa.me/55${telefone}?text=${mensagem}` : `https://wa.me/?text=${mensagem}`;
     window.open(url, "_blank");
