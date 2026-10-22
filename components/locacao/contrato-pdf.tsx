@@ -98,6 +98,7 @@ export function ContratoLocacaoPdf({
   dataRetirada,
   dataPrevistaDevolucao,
   valor,
+  valorPago,
   formaPagamento,
   statusPagamento,
   observacoes,
@@ -110,6 +111,7 @@ export function ContratoLocacaoPdf({
   dataRetirada: string;
   dataPrevistaDevolucao: string;
   valor: number;
+  valorPago: number;
   formaPagamento: LocacaoFormaPagamento;
   statusPagamento: LocacaoStatusPagamento;
   observacoes: string | null;
@@ -207,6 +209,19 @@ export function ContratoLocacaoPdf({
               </Text>
             </View>
           </View>
+          {valorPago > 0 && valorPago < valor && (
+            <View style={[styles.row, { marginTop: 6 }]}>
+              <View style={styles.col}>
+                <Text style={styles.campoLabel}>Valor já pago</Text>
+                <Text style={styles.campoValor}>{formatCurrency(valorPago)}</Text>
+              </View>
+              <View style={styles.col}>
+                <Text style={styles.campoLabel}>Saldo devedor</Text>
+                <Text style={styles.campoValor}>{formatCurrency(valor - valorPago)}</Text>
+              </View>
+              <View style={styles.col} />
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
