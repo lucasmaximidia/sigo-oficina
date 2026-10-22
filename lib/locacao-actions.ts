@@ -85,6 +85,26 @@ export async function updateVeiculoStatus(id: string, status: LocacaoVeiculoStat
   revalidarLocacao();
 }
 
+export async function deleteVeiculo(id: string) {
+  const supabase = await createClient();
+
+  const { data: veiculo } = await supabase.from("locacao_veiculos").select("status").eq("id", id).single();
+  if (!veiculo) throw new Error("Veículo não encontrado");
+  if (veiculo.status === "alugado") {
+    throw new Error("Esse veículo está alugado no momento — registre a devolução antes de excluir");
+  }
+
+  const { error } = await supabase.from("locacao_veiculos").delete().eq("id", id);
+  if (error) {
+    throw new Error(
+      error.message.includes("foreign key")
+        ? "Esse veículo já tem aluguéis registrados e não pode ser excluído"
+        : error.message
+    );
+  }
+  revalidarLocacao();
+}
+
 // ---------- Ícones de veículos ----------
 // Biblioteca de ícones usados no card do veículo (aba /locacao/icones) —
 // alguns vêm prontos com o app (em public/locacao/icones), outros o

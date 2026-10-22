@@ -8,6 +8,7 @@ import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
 import { AlugarDialog } from "@/components/locacao/alugar-dialog";
 import { DevolverDialog } from "@/components/locacao/devolver-dialog";
 import { RenovarAluguelDialog } from "@/components/locacao/renovar-aluguel-dialog";
+import { ExcluirVeiculoDialog } from "@/components/locacao/excluir-veiculo-dialog";
 import { updateVeiculoStatus } from "@/lib/locacao-actions";
 import { corVeiculo } from "@/lib/locacao-cores";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -185,8 +186,11 @@ export function VeiculoCard({
         atrasado ? "border-destructive/40" : "border-border"
       )}
     >
-      <div className="absolute right-2.5 top-2.5">
+      <div className="absolute right-2.5 top-2.5 flex items-center gap-0.5">
         <VeiculoDialog veiculo={veiculo} icones={icones} />
+        {veiculo.status !== "alugado" && (
+          <ExcluirVeiculoDialog veiculoId={veiculo.id} nome={`${veiculo.marca} ${veiculo.modelo}`} />
+        )}
       </div>
 
       <div
