@@ -25,6 +25,7 @@ const FILTROS = [
 // encerrados são afetados pelo período, pra limitar quanto histórico a
 // página carrega de uma vez (ver PR de performance).
 const PERIODOS = [
+  { value: "1m", label: "1 mês", dias: 30 },
   { value: "3m", label: "3 meses", dias: 90 },
   { value: "6m", label: "6 meses", dias: 180 },
   { value: "12m", label: "12 meses", dias: 365 },

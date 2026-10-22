@@ -31,7 +31,32 @@ export default async function LocacaoRelatoriosPage() {
             Por competência — aluguéis que atravessam a virada do mês têm o valor dividido por dia entre os meses.
           </p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-border md:hidden">
+          {resumoMensal.map((r) => (
+            <div key={r.mes} className="flex flex-col gap-2 p-4">
+              <p className="text-sm font-semibold text-foreground">{labelMes(r.mes)}</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Aluguéis</p>
+                  <p className="font-medium text-foreground">{r.numeroAlugueis}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="font-medium text-foreground">{formatCurrency(r.total)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Recebido</p>
+                  <p className="font-medium text-success">{formatCurrency(r.recebido)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">A receber</p>
+                  <p className="font-medium text-warning">{formatCurrency(r.aReceber)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">
@@ -67,7 +92,45 @@ export default async function LocacaoRelatoriosPage() {
             Regime de caixa — dinheiro que realmente entrou e saiu em cada mês, a partir da data de início do caixa.
           </p>
         </div>
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-border md:hidden">
+          {fluxoCaixa.map((f) => (
+            <div key={f.mes} className="flex flex-col gap-2 p-4">
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm font-semibold text-foreground">{labelMes(f.mes)}</p>
+                <p className="text-sm font-semibold text-foreground">{formatCurrency(f.saldoFim)}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Aluguéis</p>
+                  <p className="font-medium text-foreground">{formatCurrency(f.alugueisRecebidos)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Outras entradas</p>
+                  <p className="font-medium text-foreground">{formatCurrency(f.outrasEntradas)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Saídas</p>
+                  <p className="font-medium text-destructive">-{formatCurrency(f.saidas)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Ajustes</p>
+                  <p className={`font-medium ${f.ajustesLiquido >= 0 ? "text-success" : "text-destructive"}`}>
+                    {f.ajustesLiquido >= 0 ? "+" : ""}
+                    {formatCurrency(f.ajustesLiquido)}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-muted-foreground">Resultado</p>
+                  <p className={`font-medium ${f.resultado >= 0 ? "text-success" : "text-destructive"}`}>
+                    {f.resultado >= 0 ? "+" : ""}
+                    {formatCurrency(f.resultado)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">

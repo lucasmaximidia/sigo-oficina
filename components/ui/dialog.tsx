@@ -40,10 +40,30 @@ function DialogContent({
   showClose = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showClose?: boolean }) {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  // Fallback pro teclado do celular cobrir o campo em que a pessoa está
+  // digitando: o meta "interactive-widget=resizes-content" não é suportado
+  // em todo navegador, então aqui rolamos o campo focado pro centro do
+  // diálogo sempre que o teclado deve estar abrindo.
+  React.useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    function onFocusIn(e: FocusEvent) {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      setTimeout(() => target.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+    }
+    el.addEventListener("focusin", onFocusIn);
+    return () => el.removeEventListener("focusin", onFocusIn);
+  }, []);
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={contentRef}
         data-slot="dialog-content"
         className={cn(
           // Mobile: ancorado embaixo, largura cheia, só cantos de cima
