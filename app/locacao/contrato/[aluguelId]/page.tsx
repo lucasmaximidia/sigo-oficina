@@ -72,6 +72,12 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
             <Campo label="Retirada" valor={formatarDataHora(contrato.data_retirada)} />
             <Campo label="Devolução prevista" valor={formatarDataHora(contrato.data_prevista_devolucao)} />
             <Campo label="Valor" valor={formatCurrency(contrato.valor)} />
+            {aceite && aceite.valor_pago > 0 && aceite.valor_pago < contrato.valor && (
+              <>
+                <Campo label="Já pago" valor={formatCurrency(aceite.valor_pago)} />
+                <Campo label="Saldo a pagar" valor={formatCurrency(contrato.valor - aceite.valor_pago)} />
+              </>
+            )}
             <Campo label="Forma de pagamento" valor={FORMA_LABEL[contrato.forma_pagamento] ?? contrato.forma_pagamento} />
           </div>
 

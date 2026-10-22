@@ -13,6 +13,7 @@ interface AluguelComRelacoes {
   data_retirada: string;
   data_prevista_devolucao: string;
   valor: number;
+  valor_pago: number;
   forma_pagamento: LocacaoFormaPagamento;
   status_pagamento: LocacaoStatusPagamento;
   observacoes: string | null;
@@ -27,7 +28,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
   const { data: aluguel } = await supabase
     .from("locacao_alugueis")
     .select<string, AluguelComRelacoes>(
-      "numero, data_retirada, data_prevista_devolucao, valor, forma_pagamento, status_pagamento, observacoes, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
+      "numero, data_retirada, data_prevista_devolucao, valor, valor_pago, forma_pagamento, status_pagamento, observacoes, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
     )
     .eq("id", aluguelId)
     .maybeSingle();
@@ -48,6 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
       dataRetirada: aluguel.data_retirada,
       dataPrevistaDevolucao: aluguel.data_prevista_devolucao,
       valor: aluguel.valor,
+      valorPago: aluguel.valor_pago,
       formaPagamento: aluguel.forma_pagamento,
       statusPagamento: aluguel.status_pagamento,
       observacoes: aluguel.observacoes,
