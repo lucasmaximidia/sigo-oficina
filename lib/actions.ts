@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { criarNotaFiscalComDecisao } from "@/lib/notas-fiscais-core";
 import { enviarPushParaTodos } from "@/lib/push";
-import { hojeBR } from "@/lib/utils";
+import { hojeBR, horaBR, dataHoraBR } from "@/lib/utils";
 import type {
   Database,
   OsStatus,
@@ -155,9 +155,7 @@ export async function createOrdemServico(formData: FormData) {
   }
 
   const dataEntradaStr = str(formData, "data_entrada");
-  const dataEntrada = dataEntradaStr
-    ? new Date(`${dataEntradaStr}T${new Date().toTimeString().slice(0, 8)}`).toISOString()
-    : undefined;
+  const dataEntrada = dataEntradaStr ? dataHoraBR(dataEntradaStr, horaBR()) : undefined;
 
   const { data: os, error } = await supabase
     .from("ordens_servico")
@@ -1420,7 +1418,7 @@ export async function createAgendaEvento(formData: FormData) {
     tipo: (str(formData, "tipo") as AgendaTipo) ?? "oficina",
     cliente_id: str(formData, "cliente_id"),
     endereco: strUp(formData, "endereco"),
-    data_hora_inicio: new Date(`${data}T${hora}`).toISOString(),
+    data_hora_inicio: dataHoraBR(data, hora),
     tecnico: strUp(formData, "tecnico"),
     observacoes: strUp(formData, "observacoes"),
   });
@@ -1442,7 +1440,7 @@ export async function updateAgendaEvento(id: string, formData: FormData) {
       tipo: (str(formData, "tipo") as AgendaTipo) ?? "oficina",
       cliente_id: str(formData, "cliente_id"),
       endereco: strUp(formData, "endereco"),
-      data_hora_inicio: new Date(`${data}T${hora}`).toISOString(),
+      data_hora_inicio: dataHoraBR(data, hora),
       status: (str(formData, "status") as AgendaStatus) ?? "agendado",
       tecnico: strUp(formData, "tecnico"),
       observacoes: strUp(formData, "observacoes"),

@@ -73,6 +73,16 @@ export function inicioDiaBR(dataIso: string): string {
   return new Date(`${dataIso}T00:00:00-03:00`).toISOString();
 }
 
+// Combina uma data "YYYY-MM-DD" com um horário "HH:mm" (de <input
+// type="time">, por exemplo), ancorados explicitamente ao fuso de Brasília
+// (-03:00), devolvendo o instante UTC correspondente — mesmo motivo do
+// inicioDiaBR() acima: sem a âncora, o literal seria interpretado no fuso do
+// runtime (UTC na Vercel), e um evento marcado pra 09:00 seria gravado como
+// se fosse 09:00 UTC (06:00 em Brasília).
+export function dataHoraBR(dataIso: string, hora: string): string {
+  return new Date(`${dataIso}T${hora}:00-03:00`).toISOString();
+}
+
 // Soma (ou subtrai) dias a uma data "YYYY-MM-DD" em aritmética de calendário
 // pura (via Date.UTC), sem depender do fuso do runtime — ao contrário de
 // `Date.setDate()` num Date "local", que pode cair num dia diferente
