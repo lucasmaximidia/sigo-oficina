@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { ArrowLeft, Search, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,23 @@ export default async function ConsultarGarantiaPage({
   const jaConsultou = telefoneDigits.length >= 10;
 
   const supabase = await createClient();
-  const { data: garantias } = jaConsultou
-    ? await supabase.rpc("consultar_garantias_por_telefone", { p_telefone: telefoneDigits })
-    : { data: null };
+
+  // Página pública, sem login — sem isso, um script poderia varrer
+  // sequências de telefone (espaço pequeno o bastante pra força bruta) e
+  // coletar em massa quais clientes tiveram reparo, equipamento e datas.
+  // A função registra uma tentativa por IP e recusa quando esse IP já
+  // tentou demais na janela de tempo (ver migration 0056).
+  async function buscarGarantias() {
+    if (!jaConsultou) return { bloqueado: false, garantias: null };
+    const h = await headers();
+    const forwardedFor = h.get("x-forwarded-for");
+    const ip = (forwardedFor ? forwardedFor.split(",")[0].trim() : h.get("x-real-ip")) ?? "desconhecido";
+    const { data: permitido } = await supabase.rpc("registrar_tentativa_consulta_garantia", { p_ip: ip });
+    if (!permitido) return { bloqueado: true, garantias: null };
+    const { data } = await supabase.rpc("consultar_garantias_por_telefone", { p_telefone: telefoneDigits });
+    return { bloqueado: false, garantias: data };
+  }
+  const { bloqueado, garantias } = await buscarGarantias();
 
   return (
     <div className="h-dvh overflow-y-auto overscroll-contain bg-background">
@@ -69,7 +84,17 @@ export default async function ConsultarGarantiaPage({
 
       {jaConsultou && (
         <div className="mx-auto max-w-lg px-4 py-10">
-          {!garantias || garantias.length === 0 ? (
+          {bloqueado ? (
+            <Card>
+              <CardContent className="pt-4 md:pt-5">
+                <EmptyState
+                  icon={<ShieldX className="size-5" />}
+                  title="Muitas tentativas"
+                  description="Foram feitas muitas consultas seguidas a partir deste acesso. Aguarde alguns minutos e tente novamente."
+                />
+              </CardContent>
+            </Card>
+          ) : !garantias || garantias.length === 0 ? (
             <Card>
               <CardContent className="pt-4 md:pt-5">
                 <EmptyState
