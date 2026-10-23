@@ -37,14 +37,18 @@ const styles = StyleSheet.create({
   linha: { fontSize: 9, marginTop: 2 },
   checkLinha: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 1.5 },
   checkCaixa: {
-    width: 8,
-    height: 8,
+    width: 9,
+    height: 9,
     borderWidth: 1,
     borderColor: cores.text,
     alignItems: "center",
     justifyContent: "center",
   },
-  checkMarca: { fontSize: 7, fontFamily: "Helvetica-Bold" },
+  // lineHeight: 1 é essencial aqui — sem isso, a altura de linha padrão do
+  // texto (herdada do `lineHeight: 1.3` da página) excede a caixa de 9pt e o
+  // "X" é cortado inteiro pelo Yoga/react-pdf, ficando invisível mesmo com
+  // `marcado = true` — foi exatamente o bug visto num contrato já assinado.
+  checkMarca: { fontSize: 7, fontFamily: "Helvetica-Bold", lineHeight: 1 },
   declaracao: { fontSize: 8, marginTop: 3, color: cores.text },
   assinaturas: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, gap: 16 },
   assinaturaBloco: { flex: 1, borderTopWidth: 1, borderTopColor: cores.text, paddingTop: 3, alignItems: "center" },
