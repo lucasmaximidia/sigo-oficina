@@ -46,6 +46,14 @@ function amanhaAsDezoitoHoras() {
   return paraDatetimeLocal(d);
 }
 
+// Soma dias (em horas de 24h, mesmo critério usado na extensão automática
+// por atraso em lib/locacao-atraso.ts) a um valor de <input type="datetime-local">.
+function somarDias(dataLocal: string, dias: number) {
+  const data = new Date(dataLocal);
+  if (Number.isNaN(data.getTime())) return dataLocal;
+  return paraDatetimeLocal(new Date(data.getTime() + dias * 24 * 3_600_000));
+}
+
 export function AlugarDialog({
   veiculo,
   clientes,
@@ -63,6 +71,26 @@ export function AlugarDialog({
   const [novoCliente, setNovoCliente] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState<LocacaoFormaPagamento>("pix");
   const [jaPago, setJaPago] = useState(false);
+
+  // Dias de locação: ao mudar a retirada ou a quantidade de dias, recalcula
+  // a devolução prevista (retirada + N dias de 24h) e o valor (N × diária do
+  // veículo) — mas sem travar os campos: a oficina ainda pode ajustar a
+  // devolução ou o valor manualmente depois, pra casos fora do padrão.
+  const [dataRetirada, setDataRetirada] = useState(agora());
+  const [dias, setDias] = useState(1);
+  const [dataPrevista, setDataPrevista] = useState(() => somarDias(agora(), 1));
+  const [valor, setValor] = useState(veiculo.valor_diaria ?? 0);
+
+  function atualizarRetirada(novaRetirada: string) {
+    setDataRetirada(novaRetirada);
+    setDataPrevista(somarDias(novaRetirada, dias));
+  }
+
+  function atualizarDias(novosDias: number) {
+    setDias(novosDias);
+    setDataPrevista(somarDias(dataRetirada, novosDias));
+    if (veiculo.valor_diaria) setValor(novosDias * veiculo.valor_diaria);
+  }
   const [isPending, startTransition] = useTransition();
   const [criado, setCriado] = useState<{ aluguelId: string; clienteNome: string; clienteTelefone: string | null } | null>(
     null
@@ -75,6 +103,10 @@ export function AlugarDialog({
       setNovoCliente(false);
       setJaPago(false);
       setCriado(null);
+      setDataRetirada(agora());
+      setDias(1);
+      setDataPrevista(somarDias(agora(), 1));
+      setValor(veiculo.valor_diaria ?? 0);
     }
   }
 
@@ -210,8 +242,31 @@ export function AlugarDialog({
               <Label htmlFor="data_retirada" className="mb-1.5 block">
                 Retirada
               </Label>
-              <Input id="data_retirada" name="data_retirada" type="datetime-local" defaultValue={agora()} required />
+              <Input
+                id="data_retirada"
+                name="data_retirada"
+                type="datetime-local"
+                value={dataRetirada}
+                onChange={(e) => atualizarRetirada(e.target.value)}
+                required
+              />
             </div>
+            <div>
+              <Label htmlFor="dias" className="mb-1.5 block">
+                Dias de locação
+              </Label>
+              <Input
+                id="dias"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={dias}
+                onChange={(e) => atualizarDias(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="data_prevista" className="mb-1.5 block">
                 Devolução prevista
@@ -220,18 +275,21 @@ export function AlugarDialog({
                 id="data_prevista"
                 name="data_prevista"
                 type="datetime-local"
-                defaultValue={amanhaAsDezoitoHoras()}
+                value={dataPrevista}
+                onChange={(e) => setDataPrevista(e.target.value)}
                 required
               />
             </div>
+            <div>
+              <Label htmlFor="valor" className="mb-1.5 block">
+                Valor (R$)
+              </Label>
+              <NumericInput id="valor" name="valor" value={valor} onValueChange={setValor} required />
+            </div>
           </div>
-
-          <div>
-            <Label htmlFor="valor" className="mb-1.5 block">
-              Valor (R$)
-            </Label>
-            <NumericInput id="valor" name="valor" defaultValue={veiculo.valor_diaria ?? undefined} required />
-          </div>
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Devolução e valor são calculados pelos dias de locação — ajuste se precisar de algo fora do padrão.
+          </p>
 
           <div>
             <Label htmlFor="km_inicio" className="mb-1.5 block">
