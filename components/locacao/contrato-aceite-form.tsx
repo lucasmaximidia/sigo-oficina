@@ -37,6 +37,8 @@ export function ContratoAceiteForm({ aluguelId }: { aluguelId: string }) {
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [ciente, setCiente] = useState(false);
+  const [cienteOrientacoes, setCienteOrientacoes] = useState(false);
+  const [cienteRastreamento, setCienteRastreamento] = useState(false);
   const [localizacaoAutorizada, setLocalizacaoAutorizada] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
@@ -51,7 +53,8 @@ export function ContratoAceiteForm({ aluguelId }: { aluguelId: string }) {
   // verdade acontece no servidor.
   const nomeValido = nome.trim().split(/\s+/).filter(Boolean).length >= 2;
   const telefoneValido = telefone.replace(/\D/g, "").length >= 10;
-  const valido = ciente && nomeValido && telefoneValido && localizacaoAutorizada;
+  const valido =
+    ciente && cienteOrientacoes && cienteRastreamento && nomeValido && telefoneValido && localizacaoAutorizada;
 
   async function handleEnviar(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -87,6 +90,34 @@ export function ContratoAceiteForm({ aluguelId }: { aluguelId: string }) {
         />
         <span style={{ fontSize: 12, color: "#3a4246", lineHeight: 1.4 }}>
           Li e concordo integralmente com o Contrato de Locação acima.
+        </span>
+      </label>
+
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 10 }}>
+        <input
+          type="checkbox"
+          required
+          checked={cienteOrientacoes}
+          onChange={(e) => setCienteOrientacoes(e.target.checked)}
+          style={{ marginTop: 2, width: 16, height: 16, accentColor: "#1a7a3c", flexShrink: 0 }}
+        />
+        <span style={{ fontSize: 12, color: "#3a4246", lineHeight: 1.4 }}>
+          Recebi orientações sobre a utilização e o carregamento correto do equipamento e estou ciente das regras de
+          uso.
+        </span>
+      </label>
+
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer", marginTop: 10 }}>
+        <input
+          type="checkbox"
+          required
+          checked={cienteRastreamento}
+          onChange={(e) => setCienteRastreamento(e.target.checked)}
+          style={{ marginTop: 2, width: 16, height: 16, accentColor: "#1a7a3c", flexShrink: 0 }}
+        />
+        <span style={{ fontSize: 12, color: "#3a4246", lineHeight: 1.4 }}>
+          Estou ciente de que o equipamento poderá possuir rastreamento por GPS e/ou sensor NFC para fins de
+          segurança patrimonial.
         </span>
       </label>
 
@@ -175,7 +206,7 @@ export function ContratoAceiteForm({ aluguelId }: { aluguelId: string }) {
       </button>
       {!valido && (
         <p style={{ fontSize: 10.5, color: "#9aa5a9", textAlign: "center", margin: "8px 0 0" }}>
-          Preencha nome completo, telefone e autorize a localização pra habilitar.
+          Marque as declarações acima, preencha nome completo e telefone, e autorize a localização pra habilitar.
         </p>
       )}
     </form>
