@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, dataLembreteVencimento, formatCurrency, formatDate, formatDateTime, formatPhoneBR, slugify } from "./utils";
+import { cn, dataHoraBR, dataLembreteVencimento, formatCurrency, formatDate, formatDateTime, formatPhoneBR, slugify } from "./utils";
 
 describe("cn", () => {
   it("mescla classes e resolve conflitos do Tailwind pela última vencendo", () => {
@@ -97,5 +97,19 @@ describe("dataLembreteVencimento", () => {
   it("antecipa para sexta quando o vencimento cai no domingo", () => {
     // 2026-09-13 e um domingo.
     expect(dataLembreteVencimento("2026-09-13")).toBe("2026-09-11");
+  });
+});
+
+describe("dataHoraBR", () => {
+  it("ancora data+hora ao fuso de Brasília, não ao fuso do runtime", () => {
+    // 09:00 em Brasília (-03:00) e 12:00 UTC — sem a âncora explícita, um
+    // runtime em UTC gravaria 09:00 como se já fosse UTC (virando 06:00 em
+    // Brasília), que foi exatamente o bug encontrado na Agenda.
+    expect(dataHoraBR("2026-06-10", "09:00")).toBe("2026-06-10T12:00:00.000Z");
+  });
+
+  it("vira o dia em UTC quando o horário em Brasília está perto da meia-noite", () => {
+    // 23:30 em Brasília (-03:00) já é 02:30 UTC do dia seguinte.
+    expect(dataHoraBR("2026-06-10", "23:30")).toBe("2026-06-11T02:30:00.000Z");
   });
 });
