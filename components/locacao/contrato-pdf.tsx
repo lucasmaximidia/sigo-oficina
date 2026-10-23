@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
   qrImg: { width: 48, height: 48 },
   qrTexto: { fontSize: 7.3, color: cores.muted, flex: 1, lineHeight: 1.3 },
   qrLink: { fontSize: 7.3, color: cores.primary, fontFamily: "Helvetica-Bold", marginTop: 2 },
+  aceiteBloco: { backgroundColor: cores.bgMuted, borderRadius: 4, padding: 8, marginTop: 2 },
+  aceiteLinha: { fontSize: 7.5, color: cores.text, marginTop: 1.5 },
 });
 
 function Check({ marcado, children }: { marcado: boolean; children: string }) {
@@ -104,6 +106,11 @@ export function ContratoLocacaoPdf({
   observacoes,
   contratoUrl,
   qrCodeDataUrl,
+  aceiteOnlineEm,
+  aceiteOnlineNome,
+  aceiteOnlineTelefone,
+  aceiteOnlineIp,
+  aceiteOnlineUserAgent,
 }: {
   numero: number;
   cliente: { nome: string; cpf: string | null; telefone: string | null };
@@ -117,6 +124,11 @@ export function ContratoLocacaoPdf({
   observacoes: string | null;
   contratoUrl: string;
   qrCodeDataUrl: string;
+  aceiteOnlineEm?: string | null;
+  aceiteOnlineNome?: string | null;
+  aceiteOnlineTelefone?: string | null;
+  aceiteOnlineIp?: string | null;
+  aceiteOnlineUserAgent?: string | null;
 }) {
   const formatarDataHora = (iso: string) =>
     new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(
@@ -262,6 +274,22 @@ export function ContratoLocacaoPdf({
             </View>
           </View>
         </View>
+
+        {aceiteOnlineEm && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitulo}>08  ACEITE ONLINE</Text>
+            <View style={styles.aceiteBloco}>
+              <Text style={styles.aceiteLinha}>
+                Contrato aceito eletronicamente por {aceiteOnlineNome} em {formatarDataHora(aceiteOnlineEm)}.
+              </Text>
+              {aceiteOnlineTelefone && <Text style={styles.aceiteLinha}>Telefone confirmado: {aceiteOnlineTelefone}</Text>}
+              {aceiteOnlineIp && <Text style={styles.aceiteLinha}>Endereço IP de origem: {aceiteOnlineIp}</Text>}
+              {aceiteOnlineUserAgent && (
+                <Text style={styles.aceiteLinha}>Dispositivo/navegador: {aceiteOnlineUserAgent}</Text>
+              )}
+            </View>
+          </View>
+        )}
 
         <View style={styles.assinaturas}>
           <View style={styles.assinaturaBloco}>

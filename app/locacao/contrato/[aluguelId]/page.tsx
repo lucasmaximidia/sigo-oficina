@@ -30,7 +30,7 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
   // retorno de verificar_contrato_locacao, já em produção.
   const [{ data: contrato }, { data: aceite }] = await Promise.all([
     supabase.rpc("verificar_contrato_locacao", { p_aluguel_id: aluguelId }).maybeSingle(),
-    supabase.rpc("obter_contrato_aceite", { p_aluguel_id: aluguelId }).maybeSingle(),
+    supabase.rpc("obter_contrato_aceite_completo", { p_aluguel_id: aluguelId }).maybeSingle(),
   ]);
 
   const formatarDataHora = (iso: string) =>
@@ -106,6 +106,12 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
               <p style={{ fontSize: 13, color: "#1a7a3c", fontWeight: 700, margin: 0 }}>
                 ✓ Contrato aceito por {aceite.aceite_online_nome} em {formatarDataHora(aceite.aceite_online_em)}
               </p>
+              {(aceite.aceite_online_ip || aceite.aceite_online_user_agent) && (
+                <p style={{ fontSize: 10.5, color: "#9aa5a9", margin: "4px 0 0", wordBreak: "break-word" }}>
+                  Registrado via IP {aceite.aceite_online_ip || "—"}
+                  {aceite.aceite_online_user_agent ? ` · ${aceite.aceite_online_user_agent}` : ""}
+                </p>
+              )}
               <div
                 style={{
                   marginTop: 14,
@@ -123,32 +129,32 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
                     ? `Pagamento parcial — ${formatCurrency(aceite.valor_pago)} de ${formatCurrency(aceite.valor)} pago. Aguardando o restante.`
                     : "Aguardando pagamento."}
               </div>
+
+              <a
+                href={`/api/locacao/${aluguelId}/contrato`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  marginTop: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  width: "100%",
+                  background: "#ffffff",
+                  color: "#1a7a3c",
+                  border: "1px solid #bfe3cb",
+                  borderRadius: 12,
+                  padding: "11px 0",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                <Download size={15} /> Baixar PDF do contrato
+              </a>
             </>
           )}
-
-          <a
-            href={`/api/locacao/${aluguelId}/contrato`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              marginTop: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              width: "100%",
-              background: "#ffffff",
-              color: "#1a7a3c",
-              border: "1px solid #bfe3cb",
-              borderRadius: 12,
-              padding: "11px 0",
-              fontSize: 13,
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            <Download size={15} /> Baixar PDF do contrato
-          </a>
         </div>
 
         <p style={{ fontSize: 11, color: "#9aa5a9", textAlign: "center", margin: "0 0 8px" }}>
