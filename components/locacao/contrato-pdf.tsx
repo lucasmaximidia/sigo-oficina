@@ -1,6 +1,7 @@
-import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, Link, StyleSheet } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/utils";
 import { RESUMO_CONTRATO } from "@/lib/locacao-contrato-texto";
+import { identificarDispositivo } from "@/lib/user-agent";
 import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo } from "@/types";
 
 const cores = {
@@ -111,6 +112,9 @@ export function ContratoLocacaoPdf({
   aceiteOnlineTelefone,
   aceiteOnlineIp,
   aceiteOnlineUserAgent,
+  aceiteOnlineFusoHorario,
+  aceiteOnlineLatitude,
+  aceiteOnlineLongitude,
 }: {
   numero: number;
   cliente: { nome: string; cpf: string | null; telefone: string | null };
@@ -129,6 +133,9 @@ export function ContratoLocacaoPdf({
   aceiteOnlineTelefone?: string | null;
   aceiteOnlineIp?: string | null;
   aceiteOnlineUserAgent?: string | null;
+  aceiteOnlineFusoHorario?: string | null;
+  aceiteOnlineLatitude?: number | null;
+  aceiteOnlineLongitude?: number | null;
 }) {
   const formatarDataHora = (iso: string) =>
     new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(
@@ -285,7 +292,16 @@ export function ContratoLocacaoPdf({
               {aceiteOnlineTelefone && <Text style={styles.aceiteLinha}>Telefone confirmado: {aceiteOnlineTelefone}</Text>}
               {aceiteOnlineIp && <Text style={styles.aceiteLinha}>Endereço IP de origem: {aceiteOnlineIp}</Text>}
               {aceiteOnlineUserAgent && (
-                <Text style={styles.aceiteLinha}>Dispositivo/navegador: {aceiteOnlineUserAgent}</Text>
+                <Text style={styles.aceiteLinha}>Dispositivo/navegador: {identificarDispositivo(aceiteOnlineUserAgent)}</Text>
+              )}
+              {aceiteOnlineFusoHorario && <Text style={styles.aceiteLinha}>Fuso horário do dispositivo: {aceiteOnlineFusoHorario}</Text>}
+              {aceiteOnlineLatitude != null && aceiteOnlineLongitude != null && (
+                <Text style={styles.aceiteLinha}>
+                  Localização:{" "}
+                  <Link href={`https://www.google.com/maps?q=${aceiteOnlineLatitude},${aceiteOnlineLongitude}`} style={{ color: cores.primary }}>
+                    {aceiteOnlineLatitude.toFixed(5)}, {aceiteOnlineLongitude.toFixed(5)}
+                  </Link>
+                </Text>
               )}
             </View>
           </View>

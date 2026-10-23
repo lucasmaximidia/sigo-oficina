@@ -14,6 +14,15 @@ import { enviarPushParaTodos } from "@/lib/push";
 export async function aceitarContratoPublica(aluguelId: string, formData: FormData) {
   const nome = String(formData.get("nome") ?? "");
   const telefone = String(formData.get("telefone") ?? "");
+  const fusoHorario = String(formData.get("fusoHorario") ?? "");
+  // Latitude/longitude só vêm preenchidas se o navegador do cliente
+  // conseguiu obter e autorizar a localização — não é obrigatório pra
+  // concluir o aceite (ver ContratoAceiteForm), então ficam nulas quando o
+  // GPS falha, demora ou é negado.
+  const latitudeRaw = formData.get("latitude");
+  const longitudeRaw = formData.get("longitude");
+  const latitude = latitudeRaw ? Number(latitudeRaw) : null;
+  const longitude = longitudeRaw ? Number(longitudeRaw) : null;
   // IP de quem está aceitando, a partir dos cabeçalhos que a Vercel injeta
   // na requisição (não tem como ler isso direto do socket numa server
   // action) — junto com o user-agent, serve de evidência do aceite.
@@ -29,6 +38,9 @@ export async function aceitarContratoPublica(aluguelId: string, formData: FormDa
       p_telefone: telefone,
       p_ip: ip,
       p_user_agent: userAgent,
+      p_fuso_horario: fusoHorario,
+      p_latitude: latitude,
+      p_longitude: longitude,
     })
     .maybeSingle();
 

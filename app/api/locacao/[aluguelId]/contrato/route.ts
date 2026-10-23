@@ -22,6 +22,9 @@ interface AluguelComRelacoes {
   aceite_online_telefone: string | null;
   aceite_online_ip: string | null;
   aceite_online_user_agent: string | null;
+  aceite_online_fuso_horario: string | null;
+  aceite_online_latitude: number | null;
+  aceite_online_longitude: number | null;
   locacao_clientes: { nome: string; cpf: string | null; telefone: string | null } | null;
   locacao_veiculos: { tipo: LocacaoVeiculoTipo; marca: string; modelo: string; cor: string | null; chassi: string } | null;
 }
@@ -42,7 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
     const { data } = await supabase
       .from("locacao_alugueis")
       .select<string, AluguelComRelacoes>(
-        "numero, data_retirada, data_prevista_devolucao, valor, valor_pago, forma_pagamento, status_pagamento, observacoes, aceite_online_em, aceite_online_nome, aceite_online_telefone, aceite_online_ip, aceite_online_user_agent, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
+        "numero, data_retirada, data_prevista_devolucao, valor, valor_pago, forma_pagamento, status_pagamento, observacoes, aceite_online_em, aceite_online_nome, aceite_online_telefone, aceite_online_ip, aceite_online_user_agent, aceite_online_fuso_horario, aceite_online_latitude, aceite_online_longitude, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
       )
       .eq("id", aluguelId)
       .maybeSingle();
@@ -54,7 +57,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
     // baixar o PDF depois de ter assinado o aceite online.
     const [{ data: contrato }, { data: aceite }] = await Promise.all([
       supabase.rpc("verificar_contrato_locacao", { p_aluguel_id: aluguelId }).maybeSingle(),
-      supabase.rpc("obter_contrato_aceite_completo", { p_aluguel_id: aluguelId }).maybeSingle(),
+      supabase.rpc("obter_contrato_aceite_completo_v2", { p_aluguel_id: aluguelId }).maybeSingle(),
     ]);
 
     if (!contrato) {
@@ -78,6 +81,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
       aceite_online_telefone: aceite.aceite_online_telefone,
       aceite_online_ip: aceite.aceite_online_ip,
       aceite_online_user_agent: aceite.aceite_online_user_agent,
+      aceite_online_fuso_horario: aceite.aceite_online_fuso_horario,
+      aceite_online_latitude: aceite.aceite_online_latitude,
+      aceite_online_longitude: aceite.aceite_online_longitude,
       locacao_clientes: { nome: contrato.cliente_nome, cpf: contrato.cliente_cpf, telefone: contrato.cliente_telefone },
       locacao_veiculos: {
         tipo: contrato.veiculo_tipo as LocacaoVeiculoTipo,
@@ -116,6 +122,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
       aceiteOnlineTelefone: aluguel.aceite_online_telefone,
       aceiteOnlineIp: aluguel.aceite_online_ip,
       aceiteOnlineUserAgent: aluguel.aceite_online_user_agent,
+      aceiteOnlineFusoHorario: aluguel.aceite_online_fuso_horario,
+      aceiteOnlineLatitude: aluguel.aceite_online_latitude,
+      aceiteOnlineLongitude: aluguel.aceite_online_longitude,
     })
   );
 
