@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { criarNotaFiscalComDecisao } from "@/lib/notas-fiscais-core";
 import { enviarPushParaTodos } from "@/lib/push";
 import { hojeBR, horaBR, dataHoraBR } from "@/lib/utils";
+import { cpfCnpjValido } from "@/lib/cpf";
 import type {
   Database,
   OsStatus,
@@ -45,13 +46,15 @@ export async function createCliente(formData: FormData) {
   const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
+  const cpfCnpj = str(formData, "cpf_cnpj");
+  if (cpfCnpj && !cpfCnpjValido(cpfCnpj)) throw new Error("CPF/CNPJ inválido");
   const { data, error } = await supabase
     .from("clientes")
     .insert({
       nome,
       telefone: str(formData, "telefone"),
       email: str(formData, "email"),
-      cpf_cnpj: str(formData, "cpf_cnpj"),
+      cpf_cnpj: cpfCnpj,
       endereco: strUp(formData, "endereco"),
       bairro: strUp(formData, "bairro"),
       cidade: strUp(formData, "cidade"),
@@ -69,13 +72,15 @@ export async function updateCliente(id: string, formData: FormData) {
   const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
+  const cpfCnpj = str(formData, "cpf_cnpj");
+  if (cpfCnpj && !cpfCnpjValido(cpfCnpj)) throw new Error("CPF/CNPJ inválido");
   const { error } = await supabase
     .from("clientes")
     .update({
       nome,
       telefone: str(formData, "telefone"),
       email: str(formData, "email"),
-      cpf_cnpj: str(formData, "cpf_cnpj"),
+      cpf_cnpj: cpfCnpj,
       endereco: strUp(formData, "endereco"),
       bairro: strUp(formData, "bairro"),
       cidade: strUp(formData, "cidade"),
