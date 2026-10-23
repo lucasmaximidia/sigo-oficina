@@ -1672,10 +1672,6 @@ export interface Database {
         Args: { p_peca_id: string; p_delta: number };
         Returns: undefined;
       };
-      registrar_tentativa_consulta_garantia: {
-        Args: { p_ip: string };
-        Returns: boolean;
-      };
       verificar_garantia: {
         Args: { p_os_id: string };
         Returns: {
