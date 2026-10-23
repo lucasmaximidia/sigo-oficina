@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils";
 import { CLAUSULAS_CONTRATO } from "@/lib/locacao-contrato-texto";
 import { ContratoAceiteForm } from "@/components/locacao/contrato-aceite-form";
+import { identificarDispositivo } from "@/lib/user-agent";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
   // retorno de verificar_contrato_locacao, já em produção.
   const [{ data: contrato }, { data: aceite }] = await Promise.all([
     supabase.rpc("verificar_contrato_locacao", { p_aluguel_id: aluguelId }).maybeSingle(),
-    supabase.rpc("obter_contrato_aceite_completo", { p_aluguel_id: aluguelId }).maybeSingle(),
+    supabase.rpc("obter_contrato_aceite_completo_v2", { p_aluguel_id: aluguelId }).maybeSingle(),
   ]);
 
   const formatarDataHora = (iso: string) =>
@@ -109,7 +110,20 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
               {(aceite.aceite_online_ip || aceite.aceite_online_user_agent) && (
                 <p style={{ fontSize: 10.5, color: "#9aa5a9", margin: "4px 0 0", wordBreak: "break-word" }}>
                   Registrado via IP {aceite.aceite_online_ip || "—"}
-                  {aceite.aceite_online_user_agent ? ` · ${aceite.aceite_online_user_agent}` : ""}
+                  {aceite.aceite_online_user_agent ? ` · ${identificarDispositivo(aceite.aceite_online_user_agent)}` : ""}
+                  {aceite.aceite_online_fuso_horario ? ` · Fuso ${aceite.aceite_online_fuso_horario}` : ""}
+                </p>
+              )}
+              {aceite.aceite_online_latitude != null && aceite.aceite_online_longitude != null && (
+                <p style={{ fontSize: 10.5, margin: "2px 0 0" }}>
+                  <a
+                    href={`https://www.google.com/maps?q=${aceite.aceite_online_latitude},${aceite.aceite_online_longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#1a7a3c" }}
+                  >
+                    Ver localização registrada
+                  </a>
                 </p>
               )}
               <div

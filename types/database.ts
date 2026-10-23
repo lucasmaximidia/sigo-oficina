@@ -1381,6 +1381,9 @@ export interface Database {
           aceite_online_telefone: string | null;
           aceite_online_ip: string | null;
           aceite_online_user_agent: string | null;
+          aceite_online_fuso_horario: string | null;
+          aceite_online_latitude: number | null;
+          aceite_online_longitude: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -1406,6 +1409,9 @@ export interface Database {
           aceite_online_telefone?: string | null;
           aceite_online_ip?: string | null;
           aceite_online_user_agent?: string | null;
+          aceite_online_fuso_horario?: string | null;
+          aceite_online_latitude?: number | null;
+          aceite_online_longitude?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1431,6 +1437,9 @@ export interface Database {
           aceite_online_telefone?: string | null;
           aceite_online_ip?: string | null;
           aceite_online_user_agent?: string | null;
+          aceite_online_fuso_horario?: string | null;
+          aceite_online_latitude?: number | null;
+          aceite_online_longitude?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1763,8 +1772,35 @@ export interface Database {
           aceite_online_user_agent: string | null;
         }[];
       };
+      obter_contrato_aceite_completo_v2: {
+        Args: { p_aluguel_id: string };
+        Returns: {
+          numero: number;
+          cliente_nome: string;
+          status_pagamento: string;
+          valor: number;
+          valor_pago: number;
+          aceite_online_em: string | null;
+          aceite_online_nome: string | null;
+          aceite_online_telefone: string | null;
+          aceite_online_ip: string | null;
+          aceite_online_user_agent: string | null;
+          aceite_online_fuso_horario: string | null;
+          aceite_online_latitude: number | null;
+          aceite_online_longitude: number | null;
+        }[];
+      };
       aceitar_contrato_locacao: {
-        Args: { p_aluguel_id: string; p_nome: string; p_telefone: string; p_ip: string; p_user_agent: string };
+        Args: {
+          p_aluguel_id: string;
+          p_nome: string;
+          p_telefone: string;
+          p_ip: string;
+          p_user_agent: string;
+          p_fuso_horario: string;
+          p_latitude: number | null;
+          p_longitude: number | null;
+        };
         Returns: { sucesso: boolean; mensagem: string }[];
       };
     };
