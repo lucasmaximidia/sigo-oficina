@@ -1668,6 +1668,10 @@ export interface Database {
       };
     };
     Functions: {
+      incrementar_quantidade_peca: {
+        Args: { p_peca_id: string; p_delta: number };
+        Returns: undefined;
+      };
       verificar_garantia: {
         Args: { p_os_id: string };
         Returns: {

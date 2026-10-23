@@ -432,13 +432,7 @@ export async function addOsItem(osId: string, formData: FormData) {
   if (error) throw new Error(error.message);
 
   if (pecaId && origem === "estoque") {
-    const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
-    if (peca) {
-      await supabase
-        .from("pecas")
-        .update({ quantidade: Math.max(0, peca.quantidade - quantidade) })
-        .eq("id", pecaId);
-    }
+    await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: pecaId, p_delta: -quantidade });
   }
 
   // Compra emergencial: o dinheiro já sai do caixa na hora da compra, antes
@@ -489,13 +483,7 @@ export async function updateOsItem(itemId: string, osId: string, formData: FormD
   if (itemAtual.origem === "estoque" && itemAtual.peca_id) {
     const diferenca = itemAtual.quantidade - quantidade;
     if (diferenca !== 0) {
-      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", itemAtual.peca_id).single();
-      if (peca) {
-        await supabase
-          .from("pecas")
-          .update({ quantidade: Math.max(0, peca.quantidade + diferenca) })
-          .eq("id", itemAtual.peca_id);
-      }
+      await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: itemAtual.peca_id, p_delta: diferenca });
     }
   }
 
@@ -514,9 +502,21 @@ export async function updateOsItem(itemId: string, osId: string, formData: FormD
 
 export async function removeOsItem(itemId: string, osId: string) {
   const supabase = await createClient();
+  const { data: item } = await supabase
+    .from("os_itens")
+    .select("origem, peca_id, quantidade")
+    .eq("id", itemId)
+    .single();
   const { error } = await supabase.from("os_itens").delete().eq("id", itemId);
   if (error) throw new Error(error.message);
+  // Devolve ao estoque a quantidade que tinha sido reservada pra esse item —
+  // sem isso, remover um item lançado por engano deixava o estoque pra
+  // sempre a menos, igual ao mesmo bug já corrigido pra venda do PDV.
+  if (item?.origem === "estoque" && item.peca_id) {
+    await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: item.peca_id, p_delta: item.quantidade });
+  }
   revalidatePath(`/ordens-servico/${osId}`);
+  revalidatePath("/estoque");
 }
 
 // ---------- Mão de obra descrita ----------
@@ -757,13 +757,7 @@ export async function createEntradaEstoque(input: {
     });
     if (itemError) throw new Error(itemError.message);
 
-    const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", pecaId).single();
-    if (peca) {
-      await supabase
-        .from("pecas")
-        .update({ quantidade: peca.quantidade + item.quantidade })
-        .eq("id", pecaId);
-    }
+    await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: pecaId, p_delta: item.quantidade });
   }
 
   if (input.parcelas.length > 0) {
@@ -906,13 +900,7 @@ export async function finalizarVendaPdv(input: {
 
   for (const item of input.itens) {
     if (item.peca_id && item.tipo === "peca") {
-      const { data: peca } = await supabase.from("pecas").select("quantidade").eq("id", item.peca_id).single();
-      if (peca) {
-        await supabase
-          .from("pecas")
-          .update({ quantidade: Math.max(0, peca.quantidade - item.quantidade) })
-          .eq("id", item.peca_id);
-      }
+      await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: item.peca_id, p_delta: -item.quantidade });
     }
   }
 
@@ -1385,6 +1373,14 @@ export async function getOsDetalhes(id: string): Promise<OsDetalhes> {
 
 export async function deleteVendaPdv(id: string) {
   const supabase = await createClient();
+  // Devolve ao estoque as peças vendidas antes de excluir — sem isso, excluir
+  // uma venda lançada por engano deixava o estoque pra sempre a menos.
+  const { data: itens } = await supabase.from("venda_itens").select("peca_id, tipo, quantidade").eq("venda_id", id);
+  for (const item of itens ?? []) {
+    if (item.peca_id && item.tipo === "peca") {
+      await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: item.peca_id, p_delta: item.quantidade });
+    }
+  }
   const { error } = await supabase
     .from("vendas_pdv")
     .update({ deletado_em: new Date().toISOString() })
@@ -1393,6 +1389,7 @@ export async function deleteVendaPdv(id: string) {
   revalidatePath("/financeiro");
   revalidatePath("/pdv");
   revalidatePath("/dashboard");
+  revalidatePath("/estoque");
   revalidatePath("/configuracoes/lixeira");
 }
 
@@ -1400,9 +1397,17 @@ export async function restaurarVendaPdv(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("vendas_pdv").update({ deletado_em: null }).eq("id", id);
   if (error) throw new Error(error.message);
+  // Simétrico ao delete acima: restaurar a venda baixa o estoque de novo.
+  const { data: itens } = await supabase.from("venda_itens").select("peca_id, tipo, quantidade").eq("venda_id", id);
+  for (const item of itens ?? []) {
+    if (item.peca_id && item.tipo === "peca") {
+      await supabase.rpc("incrementar_quantidade_peca", { p_peca_id: item.peca_id, p_delta: -item.quantidade });
+    }
+  }
   revalidatePath("/financeiro");
   revalidatePath("/pdv");
   revalidatePath("/dashboard");
+  revalidatePath("/estoque");
   revalidatePath("/configuracoes/lixeira");
 }
 
