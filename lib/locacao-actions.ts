@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoStatus, LocacaoVeiculoTipo } from "@/types";
 import { hojeBR } from "@/lib/utils";
+import { cpfValido } from "@/lib/cpf";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -214,12 +215,14 @@ export async function createCliente(formData: FormData) {
   const supabase = await createClient();
   const nome = strUp(formData, "nome");
   if (!nome) throw new Error("Nome é obrigatório");
+  const cpf = str(formData, "cpf");
+  if (cpf && !cpfValido(cpf)) throw new Error("CPF inválido");
 
   const { data, error } = await supabase
     .from("locacao_clientes")
     .insert({
       nome,
-      cpf: str(formData, "cpf"),
+      cpf,
       telefone: str(formData, "telefone"),
       observacoes: str(formData, "observacoes"),
     })
@@ -232,11 +235,14 @@ export async function createCliente(formData: FormData) {
 
 export async function updateCliente(id: string, formData: FormData) {
   const supabase = await createClient();
+  const cpf = str(formData, "cpf");
+  if (cpf && !cpfValido(cpf)) throw new Error("CPF inválido");
+
   const { error } = await supabase
     .from("locacao_clientes")
     .update({
       nome: strUp(formData, "nome") ?? undefined,
-      cpf: str(formData, "cpf"),
+      cpf,
       telefone: str(formData, "telefone"),
       observacoes: str(formData, "observacoes"),
     })
@@ -290,6 +296,7 @@ export async function criarAluguel(input: {
 
   let clienteId = input.clienteId ?? null;
   if (!clienteId && input.clienteNovo?.nome) {
+    if (input.clienteNovo.cpf && !cpfValido(input.clienteNovo.cpf)) throw new Error("CPF inválido");
     const { data: novoCliente, error: clienteError } = await supabase
       .from("locacao_clientes")
       .insert({
