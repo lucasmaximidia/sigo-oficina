@@ -13,29 +13,29 @@ const cores = {
 };
 
 const styles = StyleSheet.create({
-  page: { padding: 30, fontSize: 9, color: cores.text, fontFamily: "Helvetica", lineHeight: 1.3 },
-  header: { marginBottom: 9, paddingBottom: 7, borderBottomWidth: 2, borderBottomColor: cores.primary },
+  page: { padding: 20, fontSize: 9, color: cores.text, fontFamily: "Helvetica", lineHeight: 1.3 },
+  header: { marginBottom: 5, paddingBottom: 4, borderBottomWidth: 2, borderBottomColor: cores.primary },
   marca: { fontSize: 15, fontFamily: "Helvetica-Bold", color: cores.primary },
   marcaSub: { fontSize: 7.5, color: cores.muted, marginTop: 1 },
-  titulo: { fontSize: 12, fontFamily: "Helvetica-Bold", marginTop: 7 },
+  titulo: { fontSize: 12, fontFamily: "Helvetica-Bold", marginTop: 5 },
   tituloSub: { fontSize: 7.5, color: cores.muted, marginTop: 1.5, fontFamily: "Helvetica-Oblique" },
-  section: { marginTop: 7 },
+  section: { marginTop: 5 },
   sectionTitulo: {
     fontSize: 8.5,
     fontFamily: "Helvetica-Bold",
     backgroundColor: cores.bgMuted,
     borderLeftWidth: 3,
     borderLeftColor: cores.primary,
-    paddingVertical: 3,
+    paddingVertical: 2,
     paddingHorizontal: 6,
-    marginBottom: 5,
+    marginBottom: 3,
   },
   row: { flexDirection: "row", gap: 16 },
   col: { flex: 1 },
   campoLabel: { fontSize: 7, color: cores.muted, textTransform: "uppercase" },
   campoValor: { fontSize: 9.5, fontFamily: "Helvetica-Bold", marginTop: 1 },
   linha: { fontSize: 9, marginTop: 2 },
-  checkLinha: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
+  checkLinha: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 1.5 },
   checkCaixa: {
     width: 8,
     height: 8,
@@ -45,31 +45,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   checkMarca: { fontSize: 7, fontFamily: "Helvetica-Bold" },
-  declaracao: { fontSize: 8, marginTop: 4, color: cores.text },
-  assinaturas: { flexDirection: "row", justifyContent: "space-between", marginTop: 16, gap: 16 },
-  assinaturaBloco: { flex: 1, borderTopWidth: 1, borderTopColor: cores.text, paddingTop: 4, alignItems: "center" },
+  declaracao: { fontSize: 8, marginTop: 3, color: cores.text },
+  assinaturas: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, gap: 16 },
+  assinaturaBloco: { flex: 1, borderTopWidth: 1, borderTopColor: cores.text, paddingTop: 3, alignItems: "center" },
   assinaturaLabel: { fontSize: 7.5, color: cores.muted },
-  rodape: { fontSize: 6.5, color: cores.muted, marginTop: 6, textAlign: "center" },
+  rodape: { fontSize: 6, color: cores.muted, marginTop: 3, textAlign: "center" },
   footer: {
     position: "absolute",
-    bottom: 14,
-    left: 30,
-    right: 30,
+    bottom: 10,
+    left: 22,
+    right: 22,
     textAlign: "center",
     fontSize: 7,
     color: cores.muted,
     borderTopWidth: 1,
     borderTopColor: cores.border,
-    paddingTop: 5,
+    paddingTop: 4,
   },
-  resumoLinha: { marginBottom: 4 },
+  resumoLinha: { marginBottom: 2.5 },
   resumoTitulo: { fontSize: 7.8, fontFamily: "Helvetica-Bold" },
-  resumoTexto: { fontSize: 7.3, color: cores.text, lineHeight: 1.3 },
-  qrBloco: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6, backgroundColor: cores.bgMuted, borderRadius: 4, padding: 8 },
-  qrImg: { width: 48, height: 48 },
+  resumoTexto: { fontSize: 7.3, color: cores.text, lineHeight: 1.2 },
+  qrBloco: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4, backgroundColor: cores.bgMuted, borderRadius: 4, padding: 6 },
+  qrImg: { width: 40, height: 40 },
   qrTexto: { fontSize: 7.3, color: cores.muted, flex: 1, lineHeight: 1.3 },
   qrLink: { fontSize: 7.3, color: cores.primary, fontFamily: "Helvetica-Bold", marginTop: 2 },
-  aceiteBloco: { backgroundColor: cores.bgMuted, borderRadius: 4, padding: 8, marginTop: 2 },
+  aceiteBloco: { backgroundColor: cores.bgMuted, borderRadius: 4, padding: 6, marginTop: 2 },
   aceiteLinha: { fontSize: 7.5, color: cores.text, marginTop: 1.5 },
 });
 
@@ -289,12 +289,18 @@ export function ContratoLocacaoPdf({
               <Text style={styles.aceiteLinha}>
                 Contrato aceito eletronicamente por {aceiteOnlineNome} em {formatarDataHora(aceiteOnlineEm)}.
               </Text>
-              {aceiteOnlineTelefone && <Text style={styles.aceiteLinha}>Telefone confirmado: {aceiteOnlineTelefone}</Text>}
-              {aceiteOnlineIp && <Text style={styles.aceiteLinha}>Endereço IP de origem: {aceiteOnlineIp}</Text>}
-              {aceiteOnlineUserAgent && (
-                <Text style={styles.aceiteLinha}>Dispositivo/navegador: {identificarDispositivo(aceiteOnlineUserAgent)}</Text>
+              {(aceiteOnlineTelefone || aceiteOnlineIp || aceiteOnlineUserAgent || aceiteOnlineFusoHorario) && (
+                <Text style={styles.aceiteLinha}>
+                  {[
+                    aceiteOnlineTelefone && `Telefone: ${aceiteOnlineTelefone}`,
+                    aceiteOnlineIp && `IP: ${aceiteOnlineIp}`,
+                    aceiteOnlineUserAgent && identificarDispositivo(aceiteOnlineUserAgent),
+                    aceiteOnlineFusoHorario && `Fuso: ${aceiteOnlineFusoHorario}`,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
               )}
-              {aceiteOnlineFusoHorario && <Text style={styles.aceiteLinha}>Fuso horário do dispositivo: {aceiteOnlineFusoHorario}</Text>}
               {aceiteOnlineLatitude != null && aceiteOnlineLongitude != null && (
                 <Text style={styles.aceiteLinha}>
                   Localização:{" "}
@@ -326,7 +332,9 @@ export function ContratoLocacaoPdf({
           2.200-2/2001 e da legislação aplicável.
         </Text>
 
-        <Text style={styles.footer}>VoltCity — Aluguel e Venda · (27) 99779-2023 · Termo e Contrato de Locação</Text>
+        <Text style={styles.footer} fixed>
+          VoltCity — Aluguel e Venda · (27) 99779-2023 · Termo e Contrato de Locação
+        </Text>
       </Page>
     </Document>
   );
