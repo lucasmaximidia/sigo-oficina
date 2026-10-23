@@ -8,8 +8,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 // Rotas acessíveis sem login: a tela de login, o site institucional público
 // (raiz + assets estáticos em /site), a consulta de garantia por telefone, a
 // verificação pública de garantia, o contrato de locação completo (acessados
-// pelo cliente via QR code) e a renovação de aluguel por link (mandado pelo
-// WhatsApp) — nenhuma exige conta no sistema.
+// pelo cliente via QR code), a renovação de aluguel por link (mandado pelo
+// WhatsApp) e o PDF do contrato (baixado da própria página pública, depois
+// de assinado) — nenhuma exige conta no sistema. A rota do PDF (/api/locacao)
+// também é usada pela equipe logada; a função da rota decide o que cada um
+// pode baixar, aqui só liberamos o acesso sem redirecionar pro login.
 const ROTAS_PUBLICAS = [
   "/login",
   "/",
@@ -18,6 +21,7 @@ const ROTAS_PUBLICAS = [
   "/garantias/consultar",
   "/locacao/contrato",
   "/locacao/renovar",
+  "/api/locacao",
 ];
 
 function isRotaPublica(pathname: string) {

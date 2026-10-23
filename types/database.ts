@@ -1379,6 +1379,8 @@ export interface Database {
           aceite_online_em: string | null;
           aceite_online_nome: string | null;
           aceite_online_telefone: string | null;
+          aceite_online_ip: string | null;
+          aceite_online_user_agent: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1402,6 +1404,8 @@ export interface Database {
           aceite_online_em?: string | null;
           aceite_online_nome?: string | null;
           aceite_online_telefone?: string | null;
+          aceite_online_ip?: string | null;
+          aceite_online_user_agent?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1425,6 +1429,8 @@ export interface Database {
           aceite_online_em?: string | null;
           aceite_online_nome?: string | null;
           aceite_online_telefone?: string | null;
+          aceite_online_ip?: string | null;
+          aceite_online_user_agent?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1742,8 +1748,23 @@ export interface Database {
           aceite_online_nome: string | null;
         }[];
       };
+      obter_contrato_aceite_completo: {
+        Args: { p_aluguel_id: string };
+        Returns: {
+          numero: number;
+          cliente_nome: string;
+          status_pagamento: string;
+          valor: number;
+          valor_pago: number;
+          aceite_online_em: string | null;
+          aceite_online_nome: string | null;
+          aceite_online_telefone: string | null;
+          aceite_online_ip: string | null;
+          aceite_online_user_agent: string | null;
+        }[];
+      };
       aceitar_contrato_locacao: {
-        Args: { p_aluguel_id: string; p_nome: string; p_telefone: string };
+        Args: { p_aluguel_id: string; p_nome: string; p_telefone: string; p_ip: string; p_user_agent: string };
         Returns: { sucesso: boolean; mensagem: string }[];
       };
     };
