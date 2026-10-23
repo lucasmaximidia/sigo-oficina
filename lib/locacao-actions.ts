@@ -286,69 +286,88 @@ export async function criarAluguel(input: {
 }) {
   const supabase = await createClient();
 
-  const { data: veiculo } = await supabase
+  // Reivindica o veículo com um UPDATE condicionado ao status atual, em vez
+  // de SELECT-depois-INSERT-depois-UPDATE: sem a condição .eq("status",
+  // "disponivel"), dois cliques quase simultâneos (duas abas, dois
+  // atendentes) poderiam ambos "ver" o veículo disponível antes de qualquer
+  // um gravar o aluguel, e os dois criarem reservas pro mesmo veículo.
+  const { data: veiculoReivindicado, error: veiculoError } = await supabase
     .from("locacao_veiculos")
-    .select("status")
+    .update({ status: "alugado", updated_at: new Date().toISOString() })
     .eq("id", input.veiculoId)
-    .single();
-  if (!veiculo) throw new Error("Veículo não encontrado");
-  if (veiculo.status !== "disponivel") throw new Error("Esse veículo não está disponível");
+    .eq("status", "disponivel")
+    .select("id")
+    .maybeSingle();
+  if (veiculoError) throw new Error(veiculoError.message);
+  if (!veiculoReivindicado) {
+    const { data: veiculo } = await supabase
+      .from("locacao_veiculos")
+      .select("id")
+      .eq("id", input.veiculoId)
+      .maybeSingle();
+    throw new Error(veiculo ? "Esse veículo não está disponível" : "Veículo não encontrado");
+  }
 
-  let clienteId = input.clienteId ?? null;
-  if (!clienteId && input.clienteNovo?.nome) {
-    if (input.clienteNovo.cpf && !cpfValido(input.clienteNovo.cpf)) throw new Error("CPF inválido");
-    const { data: novoCliente, error: clienteError } = await supabase
-      .from("locacao_clientes")
+  try {
+    let clienteId = input.clienteId ?? null;
+    if (!clienteId && input.clienteNovo?.nome) {
+      if (input.clienteNovo.cpf && !cpfValido(input.clienteNovo.cpf)) throw new Error("CPF inválido");
+      const { data: novoCliente, error: clienteError } = await supabase
+        .from("locacao_clientes")
+        .insert({
+          nome: input.clienteNovo.nome.toUpperCase(),
+          cpf: input.clienteNovo.cpf ?? null,
+          telefone: input.clienteNovo.telefone ?? null,
+        })
+        .select("id")
+        .single();
+      if (clienteError) throw new Error(clienteError.message);
+      clienteId = novoCliente.id;
+    }
+    if (!clienteId) throw new Error("Selecione ou cadastre um cliente");
+
+    const { data: novoAluguel, error: aluguelError } = await supabase
+      .from("locacao_alugueis")
       .insert({
-        nome: input.clienteNovo.nome.toUpperCase(),
-        cpf: input.clienteNovo.cpf ?? null,
-        telefone: input.clienteNovo.telefone ?? null,
+        veiculo_id: input.veiculoId,
+        cliente_id: clienteId,
+        data_retirada: input.dataRetirada ?? undefined,
+        data_prevista_devolucao: input.dataPrevistaDevolucao,
+        valor: input.valor,
+        forma_pagamento: input.formaPagamento,
+        status_pagamento: "pendente",
+        valor_pago: 0,
+        data_pagamento: null,
+        km_inicio: input.kmInicio ?? null,
+        observacoes: input.observacoes ?? null,
       })
       .select("id")
       .single();
-    if (clienteError) throw new Error(clienteError.message);
-    clienteId = novoCliente.id;
+    if (aluguelError) throw new Error(aluguelError.message);
+
+    if (input.statusPagamento === "pago") {
+      const { error: pagamentoError } = await supabase.from("locacao_aluguel_pagamentos").insert({
+        aluguel_id: novoAluguel.id,
+        forma_pagamento: input.formaPagamento,
+        valor: input.valor,
+        data: hojeBR(),
+      });
+      if (pagamentoError) throw new Error(pagamentoError.message);
+      await recalcularPagamentoAluguel(novoAluguel.id);
+    }
+
+    revalidarLocacao();
+    return { id: novoAluguel.id };
+  } catch (err) {
+    // Já reivindicamos o veículo (status "alugado") antes de criar o aluguel
+    // — se algo falhar daqui em diante, devolve pra "disponivel" em vez de
+    // deixá-lo travado como alugado sem nenhum aluguel associado.
+    await supabase
+      .from("locacao_veiculos")
+      .update({ status: "disponivel", updated_at: new Date().toISOString() })
+      .eq("id", input.veiculoId);
+    throw err;
   }
-  if (!clienteId) throw new Error("Selecione ou cadastre um cliente");
-
-  const { data: novoAluguel, error: aluguelError } = await supabase
-    .from("locacao_alugueis")
-    .insert({
-      veiculo_id: input.veiculoId,
-      cliente_id: clienteId,
-      data_retirada: input.dataRetirada ?? undefined,
-      data_prevista_devolucao: input.dataPrevistaDevolucao,
-      valor: input.valor,
-      forma_pagamento: input.formaPagamento,
-      status_pagamento: "pendente",
-      valor_pago: 0,
-      data_pagamento: null,
-      km_inicio: input.kmInicio ?? null,
-      observacoes: input.observacoes ?? null,
-    })
-    .select("id")
-    .single();
-  if (aluguelError) throw new Error(aluguelError.message);
-
-  const { error: veiculoError } = await supabase
-    .from("locacao_veiculos")
-    .update({ status: "alugado", updated_at: new Date().toISOString() })
-    .eq("id", input.veiculoId);
-  if (veiculoError) throw new Error(veiculoError.message);
-
-  if (input.statusPagamento === "pago") {
-    const { error: pagamentoError } = await supabase.from("locacao_aluguel_pagamentos").insert({
-      aluguel_id: novoAluguel.id,
-      forma_pagamento: input.formaPagamento,
-      valor: input.valor,
-      data: hojeBR(),
-    });
-    if (pagamentoError) throw new Error(pagamentoError.message);
-    await recalcularPagamentoAluguel(novoAluguel.id);
-  }
-
-  revalidarLocacao();
-  return { id: novoAluguel.id };
 }
 
 export async function atualizarAluguel(
@@ -378,13 +397,25 @@ export async function atualizarAluguel(
   const veiculoMudou = atual.veiculo_id !== input.veiculoId;
 
   if (estaAberto && veiculoMudou) {
-    const { data: novoVeiculo } = await supabase
+    // Mesma reivindicação atômica de criarAluguel: condiciona o UPDATE ao
+    // status atual pra não deixar duas trocas de veículo quase simultâneas
+    // reivindicarem o mesmo veículo "disponível".
+    const { data: veiculoReivindicado, error: veiculoError } = await supabase
       .from("locacao_veiculos")
-      .select("status")
+      .update({ status: "alugado", updated_at: new Date().toISOString() })
       .eq("id", input.veiculoId)
-      .single();
-    if (!novoVeiculo) throw new Error("Veículo não encontrado");
-    if (novoVeiculo.status !== "disponivel") throw new Error("O novo veículo não está disponível");
+      .eq("status", "disponivel")
+      .select("id")
+      .maybeSingle();
+    if (veiculoError) throw new Error(veiculoError.message);
+    if (!veiculoReivindicado) {
+      const { data: novoVeiculo } = await supabase
+        .from("locacao_veiculos")
+        .select("id")
+        .eq("id", input.veiculoId)
+        .maybeSingle();
+      throw new Error(novoVeiculo ? "O novo veículo não está disponível" : "Veículo não encontrado");
+    }
   }
 
   const { error } = await supabase
@@ -402,21 +433,29 @@ export async function atualizarAluguel(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (estaAberto && veiculoMudou) {
+      // Reverte a reivindicação já feita acima, já que a troca não foi
+      // gravada no aluguel.
+      await supabase
+        .from("locacao_veiculos")
+        .update({ status: "disponivel", updated_at: new Date().toISOString() })
+        .eq("id", input.veiculoId);
+    }
+    throw new Error(error.message);
+  }
 
   // O valor total pode ter mudado — refaz o status (pago/parcial/pendente)
   // a partir da soma já lançada em locacao_aluguel_pagamentos.
   await recalcularPagamentoAluguel(id);
 
   if (estaAberto && veiculoMudou) {
+    // O novo veículo já foi reivindicado ("alugado") acima — só falta
+    // liberar o antigo.
     await supabase
       .from("locacao_veiculos")
       .update({ status: "disponivel", updated_at: new Date().toISOString() })
       .eq("id", atual.veiculo_id);
-    await supabase
-      .from("locacao_veiculos")
-      .update({ status: "alugado", updated_at: new Date().toISOString() })
-      .eq("id", input.veiculoId);
   }
 
   revalidarLocacao();
