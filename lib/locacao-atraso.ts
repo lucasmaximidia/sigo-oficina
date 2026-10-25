@@ -5,12 +5,14 @@ import { createServiceClient } from "@/lib/supabase/service";
 // do lib/notificacoes-diarias.ts: o Cron do plano gratuito da Vercel não é
 // confiável sozinho. A decisão de "atrasou mais que a tolerância configurada"
 // e a extensão em si acontecem inteiramente dentro da função
-// processar_extensao_alugueis_atrasados() no Postgres (ver migration 0057) —
-// comparar o relógio do processo Node (Vercel) contra data_prevista_devolucao
-// já causou uma extensão prematura (diária cobrada ~35min antes da tolerância
-// vencer, sem conseguirmos provar a causa exata sem logs de execução); mover
-// a decisão pro banco, usando now() do próprio Postgres como única fonte de
-// verdade, elimina esse desvio de relógio como causa possível.
+// processar_extensao_alugueis_atrasados() no Postgres (ver migration 0057,
+// que move a comparação de horário pro banco — comparar o relógio do
+// processo Node contra data_prevista_devolucao já causou uma extensão
+// prematura — e 0058, que passou a encerrar o aluguel atrasado na data
+// combinada original e abrir um novo cobrindo só o período em atraso, em vez
+// de inflar o mesmo registro com uma data empurrada e um contador que só
+// cresce — isso deixava a tela mostrando "em dia" e "atrasado" ao mesmo
+// tempo).
 export async function processarExtensaoAlugueisAtrasados() {
   const supabase = createServiceClient();
   await supabase.rpc("processar_extensao_alugueis_atrasados");
