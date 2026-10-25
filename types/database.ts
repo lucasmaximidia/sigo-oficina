@@ -1676,6 +1676,10 @@ export interface Database {
         Args: { p_ip: string };
         Returns: boolean;
       };
+      processar_extensao_alugueis_atrasados: {
+        Args: Record<string, never>;
+        Returns: undefined;
+      };
       verificar_garantia: {
         Args: { p_os_id: string };
         Returns: {
