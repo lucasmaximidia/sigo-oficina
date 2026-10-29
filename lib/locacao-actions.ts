@@ -522,12 +522,26 @@ export async function deleteAluguel(id: string) {
   // "alugado" sem nenhum aluguel apontando pra ele — devolve pra
   // disponível. Se já tinha sido devolvido, o status do veículo já foi
   // decidido lá (disponível ou manutenção) e não deve ser mexido aqui.
+  // Mas só libera se não sobrar NENHUM outro aluguel aberto pro mesmo
+  // veículo — normalmente só existe um por vez, mas excluir um aluguel
+  // aberto enquanto outro também aberto aponta pro mesmo veículo (ex.:
+  // um registro duplicado) não pode soltar um veículo que ainda está
+  // realmente alugado.
   if (!aluguel.data_devolucao_real) {
-    const { error: veiculoError } = await supabase
-      .from("locacao_veiculos")
-      .update({ status: "disponivel", updated_at: new Date().toISOString() })
-      .eq("id", aluguel.veiculo_id);
-    if (veiculoError) throw new Error(veiculoError.message);
+    const { data: outroAberto } = await supabase
+      .from("locacao_alugueis")
+      .select("id")
+      .eq("veiculo_id", aluguel.veiculo_id)
+      .is("data_devolucao_real", null)
+      .limit(1)
+      .maybeSingle();
+    if (!outroAberto) {
+      const { error: veiculoError } = await supabase
+        .from("locacao_veiculos")
+        .update({ status: "disponivel", updated_at: new Date().toISOString() })
+        .eq("id", aluguel.veiculo_id);
+      if (veiculoError) throw new Error(veiculoError.message);
+    }
   }
 
   revalidarLocacao();
