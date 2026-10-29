@@ -117,6 +117,22 @@ export function VeiculoDialog({ veiculo, icones }: { veiculo?: LocacaoVeiculo; i
             </div>
           </div>
           <div>
+            <Label htmlFor="km_atual" className="mb-1.5 block">
+              KM atual
+            </Label>
+            <Input
+              id="km_atual"
+              name="km_atual"
+              type="number"
+              inputMode="numeric"
+              placeholder="Ex: 1280"
+              defaultValue={veiculo?.km_atual ?? undefined}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Atualizado automaticamente a cada devolução registrada — ajuste aqui se precisar corrigir.
+            </p>
+          </div>
+          <div>
             <Label className="mb-1.5 block">Ícone</Label>
             <Select name="foto_url" defaultValue={veiculo?.foto_url ?? "nenhuma"}>
               <SelectTrigger>
