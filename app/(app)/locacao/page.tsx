@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function LocacaoPage() {
   const supabase = await createClient();
 
-  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: kmFinais }, { data: icones }, saldoCaixa] =
+  const [{ data: veiculos }, { data: alugueisAbertos }, { data: clientes }, { data: icones }, saldoCaixa] =
     await Promise.all([
       supabase.from("locacao_veiculos").select("*").order("created_at", { ascending: true }),
       supabase
@@ -23,16 +23,16 @@ export default async function LocacaoPage() {
         )
         .is("data_devolucao_real", null),
       supabase.from("locacao_clientes").select("id, nome, telefone").order("nome", { ascending: true }),
-      supabase.from("locacao_alugueis").select("veiculo_id, km_fim").not("km_fim", "is", null),
       supabase.from("locacao_icones").select("*").order("created_at", { ascending: true }),
       getSaldoEmCaixa(supabase),
     ]);
 
+  // km_atual mora no próprio veículo (ver migration 0059) — mantido em dia
+  // automaticamente a cada devolução registrada, e editável direto no
+  // cadastro. Não precisa mais calcular a partir do histórico de aluguéis.
   const kmPorVeiculo: Record<string, number> = {};
-  for (const a of kmFinais ?? []) {
-    if (a.km_fim != null && (kmPorVeiculo[a.veiculo_id] ?? 0) < a.km_fim) {
-      kmPorVeiculo[a.veiculo_id] = a.km_fim;
-    }
+  for (const v of veiculos ?? []) {
+    if (v.km_atual != null) kmPorVeiculo[v.id] = v.km_atual;
   }
 
   const alugueisPorVeiculo: Record<string, AluguelAtivo> = {};

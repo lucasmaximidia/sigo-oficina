@@ -51,6 +51,7 @@ export async function createVeiculo(formData: FormData) {
     valor_diaria: num(formData, "valor_diaria") || null,
     observacoes: str(formData, "observacoes"),
     foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
+    km_atual: intOuNull(formData, "km_atual"),
   });
   if (error) throw new Error(error.message.includes("unique") ? "Já existe um veículo com esse chassi" : error.message);
   revalidarLocacao();
@@ -69,6 +70,7 @@ export async function updateVeiculo(id: string, formData: FormData) {
       valor_diaria: num(formData, "valor_diaria") || null,
       observacoes: str(formData, "observacoes"),
       foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
+      km_atual: intOuNull(formData, "km_atual"),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -489,7 +491,14 @@ export async function registrarDevolucao(
 
   const { error: veiculoError } = await supabase
     .from("locacao_veiculos")
-    .update({ status: novoStatusVeiculo, updated_at: new Date().toISOString() })
+    .update({
+      status: novoStatusVeiculo,
+      // Mantém o KM do veículo em dia automaticamente a cada devolução —
+      // sem isso, o único jeito de atualizar era recadastrando o veículo na
+      // mão.
+      ...(kmFim != null ? { km_atual: kmFim } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", veiculoId);
   if (veiculoError) throw new Error(veiculoError.message);
 

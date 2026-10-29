@@ -1298,6 +1298,7 @@ export interface Database {
           valor_diaria: number | null;
           observacoes: string | null;
           foto_url: string | null;
+          km_atual: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -1312,6 +1313,7 @@ export interface Database {
           valor_diaria?: number | null;
           observacoes?: string | null;
           foto_url?: string | null;
+          km_atual?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1326,6 +1328,7 @@ export interface Database {
           valor_diaria?: number | null;
           observacoes?: string | null;
           foto_url?: string | null;
+          km_atual?: number | null;
           created_at?: string;
           updated_at?: string;
         };
