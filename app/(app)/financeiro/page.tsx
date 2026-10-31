@@ -34,24 +34,29 @@ import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
 import type { ParceiroPendente, MesParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
 
-interface OsEntradaRow {
+// Cada pagamento registrado numa OS (os_pagamentos) vira uma entrada própria
+// no Financeiro, com a data em que o dinheiro realmente entrou — inclusive
+// um adiantamento numa OS ainda não quitada por completo. Isso faz o Saldo
+// em Caixa refletir o dinheiro físico recebido até agora, não só OS fechadas.
+interface PagamentoOsRow {
   id: string;
-  numero: number;
-  data_pagamento: string | null;
-  data_finalizacao: string | null;
-  forma_pagamento: string | null;
-  valor_mao_obra: number;
-  valor_frete: number;
-  desconto: number;
+  os_id: string;
+  data: string;
+  forma_pagamento: string;
+  valor: number;
   valor_recebido_liquido: number | null;
-  clientes: { nome: string } | null;
+  ordens_servico: { numero: number; clientes: { nome: string } | null } | null;
 }
 
-// Versão enxuta de OsEntradaRow/VendaEntradaRow — sem join de cliente, só o
-// necessário pra somar valores. Usada pros totais (saldo em caixa, gráfico
-// de 6 meses, mês anterior etc.), que precisam do histórico inteiro, nunca
-// só do período escolhido na tela — diferente da lista de "Entradas", que
-// é só o que aparece na tela e pode ficar limitada ao período.
+interface PagamentoOsStatsRow {
+  data: string;
+  forma_pagamento: string;
+  valor: number;
+  valor_recebido_liquido: number | null;
+}
+
+// OS pagas (de verdade, não só adiantadas) — usada só pra "Mão de Obra do
+// mês", que é uma métrica por OS fechada, não por pagamento individual.
 interface OsStatsRow {
   id: string;
   data_pagamento: string | null;
@@ -160,14 +165,13 @@ export default async function FinanceiroPage({
     .order("created_at", { ascending: false });
   if (desdeStr) fretesQuery = fretesQuery.or(`status.eq.pendente,data_pagamento.gte.${desdeStr}`);
 
-  let osPagasQuery = supabase
-    .from("ordens_servico")
-    .select<string, OsEntradaRow>(
-      "id, numero, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido, clientes(nome)"
+  let pagamentosOsQuery = supabase
+    .from("os_pagamentos")
+    .select<string, PagamentoOsRow>(
+      "id, os_id, data, forma_pagamento, valor, valor_recebido_liquido, ordens_servico(numero, clientes(nome))"
     )
-    .not("forma_pagamento", "is", null)
-    .order("data_pagamento", { ascending: false });
-  if (desdeStr) osPagasQuery = osPagasQuery.gte("data_finalizacao", desdeStr);
+    .order("data", { ascending: false });
+  if (desdeStr) pagamentosOsQuery = pagamentosOsQuery.gte("data", desdeStr);
 
   let vendasQuery = supabase
     .from("vendas_pdv")
@@ -186,7 +190,7 @@ export default async function FinanceiroPage({
     { data: contas },
     { data: despesas },
     { data: fretes },
-    { data: osPagas },
+    { data: pagamentosOs },
     { data: vendas },
     { data: retiradas },
     { data: itensParceiroPendentes },
@@ -199,11 +203,12 @@ export default async function FinanceiroPage({
     { data: contasPagasTotalRows },
     { data: retiradasTotalRows },
     { data: ajustesTotalRows },
+    { data: pagamentosOsStats },
   ] = await Promise.all([
     contasQuery,
     despesasQuery,
     fretesQuery,
-    osPagasQuery,
+    pagamentosOsQuery,
     vendasQuery,
     retiradasQuery,
     supabase
@@ -238,59 +243,47 @@ export default async function FinanceiroPage({
     supabase.from("financeiro_contas").select("valor").is("deletado_em", null).eq("status", "pago"),
     supabase.from("financeiro_retiradas").select("valor").is("deletado_em", null),
     supabase.from("financeiro_ajustes_caixa").select("valor").is("deletado_em", null),
+    supabase.from("os_pagamentos").select<string, PagamentoOsStatsRow>("data, forma_pagamento, valor, valor_recebido_liquido"),
   ]);
 
-  // Itens/pagamentos pro cálculo do valor de cada OS/venda — a partir do
-  // histórico COMPLETO (osPagasStats/vendasStats), não só do que aparece na
-  // tela, já que o saldo em caixa precisa do total real desde sempre. Os ids
-  // da lista exibida (osPagas/vendas) sempre são um subconjunto desses.
-  const osIdsStats = (osPagasStats ?? []).map((os) => os.id);
+  // Pagamentos das vendas PDV — a partir do histórico COMPLETO (vendasStats),
+  // não só do que aparece na tela, já que o saldo em caixa precisa do total
+  // real desde sempre. Os ids da lista exibida (vendas) são um subconjunto.
   const vendaIdsStats = (vendasStats ?? []).map((v) => v.id);
-  const [{ data: itensDasOsPagas }, { data: pagamentosDasVendas }] = await Promise.all([
-    osIdsStats.length
-      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIdsStats)
-      : Promise.resolve({ data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] }),
-    vendaIdsStats.length
-      ? supabase
-          .from("venda_pagamentos")
-          .select("venda_id, forma_pagamento, valor, valor_recebido_liquido")
-          .in("venda_id", vendaIdsStats)
-      : Promise.resolve({
-          data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[],
-        }),
-  ]);
+  const { data: pagamentosDasVendas } = vendaIdsStats.length
+    ? await supabase.from("venda_pagamentos").select("venda_id, forma_pagamento, valor, valor_recebido_liquido").in("venda_id", vendaIdsStats)
+    : { data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[] };
 
   // Pra cada venda, o valor que efetivamente entrou no caixa: pagamentos em
   // dinheiro/PIX contam pelo valor cheio, cartão conta pelo valor líquido
   // (desconta a taxa da maquininha) quando essa informação foi registrada —
-  // mesmo critério já usado pras OS logo abaixo.
+  // mesmo critério usado pros pagamentos de OS logo abaixo.
   const valorLiquidoPorVenda = new Map<string, number>();
   for (const p of pagamentosDasVendas ?? []) {
     const valor = p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
     valorLiquidoPorVenda.set(p.venda_id, (valorLiquidoPorVenda.get(p.venda_id) ?? 0) + valor);
   }
 
-  const totalItensPorOs = new Map<string, number>();
-  for (const item of itensDasOsPagas ?? []) {
-    totalItensPorOs.set(item.os_id, (totalItensPorOs.get(item.os_id) ?? 0) + item.quantidade * item.valor_unitario);
+  // Valor líquido de um pagamento de OS: dinheiro/PIX conta pelo valor
+  // cheio, cartão pelo valor líquido (desconta a taxa) quando registrado.
+  function valorPagamentoOs(p: { forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }) {
+    return p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
   }
 
-  function valorOs(os: { id: string; forma_pagamento: string | null; valor_mao_obra: number; valor_frete: number; desconto: number; valor_recebido_liquido: number | null }) {
-    const totalItens = totalItensPorOs.get(os.id) ?? 0;
-    const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
-    return os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
-  }
-
-  // Lista exibida na aba "Entradas" — só o período escolhido.
-  const entradasOs: Entrada[] = (osPagas ?? []).map((os) => ({
-    id: os.id,
+  // Lista exibida na aba "Entradas" — só o período escolhido. Cada pagamento
+  // de OS (completo ou parcial) vira sua própria entrada, datada do dia em
+  // que o dinheiro entrou de verdade — não da data de finalização/quitação
+  // da OS.
+  const entradasOs: Entrada[] = (pagamentosOs ?? []).map((p) => ({
+    id: p.os_id,
+    pagamentoId: p.id,
     tipo: "os",
-    origemLabel: `OS #OS-${String(os.numero).padStart(4, "0")}`,
-    cliente: os.clientes?.nome ?? "—",
-    data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
-    formaPagamento: os.forma_pagamento ? (formaPagamentoLabel[os.forma_pagamento] ?? os.forma_pagamento) : "—",
-    formaPagamentoChave: os.forma_pagamento ?? "outro",
-    valor: valorOs(os),
+    origemLabel: `OS #OS-${String(p.ordens_servico?.numero ?? 0).padStart(4, "0")}`,
+    cliente: p.ordens_servico?.clientes?.nome ?? "—",
+    data: p.data,
+    formaPagamento: formaPagamentoLabel[p.forma_pagamento] ?? p.forma_pagamento,
+    formaPagamentoChave: p.forma_pagamento,
+    valor: valorPagamentoOs(p),
   }));
 
   const entradasPdv: Entrada[] = (vendas ?? []).map((venda) => ({
@@ -308,10 +301,10 @@ export default async function FinanceiroPage({
 
   // Entradas "de verdade" (histórico completo) — usadas só pros totais
   // (saldo em caixa, gráfico, mês anterior etc.), nunca pra lista exibida.
-  const entradasOsStats = (osPagasStats ?? []).map((os) => ({
-    data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""),
-    formaPagamentoChave: os.forma_pagamento ?? "outro",
-    valor: valorOs(os),
+  const entradasOsStats = (pagamentosOsStats ?? []).map((p) => ({
+    data: p.data,
+    formaPagamentoChave: p.forma_pagamento,
+    valor: valorPagamentoOs(p),
   }));
   const entradasPdvStats = (vendasStats ?? []).map((venda) => ({
     data: dataBR(venda.created_at),

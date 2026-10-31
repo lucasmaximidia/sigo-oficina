@@ -46,7 +46,7 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
               title={entradas.length === 0 ? "Nenhuma entrada registrada ainda" : "Nenhuma entrada no período selecionado"}
               description={
                 entradas.length === 0
-                  ? "Elas aparecem aqui quando uma OS é finalizada com pagamento ou uma venda é feita no PDV."
+                  ? "Elas aparecem aqui quando um pagamento é registrado numa OS (completo ou parcial) ou uma venda é feita no PDV."
                   : undefined
               }
             />
@@ -62,7 +62,7 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
             </>
           }
           renderRow={(entrada) => (
-            <TableRow key={`${entrada.tipo}-${entrada.id}`}>
+            <TableRow key={`${entrada.tipo}-${entrada.pagamentoId ?? entrada.id}`}>
               <TableCell>
                 <div className="flex items-center gap-1.5">
                   {entrada.tipo === "os" ? (
@@ -82,12 +82,18 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
               <TableCell className="text-muted-foreground">{entrada.formaPagamento}</TableCell>
               <TableCell className="font-medium text-success">{formatCurrency(entrada.valor)}</TableCell>
               <TableCell>
-                <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+                <ExcluirEntradaButton
+                  id={entrada.id}
+                  pagamentoId={entrada.pagamentoId}
+                  tipo={entrada.tipo}
+                  origemLabel={entrada.origemLabel}
+                  valor={entrada.valor}
+                />
               </TableCell>
             </TableRow>
           )}
           renderCard={(entrada) => (
-            <div key={`${entrada.tipo}-${entrada.id}`} className="flex items-start justify-between gap-3 p-4">
+            <div key={`${entrada.tipo}-${entrada.pagamentoId ?? entrada.id}`} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   {entrada.tipo === "os" ? (
@@ -107,7 +113,13 @@ export function EntradasTab({ entradas }: { entradas: Entrada[] }) {
                 </p>
                 <p className="mt-1 text-sm font-semibold text-success">{formatCurrency(entrada.valor)}</p>
               </div>
-              <ExcluirEntradaButton id={entrada.id} tipo={entrada.tipo} origemLabel={entrada.origemLabel} />
+              <ExcluirEntradaButton
+                id={entrada.id}
+                pagamentoId={entrada.pagamentoId}
+                tipo={entrada.tipo}
+                origemLabel={entrada.origemLabel}
+                valor={entrada.valor}
+              />
             </div>
           )}
         />

@@ -9,14 +9,13 @@ import { dataBR } from "@/lib/utils";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface OsPagaRow {
-  id: string;
-  data_pagamento: string | null;
-  data_finalizacao: string | null;
-  forma_pagamento: string | null;
-  valor_mao_obra: number;
-  valor_frete: number;
-  desconto: number;
+// Cada pagamento registrado numa OS (os_pagamentos) é um movimento de caixa
+// próprio, datado do dia em que o dinheiro entrou de verdade — inclusive um
+// adiantamento numa OS ainda não quitada por completo.
+interface PagamentoOsRow {
+  data: string;
+  forma_pagamento: string;
+  valor: number;
   valor_recebido_liquido: number | null;
 }
 
@@ -52,7 +51,7 @@ export async function GET(request: Request) {
   }
 
   const [
-    { data: osPagas },
+    { data: pagamentosOs },
     { data: vendas },
     { data: despesas },
     { data: contas },
@@ -60,12 +59,7 @@ export async function GET(request: Request) {
     { data: retiradas },
     { data: ajustes },
   ] = await Promise.all([
-    supabase
-      .from("ordens_servico")
-      .select<string, OsPagaRow>(
-        "id, data_pagamento, data_finalizacao, forma_pagamento, valor_mao_obra, valor_frete, desconto, valor_recebido_liquido"
-      )
-      .not("forma_pagamento", "is", null),
+    supabase.from("os_pagamentos").select<string, PagamentoOsRow>("data, forma_pagamento, valor, valor_recebido_liquido"),
     supabase.from("vendas_pdv").select("id, created_at, total, forma_pagamento").is("deletado_em", null),
     supabase.from("financeiro_despesas").select("descricao, categoria, valor, data").is("deletado_em", null),
     supabase.from("financeiro_contas").select("descricao, fornecedor, valor, pago_em, status").is("deletado_em", null),
@@ -76,42 +70,30 @@ export async function GET(request: Request) {
     supabase.from("financeiro_ajustes_caixa").select("descricao, valor, data").is("deletado_em", null),
   ]);
 
-  const osIds = (osPagas ?? []).map((os) => os.id);
   const vendaIds = (vendas ?? []).map((v) => v.id);
-  const [{ data: itensDasOs }, { data: pagamentosDasVendas }] = await Promise.all([
-    osIds.length
-      ? supabase.from("os_itens").select("os_id, quantidade, valor_unitario").in("os_id", osIds)
-      : Promise.resolve({ data: [] as { os_id: string; quantidade: number; valor_unitario: number }[] }),
-    vendaIds.length
-      ? supabase
-          .from("venda_pagamentos")
-          .select("venda_id, forma_pagamento, valor, valor_recebido_liquido")
-          .in("venda_id", vendaIds)
-      : Promise.resolve({
-          data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[],
-        }),
-  ]);
-
-  const totalItensPorOs = new Map<string, number>();
-  for (const item of itensDasOs ?? []) {
-    totalItensPorOs.set(item.os_id, (totalItensPorOs.get(item.os_id) ?? 0) + item.quantidade * item.valor_unitario);
-  }
+  const { data: pagamentosDasVendas } = vendaIds.length
+    ? await supabase.from("venda_pagamentos").select("venda_id, forma_pagamento, valor, valor_recebido_liquido").in("venda_id", vendaIds)
+    : { data: [] as { venda_id: string; forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }[] };
 
   // Pra cada venda, o valor que efetivamente entrou no caixa: pagamentos em
   // dinheiro/PIX contam pelo valor cheio, cartão conta pelo valor líquido
-  // (desconta a taxa da maquininha) quando essa informação foi registrada.
+  // (desconta a taxa da maquininha) quando essa informação foi registrada —
+  // mesmo critério usado pros pagamentos de OS logo abaixo.
   const valorLiquidoPorVenda = new Map<string, number>();
   for (const p of pagamentosDasVendas ?? []) {
     const valor = p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
     valorLiquidoPorVenda.set(p.venda_id, (valorLiquidoPorVenda.get(p.venda_id) ?? 0) + valor);
   }
 
-  const entradasOs: MovimentoDatado[] = (osPagas ?? []).map((os) => {
-    const totalItens = totalItensPorOs.get(os.id) ?? 0;
-    const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
-    const valor = os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado;
-    return { data: os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : ""), valor, descricao: "" };
-  });
+  function valorPagamentoOs(p: { forma_pagamento: string; valor: number; valor_recebido_liquido: number | null }) {
+    return p.forma_pagamento === "cartao" && p.valor_recebido_liquido != null ? p.valor_recebido_liquido : p.valor;
+  }
+
+  const entradasOs: MovimentoDatado[] = (pagamentosOs ?? []).map((p) => ({
+    data: p.data,
+    valor: valorPagamentoOs(p),
+    descricao: "",
+  }));
   const entradasPdv: MovimentoDatado[] = (vendas ?? []).map((v) => ({
     data: dataBR(v.created_at),
     valor: valorLiquidoPorVenda.get(v.id) ?? v.total,
@@ -171,16 +153,9 @@ export async function GET(request: Request) {
   const saldoFinal = saldoInicial + entradasMes - saidasMes + ajustesMes;
 
   const formasNoMes = ["pix", "cartao", "dinheiro"].map((forma) => {
-    const osDoMes = (osPagas ?? []).filter((os) => {
-      const data = os.data_pagamento ?? (os.data_finalizacao ? dataBR(os.data_finalizacao) : "");
-      return os.forma_pagamento === forma && data >= inicioMes && data <= fimMes;
-    });
+    const pagamentosDoMes = (pagamentosOs ?? []).filter((p) => p.forma_pagamento === forma && p.data >= inicioMes && p.data <= fimMes);
     const pdvDoMes = (vendas ?? []).filter((v) => v.forma_pagamento === forma && dataBR(v.created_at) >= inicioMes && dataBR(v.created_at) <= fimMes);
-    const totalOs = osDoMes.reduce((acc, os) => {
-      const totalItens = totalItensPorOs.get(os.id) ?? 0;
-      const totalCalculado = totalItens + os.valor_mao_obra + os.valor_frete - os.desconto;
-      return acc + (os.forma_pagamento === "cartao" && os.valor_recebido_liquido != null ? os.valor_recebido_liquido : totalCalculado);
-    }, 0);
+    const totalOs = pagamentosDoMes.reduce((acc, p) => acc + valorPagamentoOs(p), 0);
     const totalPdv = pdvDoMes.reduce((acc, v) => acc + (valorLiquidoPorVenda.get(v.id) ?? v.total), 0);
     return { forma, label: formaPagamentoLabel[forma] ?? forma, valor: totalOs + totalPdv };
   }).filter((f) => f.valor > 0);
