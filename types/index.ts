@@ -87,6 +87,11 @@ export interface AutorizadaPendente {
 
 export interface Entrada {
   id: string;
+  // Id do pagamento em si (os_pagamentos.id), só pra tipo "os" — cada
+  // pagamento de uma OS (completo ou parcial) vira uma entrada própria, mas
+  // `id` continua sendo o id da OS (usado pro diálogo de detalhes); esse
+  // campo identifica qual pagamento específico remover.
+  pagamentoId?: string;
   tipo: "os" | "pdv";
   origemLabel: string;
   cliente: string;

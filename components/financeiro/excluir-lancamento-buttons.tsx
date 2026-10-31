@@ -1,7 +1,8 @@
 "use client";
 
 import { ConfirmDeleteButton } from "@/components/financeiro/confirm-delete-button";
-import { deleteContaPagar, deleteDespesa, deleteRetirada, deleteVendaPdv, deleteAjusteCaixa, reabrirOrdemServico } from "@/lib/actions";
+import { deleteContaPagar, deleteDespesa, deleteRetirada, deleteVendaPdv, deleteAjusteCaixa, deleteOsPagamento } from "@/lib/actions";
+import { formatCurrency } from "@/lib/utils";
 
 export function ExcluirContaButton({ id, descricao }: { id: string; descricao: string }) {
   return (
@@ -61,12 +62,16 @@ export function ExcluirAjusteCaixaButton({ id, descricao }: { id: string; descri
 
 export function ExcluirEntradaButton({
   id,
+  pagamentoId,
   tipo,
   origemLabel,
+  valor,
 }: {
   id: string;
+  pagamentoId?: string;
   tipo: "os" | "pdv";
   origemLabel: string;
+  valor: number;
 }) {
   if (tipo === "pdv") {
     return (
@@ -78,12 +83,13 @@ export function ExcluirEntradaButton({
       />
     );
   }
+  if (!pagamentoId) return null;
   return (
     <ConfirmDeleteButton
       title="Remover este pagamento?"
-      description={`O pagamento registrado na ${origemLabel} será removido e ela volta para "Aguardando pagamento". A OS em si, seus itens e o cliente não são afetados — você pode registrar o pagamento correto depois.`}
-      onConfirm={() => reabrirOrdemServico(id)}
-      successMessage="Pagamento removido — a OS foi reaberta"
+      description={`O pagamento de ${formatCurrency(valor)} registrado na ${origemLabel} será removido. Se isso derrubar o total pago abaixo do valor da OS, ela volta a aparecer como "Aguardando pagamento" — você pode registrar o valor certo depois. Os demais pagamentos dessa OS não são afetados.`}
+      onConfirm={() => deleteOsPagamento(pagamentoId, id)}
+      successMessage="Pagamento removido"
     />
   );
 }
