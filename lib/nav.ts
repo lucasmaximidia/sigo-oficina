@@ -11,6 +11,7 @@ import {
   FileText,
   Receipt,
   Scooter,
+  Home,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,10 +21,17 @@ export interface NavItem {
   icon: LucideIcon;
   // Itens sem seção pertencem à oficina (Casa dos Reparos). "locacao" é a
   // segunda empresa (VoltCity, aluguel de scooter/bicicleta elétrica) —
-  // mesmo login, área e dados totalmente à parte. O divisor visual entre
+  // mesmo login, área e dados totalmente à parte. "pessoal" é o controle
+  // financeiro particular do dono (contas da casa, cartões), também
+  // totalmente separado dos números do negócio. O divisor visual entre
   // seções é desenhado por SidebarNav a partir dessa marcação.
-  secao?: "locacao";
+  secao?: "locacao" | "pessoal";
 }
+
+export const SECAO_LABEL: Record<string, string> = {
+  locacao: "Locação",
+  pessoal: "Pessoal",
+};
 
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
@@ -37,5 +45,6 @@ export const navItems: NavItem[] = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/garantias", label: "Garantias", icon: ShieldCheck },
   { href: "/locacao", label: "Locação", icon: Scooter, secao: "locacao" },
+  { href: "/pessoal", label: "Financeiro Pessoal", icon: Home, secao: "pessoal" },
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];

@@ -39,6 +39,10 @@ export type LocacaoAjusteCaixa = Database["public"]["Tables"]["locacao_ajustes_c
 export type LocacaoOutraEntrada = Database["public"]["Tables"]["locacao_outras_entradas"]["Row"];
 export type LocacaoAluguelPagamento = Database["public"]["Tables"]["locacao_aluguel_pagamentos"]["Row"];
 export type LocacaoRenovacao = Database["public"]["Tables"]["locacao_renovacoes"]["Row"];
+export type PessoalRenda = Database["public"]["Tables"]["pessoal_renda"]["Row"];
+export type PessoalItemMes = Database["public"]["Tables"]["pessoal_itens_mes"]["Row"];
+export type PessoalCartao = Database["public"]["Tables"]["pessoal_cartoes"]["Row"];
+export type PessoalCartaoLancamento = Database["public"]["Tables"]["pessoal_cartao_lancamentos"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;
