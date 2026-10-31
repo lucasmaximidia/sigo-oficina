@@ -75,5 +75,6 @@ export const freteTipoMap: Record<FreteTipo, { label: string; variant: "info" | 
 export const retiradaTipoMap: Record<RetiradaTipo, { label: string; variant: "secondary" | "info" | "warning" }> = {
   mao_de_obra: { label: "Mão de Obra", variant: "info" },
   pagamento_parceiro: { label: "Pagamento a Parceiro", variant: "warning" },
+  fatura_cartao: { label: "Fatura do Cartão", variant: "warning" },
   outro: { label: "Outro", variant: "secondary" },
 };

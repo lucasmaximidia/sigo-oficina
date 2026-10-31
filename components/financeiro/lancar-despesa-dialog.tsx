@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,16 @@ export function LancarDespesaDialog() {
               Data
             </Label>
             <Input id="data" name="data" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+          </div>
+          <div>
+            <label className="flex items-center gap-2.5">
+              <Checkbox id="cartao" name="cartao" />
+              <span className="text-sm text-foreground">Paguei no cartão (fatura fecha no fim do mês)</span>
+            </label>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Com isso marcado, esse gasto não sai do caixa agora — fica pendente até você fechar a fatura do
+              cartão (em Despesas), com a data real em que ela foi paga.
+            </p>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

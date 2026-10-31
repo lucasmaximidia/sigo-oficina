@@ -25,7 +25,7 @@ export type OrcamentoStatus = "rascunho" | "enviado" | "aprovado" | "recusado" |
 export type OrcamentoItemTipo = "peca" | "mao_obra";
 export type FreteStatus = "pendente" | "pago";
 export type FreteTipo = "buscar" | "entrega";
-export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "outro";
+export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "fatura_cartao" | "outro";
 export type NotaFiscalOrigem = "os" | "venda_pdv" | "avulsa";
 export type NotaFiscalMotivo = "obrigatoria_cartao_pix" | "opcional_cliente_sim" | "opcional_cliente_nao";
 
@@ -799,6 +799,8 @@ export interface Database {
           valor: number;
           data: string;
           os_item_id: string | null;
+          cartao: boolean;
+          pago_em: string | null;
           created_at: string;
           deletado_em: string | null;
         };
@@ -809,6 +811,8 @@ export interface Database {
           valor?: number;
           data?: string;
           os_item_id?: string | null;
+          cartao?: boolean;
+          pago_em?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
@@ -819,6 +823,8 @@ export interface Database {
           valor?: number;
           data?: string;
           os_item_id?: string | null;
+          cartao?: boolean;
+          pago_em?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
