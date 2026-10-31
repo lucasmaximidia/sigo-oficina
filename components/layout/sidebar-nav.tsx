@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navItems } from "@/lib/nav";
+import { navItems, SECAO_LABEL } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () => void; collapsed?: boolean }) {
@@ -24,7 +24,7 @@ export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () 
               >
                 {!collapsed && item.secao && (
                   <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary/70">
-                    Locação
+                    {SECAO_LABEL[item.secao] ?? item.secao}
                   </p>
                 )}
               </div>

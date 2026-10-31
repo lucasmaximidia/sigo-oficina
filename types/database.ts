@@ -40,6 +40,22 @@ export type EtiquetaTipo = "peca" | "os" | "autorizada";
 export type EtiquetaAlinhamento = "left" | "center" | "right";
 export type EtiquetaTamanhoFonte = "pequena" | "media" | "grande";
 
+export type PessoalRendaCategoria = "salario_lucas" | "salario_jessica" | "terceiros" | "outro";
+export type PessoalItemSecao = "fixa" | "carro" | "dizimo" | "extra";
+export type PessoalCartaoCategoria =
+  | "alimentacao"
+  | "carro"
+  | "casa"
+  | "celular"
+  | "farmacia"
+  | "feira"
+  | "lanches"
+  | "loja"
+  | "oficina"
+  | "igreja"
+  | "outra_pessoa"
+  | "outros";
+
 export interface EtiquetaCampoConfig {
   id: string;
   visivel: boolean;
@@ -1656,6 +1672,144 @@ export interface Database {
           valor?: number;
           data?: string;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      pessoal_renda: {
+        Row: {
+          id: string;
+          mes: string;
+          descricao: string;
+          categoria: PessoalRendaCategoria;
+          valor_previsto: number;
+          valor_real: number | null;
+          created_at: string;
+          deletado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          mes: string;
+          descricao: string;
+          categoria?: PessoalRendaCategoria;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          mes?: string;
+          descricao?: string;
+          categoria?: PessoalRendaCategoria;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Relationships: [];
+      };
+      pessoal_itens_mes: {
+        Row: {
+          id: string;
+          mes: string;
+          secao: PessoalItemSecao;
+          descricao: string;
+          forma_pagamento: string | null;
+          valor_previsto: number;
+          valor_real: number | null;
+          pago_em: string | null;
+          created_at: string;
+          deletado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          mes: string;
+          secao: PessoalItemSecao;
+          descricao: string;
+          forma_pagamento?: string | null;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          pago_em?: string | null;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          mes?: string;
+          secao?: PessoalItemSecao;
+          descricao?: string;
+          forma_pagamento?: string | null;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          pago_em?: string | null;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Relationships: [];
+      };
+      pessoal_cartoes: {
+        Row: {
+          id: string;
+          nome: string;
+          ativo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          ativo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          ativo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      pessoal_cartao_lancamentos: {
+        Row: {
+          id: string;
+          cartao_id: string;
+          compra_id: string;
+          mes: string;
+          categoria: PessoalCartaoCategoria;
+          descricao: string;
+          parcela_atual: number;
+          parcela_total: number;
+          valor_previsto: number;
+          valor_real: number | null;
+          created_at: string;
+          deletado_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          cartao_id: string;
+          compra_id?: string;
+          mes: string;
+          categoria: PessoalCartaoCategoria;
+          descricao: string;
+          parcela_atual?: number;
+          parcela_total?: number;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          created_at?: string;
+          deletado_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          cartao_id?: string;
+          compra_id?: string;
+          mes?: string;
+          categoria?: PessoalCartaoCategoria;
+          descricao?: string;
+          parcela_atual?: number;
+          parcela_total?: number;
+          valor_previsto?: number;
+          valor_real?: number | null;
+          created_at?: string;
+          deletado_em?: string | null;
         };
         Relationships: [];
       };
