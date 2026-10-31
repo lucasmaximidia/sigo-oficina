@@ -1781,6 +1781,7 @@ export interface Database {
           parcela_total: number;
           valor_previsto: number;
           valor_real: number | null;
+          eh_fixa: boolean;
           created_at: string;
           deletado_em: string | null;
         };
@@ -1795,6 +1796,7 @@ export interface Database {
           parcela_total?: number;
           valor_previsto?: number;
           valor_real?: number | null;
+          eh_fixa?: boolean;
           created_at?: string;
           deletado_em?: string | null;
         };
@@ -1809,6 +1811,7 @@ export interface Database {
           parcela_total?: number;
           valor_previsto?: number;
           valor_real?: number | null;
+          eh_fixa?: boolean;
           created_at?: string;
           deletado_em?: string | null;
         };

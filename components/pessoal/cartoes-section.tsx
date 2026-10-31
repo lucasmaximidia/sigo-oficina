@@ -73,6 +73,7 @@ export function CartoesSection({
                             {l.parcela_atual}/{l.parcela_total}
                           </span>
                         )}
+                        {l.eh_fixa && <Badge variant="outline" className="ml-1.5 align-middle text-[10px]">Fixa</Badge>}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {PESSOAL_CARTAO_CATEGORIA_LABEL[l.categoria]} · Previsto {formatCurrency(l.valor_previsto)}
