@@ -68,7 +68,7 @@ export const CLAUSULAS_CONTRATO: { titulo: string; texto: string }[] = [
   {
     titulo: "7. DO RASTREAMENTO E DA PROTEÇÃO DE DADOS (LGPD)",
     texto:
-      "O equipamento poderá possuir GPS e/ou sensor NFC, usados exclusivamente para segurança patrimonial, localização e recuperação do bem. Os dados pessoais do LOCATÁRIO (nome, CPF, telefone e demais informações necessárias) serão tratados pela LOCADORA conforme a Lei nº 13.709/2018 (LGPD), exclusivamente para execução da locação, cobrança e cumprimento de obrigações legais. Dados de localização não serão usados para finalidade diversa da segurança patrimonial e serão descartados após o encerramento da locação, observado o prazo legal de guarda quando aplicável.",
+      "O equipamento poderá possuir GPS, usado exclusivamente para segurança patrimonial, localização e recuperação do bem. Os dados pessoais do LOCATÁRIO (nome, CPF, telefone e demais informações necessárias) serão tratados pela LOCADORA conforme a Lei nº 13.709/2018 (LGPD), exclusivamente para execução da locação, cobrança e cumprimento de obrigações legais. Dados de localização não serão usados para finalidade diversa da segurança patrimonial e serão descartados após o encerramento da locação, observado o prazo legal de guarda quando aplicável.",
   },
   {
     titulo: "8. DOS DANOS, MANUTENÇÃO, CONSERVAÇÃO E DEVOLUÇÃO",
