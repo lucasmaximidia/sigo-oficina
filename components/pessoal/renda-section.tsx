@@ -44,7 +44,7 @@ export function RendaSection({ renda, mes }: { renda: PessoalRenda[]; mes: strin
               <ConfirmarValorInline
                 valorReal={r.valor_real}
                 valorPrevisto={r.valor_previsto}
-                onConfirm={(valor) => confirmarRenda(r.id, valor)}
+                onConfirm={confirmarRenda.bind(null, r.id)}
               />
               <ExcluirRendaButton id={r.id} descricao={r.descricao} />
             </div>
