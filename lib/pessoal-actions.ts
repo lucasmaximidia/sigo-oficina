@@ -55,6 +55,36 @@ export async function confirmarRenda(id: string, valorReal: number) {
   revalidarPessoal();
 }
 
+// Marca o repasse de terceiros (oficina/VoltCity/empréstimos) do mês como
+// recebido, gravando o valor em Renda > "Contas pagas por Terceiros" — é
+// aqui que esse dinheiro já entrava na planilha quando caía na conta.
+export async function marcarRepasseRecebido(mes: string, valor: number) {
+  const supabase = await createClient();
+  const { data: existentes } = await supabase
+    .from("pessoal_renda")
+    .select("id")
+    .eq("mes", mes)
+    .eq("categoria", "terceiros")
+    .is("deletado_em", null)
+    .order("created_at");
+
+  const existente = existentes?.[0];
+  if (existente) {
+    const { error } = await supabase.from("pessoal_renda").update({ valor_real: valor }).eq("id", existente.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("pessoal_renda").insert({
+      mes,
+      descricao: "CONTAS PAGAS POR TERCEIROS",
+      categoria: "terceiros",
+      valor_previsto: valor,
+      valor_real: valor,
+    });
+    if (error) throw new Error(error.message);
+  }
+  revalidarPessoal();
+}
+
 export async function deleteRenda(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("pessoal_renda").update({ deletado_em: new Date().toISOString() }).eq("id", id);

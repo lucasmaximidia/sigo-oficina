@@ -18,16 +18,27 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { confirmarItemMes } from "@/lib/pessoal-actions";
 import { hojeBR } from "@/lib/utils";
 
-export function ConfirmarItemMesDialog({ id, descricao, valorPrevisto }: { id: string; descricao: string; valorPrevisto: number }) {
+export function ConfirmarItemMesDialog({
+  id,
+  descricao,
+  valorPrevisto,
+  valorSugerido,
+}: {
+  id: string;
+  descricao: string;
+  valorPrevisto: number;
+  /** Ex.: 10% do salário real já confirmado, pro dízimo — some quando não houver sugestão melhor que o previsto. */
+  valorSugerido?: number;
+}) {
   const [open, setOpen] = useState(false);
-  const [valor, setValor] = useState(valorPrevisto);
+  const [valor, setValor] = useState(valorSugerido ?? valorPrevisto);
   const [dataPagamento, setDataPagamento] = useState(hojeBR());
   const [isPending, startTransition] = useTransition();
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      setValor(valorPrevisto);
+      setValor(valorSugerido ?? valorPrevisto);
       setDataPagamento(hojeBR());
     }
   }

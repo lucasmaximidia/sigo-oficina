@@ -10,6 +10,7 @@ import { RendaSection } from "@/components/pessoal/renda-section";
 import { ItensMesSection } from "@/components/pessoal/itens-mes-section";
 import { CartoesSection } from "@/components/pessoal/cartoes-section";
 import { CategoriaChart } from "@/components/pessoal/categoria-chart";
+import { ARecemberSection } from "@/components/pessoal/a-receber-section";
 import { formatCurrency } from "@/lib/utils";
 import { agoraBR } from "@/lib/utils";
 import type { PessoalCartaoCategoria } from "@/types";
@@ -90,19 +91,22 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <RendaSection renda={renda ?? []} mes={mes} />
-          <ItensMesSection itens={itensMes ?? []} mes={mes} />
+          <ItensMesSection itens={itensMes ?? []} mes={mes} renda={renda ?? []} />
         </div>
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="size-4.5 text-primary" />
-              Gastos do cartão por categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CategoriaChart dados={categorias} />
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4">
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="size-4.5 text-primary" />
+                Gastos do cartão por categoria
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CategoriaChart dados={categorias} />
+            </CardContent>
+          </Card>
+          <ARecemberSection lancamentos={lancamentos ?? []} mes={mes} />
+        </div>
       </div>
 
       <div className="mt-4">
