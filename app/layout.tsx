@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { KeyboardInsetWatcher } from "@/components/layout/keyboard-inset-watcher";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <KeyboardInsetWatcher />
         {children}
         <Toaster richColors position="top-right" />
       </body>

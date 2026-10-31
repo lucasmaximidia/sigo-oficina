@@ -43,8 +43,10 @@ const sheetVariants = cva(
         left: "inset-y-0 left-0 h-full w-72 border-r border-border data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left",
         right:
           "inset-y-0 right-0 h-full w-80 border-l border-border data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right",
+        // bottom/max-h descontam --keyboard-inset (ver KeyboardInsetWatcher)
+        // pra subir acima do teclado virtual em vez de ficar atrás dele.
         bottom:
-          "inset-x-0 bottom-0 max-h-[85vh] rounded-t-xl border-t border-border data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom",
+          "inset-x-0 bottom-[var(--keyboard-inset,0px)] max-h-[calc(85vh-var(--keyboard-inset,0px))] rounded-t-xl border-t border-border data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom",
       },
     },
     defaultVariants: { side: "right" },
