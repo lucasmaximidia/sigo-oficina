@@ -29,6 +29,7 @@ export async function GET(request: Request) {
   const colunasParam = url.searchParams.get("colunas");
   const lojaParceiraId = url.searchParams.get("loja");
   const orientacao = url.searchParams.get("orientacao") === "portrait" ? "portrait" : "landscape";
+  const apenasPagas = url.searchParams.get("apenasPagas") === "true";
 
   if (!inicio || !fim) {
     return NextResponse.json({ error: "Informe o período (inicio e fim)" }, { status: 400 });
@@ -64,6 +65,7 @@ export async function GET(request: Request) {
       .lte("data_finalizacao", `${fim}T23:59:59`)
       .order("data_finalizacao", { ascending: true });
     if (osIdsFiltro) query = query.in("id", osIdsFiltro);
+    if (apenasPagas) query = query.not("forma_pagamento", "is", null);
     const { data } = await query;
     ordens = data ?? [];
   }

@@ -31,6 +31,7 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
   const [lojaParceiraId, setLojaParceiraId] = useState<string>("todas");
   const [colunas, setColunas] = useState<Set<string>>(new Set(TODAS_AS_CHAVES));
   const [orientacao, setOrientacao] = useState<"landscape" | "portrait">("landscape");
+  const [apenasPagas, setApenasPagas] = useState(true);
 
   function handleMesChange(valor: string) {
     setMes(valor);
@@ -76,6 +77,7 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
       orientacao,
     });
     if (lojaParceiraId !== "todas") params.set("loja", lojaParceiraId);
+    if (apenasPagas) params.set("apenasPagas", "true");
     window.open(`/api/financeiro/relatorio/pdf?${params.toString()}`, "_blank");
   }
 
@@ -87,8 +89,8 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
           Relatório de Serviços Realizados
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Escolha o período e quais colunas entram no PDF antes de gerar. O relatório considera as OS finalizadas com
-          data de pagamento dentro do período escolhido.
+          Escolha o período e quais colunas entram no PDF antes de gerar. O relatório considera as OS finalizadas
+          dentro do período escolhido.
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
@@ -129,6 +131,18 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
               }}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2.5">
+            <Checkbox checked={apenasPagas} onCheckedChange={(v) => setApenasPagas(v === true)} />
+            <span className="text-sm text-foreground">Somente OS já pagas pelo cliente</span>
+          </label>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Com isso marcado, OS finalizadas mas ainda sem pagamento registrado ficam de fora — os totais (Mão de
+            Obra, Faturamento etc.) batem com os cards do Financeiro. Desmarque pra ver todas as OS finalizadas no
+            período, pagas ou não.
+          </p>
         </div>
 
         <div className="sm:max-w-xs">
