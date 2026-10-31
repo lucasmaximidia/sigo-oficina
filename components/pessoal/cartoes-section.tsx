@@ -5,6 +5,7 @@ import { CartaoDialog } from "@/components/pessoal/cartao-dialog";
 import { LancarCompraCartaoDialog } from "@/components/pessoal/lancar-compra-cartao-dialog";
 import { FecharFaturaButton } from "@/components/pessoal/fechar-fatura-button";
 import { ConfirmarValorInline } from "@/components/pessoal/confirmar-valor-inline";
+import { EditarLancamentoCartaoDialog } from "@/components/pessoal/editar-lancamento-cartao-dialog";
 import { ExcluirLancamentoCartaoButton } from "@/components/pessoal/pessoal-excluir-buttons";
 import { confirmarLancamentoCartao } from "@/lib/pessoal-actions";
 import { PESSOAL_CARTAO_CATEGORIA_LABEL } from "@/lib/pessoal-status";
@@ -82,6 +83,7 @@ export function CartoesSection({
                       valorPrevisto={l.valor_previsto}
                       onConfirm={confirmarLancamentoCartao.bind(null, l.id)}
                     />
+                    <EditarLancamentoCartaoDialog lancamento={l} />
                     <ExcluirLancamentoCartaoButton
                       id={l.id}
                       compraId={l.compra_id}

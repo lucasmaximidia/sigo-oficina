@@ -48,6 +48,26 @@ export async function createRenda(formData: FormData) {
   revalidarPessoal();
 }
 
+// Corrige descrição/categoria/previsto de uma renda já lançada. O campo
+// "valor_real" só vem no formData quando o diálogo o mostra (já confirmado)
+// — por isso só mexe nele quando presente, em vez de sempre sobrescrever.
+export async function updateRenda(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const { error } = await supabase
+    .from("pessoal_renda")
+    .update({
+      descricao,
+      categoria: (str(formData, "categoria") as PessoalRendaCategoria) ?? "outro",
+      valor_previsto: num(formData, "valor_previsto"),
+      ...(formData.has("valor_real") ? { valor_real: num(formData, "valor_real") } : {}),
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidarPessoal();
+}
+
 export async function confirmarRenda(id: string, valorReal: number) {
   const supabase = await createClient();
   const { error } = await supabase.from("pessoal_renda").update({ valor_real: valorReal }).eq("id", id);
@@ -107,6 +127,28 @@ export async function createItemMes(formData: FormData) {
     forma_pagamento: str(formData, "forma_pagamento"),
     valor_previsto: num(formData, "valor_previsto"),
   });
+  if (error) throw new Error(error.message);
+  revalidarPessoal();
+}
+
+// Corrige descrição/forma de pagamento/previsto de um item já lançado.
+// "valor_real"/"pago_em" só vêm no formData quando o diálogo os mostra (item
+// já confirmado) — por isso só mexe neles quando presentes.
+export async function updateItemMes(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const descricao = strUp(formData, "descricao");
+  if (!descricao) throw new Error("Descrição é obrigatória");
+  const { error } = await supabase
+    .from("pessoal_itens_mes")
+    .update({
+      descricao,
+      forma_pagamento: str(formData, "forma_pagamento"),
+      valor_previsto: num(formData, "valor_previsto"),
+      ...(formData.has("valor_real")
+        ? { valor_real: num(formData, "valor_real"), pago_em: str(formData, "pago_em") }
+        : {}),
+    })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidarPessoal();
 }
@@ -213,6 +255,28 @@ export async function createLancamentoCartao(formData: FormData) {
   }));
 
   const { error } = await supabase.from("pessoal_cartao_lancamentos").insert(linhas);
+  if (error) throw new Error(error.message);
+  revalidarPessoal();
+}
+
+// Corrige descrição/categoria/previsto de um lançamento já criado — não mexe
+// em cartão/parcela/compra_id, pra não bagunçar o agrupamento de uma compra
+// parcelada (pra isso é excluir a compra inteira e relançar). "valor_real"
+// só vem no formData quando o diálogo o mostra (já confirmado).
+export async function updateLancamentoCartao(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const descricao = strUp(formData, "descricao");
+  const categoria = str(formData, "categoria") as PessoalCartaoCategoria | null;
+  if (!descricao || !categoria) throw new Error("Preencha todos os campos obrigatórios");
+  const { error } = await supabase
+    .from("pessoal_cartao_lancamentos")
+    .update({
+      descricao,
+      categoria,
+      valor_previsto: num(formData, "valor_previsto"),
+      ...(formData.has("valor_real") ? { valor_real: num(formData, "valor_real") } : {}),
+    })
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidarPessoal();
 }

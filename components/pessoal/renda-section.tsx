@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { LancarRendaDialog } from "@/components/pessoal/lancar-renda-dialog";
 import { ConfirmarValorInline } from "@/components/pessoal/confirmar-valor-inline";
+import { EditarRendaDialog } from "@/components/pessoal/editar-renda-dialog";
 import { ExcluirRendaButton } from "@/components/pessoal/pessoal-excluir-buttons";
 import { confirmarRenda } from "@/lib/pessoal-actions";
 import { PESSOAL_RENDA_CATEGORIA_LABEL } from "@/lib/pessoal-status";
@@ -46,6 +47,7 @@ export function RendaSection({ renda, mes }: { renda: PessoalRenda[]; mes: strin
                 valorPrevisto={r.valor_previsto}
                 onConfirm={confirmarRenda.bind(null, r.id)}
               />
+              <EditarRendaDialog renda={r} />
               <ExcluirRendaButton id={r.id} descricao={r.descricao} />
             </div>
           ))
