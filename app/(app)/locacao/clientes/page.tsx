@@ -37,7 +37,7 @@ export default async function LocacaoClientesPage() {
     <div>
       <PageHeader
         title="Clientes da Locação"
-        description="Cadastro de clientes de scooters e bicicletas elétricas"
+        description="Cadastro de clientes de scooters, bicicletas e quadriciclos elétricos"
         actions={<ClienteLocacaoDialog />}
       />
 

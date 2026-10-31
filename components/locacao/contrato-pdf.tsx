@@ -1,8 +1,8 @@
 import { Document, Page, View, Text, Image, Link, StyleSheet } from "@react-pdf/renderer";
 import { formatCurrency } from "@/lib/utils";
-import { RESUMO_CONTRATO } from "@/lib/locacao-contrato-texto";
+import { getContratoTexto } from "@/lib/locacao-contrato-texto";
 import { identificarDispositivo } from "@/lib/user-agent";
-import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo } from "@/types";
+import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo, LocacaoTipoContrato } from "@/types";
 
 const cores = {
   primary: "#1a7a3c",
@@ -69,6 +69,15 @@ const styles = StyleSheet.create({
   resumoLinha: { marginBottom: 2.5 },
   resumoTitulo: { fontSize: 7.8, fontFamily: "Helvetica-Bold" },
   resumoTexto: { fontSize: 7.3, color: cores.text, lineHeight: 1.2 },
+  resumoDestaque: {
+    backgroundColor: "#fff3cd",
+    borderWidth: 1,
+    borderColor: "#f0c36d",
+    borderRadius: 3,
+    padding: 4,
+  },
+  resumoTituloDestaque: { fontSize: 7.8, fontFamily: "Helvetica-Bold", color: "#7a5b00" },
+  resumoTextoDestaque: { fontSize: 7.3, fontFamily: "Helvetica-Bold", color: "#7a5b00", lineHeight: 1.2 },
   qrBloco: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4, backgroundColor: cores.bgMuted, borderRadius: 4, padding: 6 },
   qrImg: { width: 40, height: 40 },
   qrTexto: { fontSize: 7.3, color: cores.muted, flex: 1, lineHeight: 1.3 },
@@ -96,6 +105,7 @@ const FORMA_LABEL: Record<LocacaoFormaPagamento, string> = {
 const TIPO_LABEL: Record<LocacaoVeiculoTipo, string> = {
   scooter: "Scooter Elétrica",
   bicicleta: "Bicicleta Elétrica",
+  quadriciclo: "Quadriciclo Elétrico Infantil",
 };
 
 export function ContratoLocacaoPdf({
@@ -122,7 +132,14 @@ export function ContratoLocacaoPdf({
 }: {
   numero: number;
   cliente: { nome: string; cpf: string | null; telefone: string | null };
-  veiculo: { tipo: LocacaoVeiculoTipo; marca: string; modelo: string; cor: string | null; chassi: string };
+  veiculo: {
+    tipo: LocacaoVeiculoTipo;
+    marca: string;
+    modelo: string;
+    cor: string | null;
+    chassi: string;
+    tipo_contrato: LocacaoTipoContrato;
+  };
   dataRetirada: string;
   dataPrevistaDevolucao: string;
   valor: number;
@@ -145,6 +162,7 @@ export function ContratoLocacaoPdf({
     new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(
       new Date(iso)
     );
+  const { resumo } = getContratoTexto(veiculo.tipo_contrato);
 
   return (
     <Document title={`Contrato-Locacao-${numero}`}>
@@ -254,7 +272,7 @@ export function ContratoLocacaoPdf({
             conservação, apto para uso.
           </Text>
           <Check marcado>Recebi orientações sobre a utilização e o carregamento correto do equipamento e estou ciente das regras de uso.</Check>
-          <Check marcado>Estou ciente de que o equipamento poderá possuir rastreamento por GPS e/ou sensor NFC para fins de segurança patrimonial.</Check>
+          <Check marcado>Estou ciente de que o equipamento poderá possuir rastreamento por GPS para fins de segurança patrimonial.</Check>
           <Check marcado>Li, compreendi e concordo integralmente com o Contrato de Locação resumido abaixo, cujo texto completo está disponível no link/QR code.</Check>
         </View>
 
@@ -267,12 +285,19 @@ export function ContratoLocacaoPdf({
 
         <View style={styles.section}>
           <Text style={styles.sectionTitulo}>07  RESUMO DO CONTRATO DE LOCAÇÃO</Text>
-          {RESUMO_CONTRATO.map((item) => (
-            <View key={item.titulo} style={styles.resumoLinha}>
-              <Text style={styles.resumoTitulo}>{item.titulo}</Text>
-              <Text style={styles.resumoTexto}>{item.texto}</Text>
-            </View>
-          ))}
+          {resumo.map((item) =>
+            item.destaque ? (
+              <View key={item.titulo} style={[styles.resumoLinha, styles.resumoDestaque]}>
+                <Text style={styles.resumoTituloDestaque}>{item.titulo}</Text>
+                <Text style={styles.resumoTextoDestaque}>{item.texto}</Text>
+              </View>
+            ) : (
+              <View key={item.titulo} style={styles.resumoLinha}>
+                <Text style={styles.resumoTitulo}>{item.titulo}</Text>
+                <Text style={styles.resumoTexto}>{item.texto}</Text>
+              </View>
+            )
+          )}
           <View style={styles.qrBloco}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image, sem alt na API */}
             <Image src={qrCodeDataUrl} style={styles.qrImg} />

@@ -65,7 +65,7 @@ export function VeiculoDialog({ veiculo, icones }: { veiculo?: LocacaoVeiculo; i
       <DialogContent className="locacao-theme">
         <DialogHeader>
           <DialogTitle>{editando ? "Editar veículo" : "Novo veículo"}</DialogTitle>
-          <DialogDescription>Scooter ou bicicleta elétrica disponível para locação.</DialogDescription>
+          <DialogDescription>Equipamento elétrico disponível para locação.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
@@ -78,6 +78,7 @@ export function VeiculoDialog({ veiculo, icones }: { veiculo?: LocacaoVeiculo; i
                 <SelectContent className="locacao-theme">
                   <SelectItem value="scooter">Scooter</SelectItem>
                   <SelectItem value="bicicleta">Bicicleta</SelectItem>
+                  <SelectItem value="quadriciclo">Quadriciclo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -87,6 +88,22 @@ export function VeiculoDialog({ veiculo, icones }: { veiculo?: LocacaoVeiculo; i
               </Label>
               <Input id="cor" name="cor" defaultValue={veiculo?.cor ?? ""} />
             </div>
+          </div>
+          <div>
+            <Label className="mb-1.5 block">Tipo de contrato</Label>
+            <Select name="tipo_contrato" defaultValue={veiculo?.tipo_contrato ?? "padrao"}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="locacao-theme">
+                <SelectItem value="padrao">Contrato 1 — padrão (condutor maior de idade)</SelectItem>
+                <SelectItem value="infantil">Contrato 2 — uso infantil (responsável pela criança)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Decide qual contrato é gerado nos aluguéis deste veículo. Novos veículos começam no Contrato 1 — os já
+              cadastrados não são afetados.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

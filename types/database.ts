@@ -29,8 +29,9 @@ export type RetiradaTipo = "mao_de_obra" | "pagamento_parceiro" | "fatura_cartao
 export type NotaFiscalOrigem = "os" | "venda_pdv" | "avulsa";
 export type NotaFiscalMotivo = "obrigatoria_cartao_pix" | "opcional_cliente_sim" | "opcional_cliente_nao";
 
-export type LocacaoVeiculoTipo = "scooter" | "bicicleta";
+export type LocacaoVeiculoTipo = "scooter" | "bicicleta" | "quadriciclo";
 export type LocacaoVeiculoStatus = "disponivel" | "alugado" | "manutencao" | "inativo";
+export type LocacaoTipoContrato = "padrao" | "infantil";
 export type LocacaoFormaPagamento = "pix" | "cartao" | "dinheiro" | "transferencia";
 export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
@@ -1305,6 +1306,7 @@ export interface Database {
           observacoes: string | null;
           foto_url: string | null;
           km_atual: number | null;
+          tipo_contrato: LocacaoTipoContrato;
           created_at: string;
           updated_at: string;
         };
@@ -1320,6 +1322,7 @@ export interface Database {
           observacoes?: string | null;
           foto_url?: string | null;
           km_atual?: number | null;
+          tipo_contrato?: LocacaoTipoContrato;
           created_at?: string;
           updated_at?: string;
         };
@@ -1335,6 +1338,7 @@ export interface Database {
           observacoes?: string | null;
           foto_url?: string | null;
           km_atual?: number | null;
+          tipo_contrato?: LocacaoTipoContrato;
           created_at?: string;
           updated_at?: string;
         };
@@ -1736,6 +1740,7 @@ export interface Database {
           veiculo_modelo: string;
           veiculo_cor: string | null;
           veiculo_chassi: string;
+          veiculo_tipo_contrato: string;
           data_retirada: string;
           data_prevista_devolucao: string;
           valor: number;

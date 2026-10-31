@@ -137,7 +137,7 @@ export default async function DashboardPage() {
 
   const alugueisPainel: AluguelPainel[] = (locacaoAlugueisAbertos ?? []).map((a) => {
     const veiculo = a.locacao_veiculos as unknown as {
-      tipo: "scooter" | "bicicleta";
+      tipo: "scooter" | "bicicleta" | "quadriciclo";
       marca: string;
       modelo: string;
       cor: string | null;
