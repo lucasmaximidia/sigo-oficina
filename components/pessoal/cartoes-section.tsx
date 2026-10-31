@@ -80,7 +80,7 @@ export function CartoesSection({
                     <ConfirmarValorInline
                       valorReal={l.valor_real}
                       valorPrevisto={l.valor_previsto}
-                      onConfirm={(valor) => confirmarLancamentoCartao(l.id, valor)}
+                      onConfirm={confirmarLancamentoCartao.bind(null, l.id)}
                     />
                     <ExcluirLancamentoCartaoButton
                       id={l.id}
