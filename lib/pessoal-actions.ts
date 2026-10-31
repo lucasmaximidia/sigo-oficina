@@ -177,25 +177,53 @@ export async function deleteItemMes(id: string) {
 export async function copiarItensMesAnterior(mesAtual: string) {
   const supabase = await createClient();
   const mesAnterior = somarMeses(mesAtual, -1);
-  const { data: itensAnteriores } = await supabase
-    .from("pessoal_itens_mes")
-    .select("secao, descricao, forma_pagamento, valor_previsto")
-    .eq("mes", mesAnterior)
-    .in("secao", ["fixa", "carro", "dizimo"])
-    .is("deletado_em", null);
 
-  if (!itensAnteriores || itensAnteriores.length === 0) throw new Error("Nenhum item no mês anterior pra copiar");
+  const [{ data: itensAnteriores }, { data: cartaoAnteriores }] = await Promise.all([
+    supabase
+      .from("pessoal_itens_mes")
+      .select("secao, descricao, forma_pagamento, valor_previsto")
+      .eq("mes", mesAnterior)
+      .in("secao", ["fixa", "carro", "dizimo"])
+      .is("deletado_em", null),
+    supabase
+      .from("pessoal_cartao_lancamentos")
+      .select("cartao_id, categoria, descricao, valor_previsto")
+      .eq("mes", mesAnterior)
+      .eq("eh_fixa", true)
+      .is("deletado_em", null),
+  ]);
 
-  const { error } = await supabase.from("pessoal_itens_mes").insert(
-    itensAnteriores.map((item) => ({
-      mes: mesAtual,
-      secao: item.secao,
-      descricao: item.descricao,
-      forma_pagamento: item.forma_pagamento,
-      valor_previsto: item.valor_previsto,
-    }))
-  );
-  if (error) throw new Error(error.message);
+  if ((!itensAnteriores || itensAnteriores.length === 0) && (!cartaoAnteriores || cartaoAnteriores.length === 0)) {
+    throw new Error("Nenhum item fixo no mês anterior pra copiar");
+  }
+
+  if (itensAnteriores && itensAnteriores.length > 0) {
+    const { error } = await supabase.from("pessoal_itens_mes").insert(
+      itensAnteriores.map((item) => ({
+        mes: mesAtual,
+        secao: item.secao,
+        descricao: item.descricao,
+        forma_pagamento: item.forma_pagamento,
+        valor_previsto: item.valor_previsto,
+      }))
+    );
+    if (error) throw new Error(error.message);
+  }
+
+  if (cartaoAnteriores && cartaoAnteriores.length > 0) {
+    const { error } = await supabase.from("pessoal_cartao_lancamentos").insert(
+      cartaoAnteriores.map((l) => ({
+        cartao_id: l.cartao_id,
+        mes: mesAtual,
+        categoria: l.categoria,
+        descricao: l.descricao,
+        valor_previsto: l.valor_previsto,
+        eh_fixa: true,
+      }))
+    );
+    if (error) throw new Error(error.message);
+  }
+
   revalidarPessoal();
 }
 
@@ -240,7 +268,11 @@ export async function createLancamentoCartao(formData: FormData) {
   if (!cartaoId || !descricao || !mes || !categoria) throw new Error("Preencha todos os campos obrigatórios");
 
   const valorPrevisto = num(formData, "valor_previsto");
-  const parcelaTotal = Math.max(1, intOuNull(formData, "parcela_total") ?? 1);
+  const ehFixa = formData.get("eh_fixa") === "on";
+  // Conta fixa (assinatura, seguro) não é parcela com fim marcado — ignora
+  // o número de parcelas e lança só o mês atual; o "copiar do mês anterior"
+  // é quem traz ela pros meses seguintes.
+  const parcelaTotal = ehFixa ? 1 : Math.max(1, intOuNull(formData, "parcela_total") ?? 1);
   const compraId = crypto.randomUUID();
 
   const linhas = Array.from({ length: parcelaTotal }, (_, i) => ({
@@ -252,6 +284,7 @@ export async function createLancamentoCartao(formData: FormData) {
     parcela_atual: i + 1,
     parcela_total: parcelaTotal,
     valor_previsto: valorPrevisto,
+    eh_fixa: ehFixa,
   }));
 
   const { error } = await supabase.from("pessoal_cartao_lancamentos").insert(linhas);
@@ -274,6 +307,7 @@ export async function updateLancamentoCartao(id: string, formData: FormData) {
       descricao,
       categoria,
       valor_previsto: num(formData, "valor_previsto"),
+      eh_fixa: formData.get("eh_fixa") === "on",
       ...(formData.has("valor_real") ? { valor_real: num(formData, "valor_real") } : {}),
     })
     .eq("id", id);

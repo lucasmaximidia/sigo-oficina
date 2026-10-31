@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
@@ -91,6 +92,12 @@ export function EditarLancamentoCartaoDialog({ lancamento }: { lancamento: Pesso
               </div>
             )}
           </div>
+          {lancamento.parcela_total === 1 && (
+            <label className="flex items-center gap-2.5 text-sm text-foreground">
+              <Checkbox name="eh_fixa" defaultChecked={lancamento.eh_fixa} />
+              Conta fixa (repete todo mês — assinatura, seguro, mensalidade...)
+            </label>
+          )}
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
               {isPending ? "Salvando..." : "Salvar"}
