@@ -42,10 +42,10 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showClose?: boolean }) {
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  // Fallback pro teclado do celular cobrir o campo em que a pessoa está
-  // digitando: o meta "interactive-widget=resizes-content" não é suportado
-  // em todo navegador, então aqui rolamos o campo focado pro centro do
-  // diálogo sempre que o teclado deve estar abrindo.
+  // Complementa o --keyboard-inset (que sobe o diálogo acima do teclado):
+  // mesmo já fora do teclado, um formulário mais alto que o espaço restante
+  // ainda pode deixar o campo focado fora da área visível — aqui rolamos
+  // ele pro centro do diálogo sempre que o teclado deve estar abrindo.
   React.useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -68,8 +68,10 @@ function DialogContent({
         className={cn(
           // Mobile: ancorado embaixo, largura cheia, só cantos de cima
           // arredondados — evita o modal central apertado em telas pequenas.
-          "fixed inset-x-0 bottom-0 z-50 grid w-full gap-4 rounded-t-2xl border-t border-border bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-lg duration-150",
-          "max-h-[85vh] overflow-y-auto",
+          // bottom/max-h descontam --keyboard-inset (ver KeyboardInsetWatcher)
+          // pra subir acima do teclado virtual em vez de ficar atrás dele.
+          "fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-50 grid w-full gap-4 rounded-t-2xl border-t border-border bg-card p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-lg duration-150",
+          "max-h-[calc(85vh-var(--keyboard-inset,0px))] overflow-y-auto",
           "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom",
           // sm+: volta a ser o modal central de sempre.
           "sm:inset-x-auto sm:top-1/2 sm:left-1/2 sm:bottom-auto sm:max-h-[90vh] sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border sm:pb-5",
