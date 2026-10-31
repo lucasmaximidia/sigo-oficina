@@ -54,12 +54,21 @@ export interface ItemParceiroPendente {
   clientePagou: boolean;
 }
 
-export interface ParceiroPendente {
-  lojaId: string;
-  lojaNome: string;
+// Agrupa os itens pendentes de uma loja parceira pelo mês em que a OS de
+// origem foi finalizada — permite fechar a conta de um mês esquecido (com a
+// data real do pagamento) separado do mês corrente, em vez de misturar tudo
+// numa lista só.
+export interface MesParceiroPendente {
+  mes: string; // "YYYY-MM"
   totalFechavel: number;
   totalGeral: number;
   itens: ItemParceiroPendente[];
+}
+
+export interface ParceiroPendente {
+  lojaId: string;
+  lojaNome: string;
+  meses: MesParceiroPendente[];
 }
 
 export interface ItemAutorizadaPendente {

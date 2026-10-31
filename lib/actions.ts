@@ -1139,9 +1139,13 @@ export async function restaurarAjusteCaixa(id: string) {
   revalidatePath("/configuracoes/lixeira");
 }
 
-// Fecha a conta corrente com um parceiro que não emite boleto/NF: soma
-// todos os itens de OS ainda pendentes dessa loja, lança a retirada
-// correspondente e marca os itens como pagos.
+// Fecha a conta corrente com um parceiro que não emite boleto/NF: soma os
+// itens de OS indicados (normalmente só os de um mês — ver
+// MesParceiroPendente/AcertoParceiros, que separa por mês de finalização da
+// OS), lança a retirada correspondente e marca os itens como pagos. Recebe
+// a data real do pagamento em vez de usar "hoje" sempre — precisa pra dar
+// baixa de um mês esquecido com a data correta, sem misturar com o mês
+// corrente.
 interface ItemParceiroCandidato {
   id: string;
   quantidade: number;
@@ -1149,7 +1153,8 @@ interface ItemParceiroCandidato {
   ordens_servico: { forma_pagamento: string | null } | null;
 }
 
-export async function fecharContaParceiro(lojaParceiraId: string) {
+export async function fecharContaParceiro(lojaParceiraId: string, itemIds: string[], dataPagamento: string) {
+  if (itemIds.length === 0) throw new Error("Nenhum item selecionado");
   const supabase = await createClient();
   const [{ data: loja }, { data: itensCandidatos }] = await Promise.all([
     supabase.from("lojas_parceiras").select("nome").eq("id", lojaParceiraId).single(),
@@ -1158,6 +1163,7 @@ export async function fecharContaParceiro(lojaParceiraId: string) {
       .select<string, ItemParceiroCandidato>("id, quantidade, valor_unitario, ordens_servico(forma_pagamento)")
       .eq("origem", "loja_parceira")
       .eq("loja_parceira_id", lojaParceiraId)
+      .in("id", itemIds)
       .is("pago_em", null),
   ]);
   if (!loja) throw new Error("Loja parceira não encontrada");
@@ -1167,20 +1173,19 @@ export async function fecharContaParceiro(lojaParceiraId: string) {
   if (itensPendentes.length === 0) throw new Error("Nada pendente com essa loja (em OS já pagas pelo cliente)");
 
   const total = itensPendentes.reduce((acc, item) => acc + item.quantidade * item.valor_unitario, 0);
-  const agora = new Date().toISOString();
 
   const { error: retiradaError } = await supabase.from("financeiro_retiradas").insert({
     tipo: "pagamento_parceiro",
     descricao: `Pagamento de peças - ${loja.nome}`,
     loja_parceira_id: lojaParceiraId,
     valor: total,
-    data: hojeBR(),
+    data: dataPagamento,
   });
   if (retiradaError) throw new Error(retiradaError.message);
 
   const { error: itensError } = await supabase
     .from("os_itens")
-    .update({ pago_em: agora })
+    .update({ pago_em: dataHoraBR(dataPagamento, horaBR()) })
     .in("id", itensPendentes.map((item) => item.id));
   if (itensError) throw new Error(itensError.message);
 
