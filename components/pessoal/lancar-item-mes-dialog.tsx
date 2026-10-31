@@ -19,7 +19,19 @@ import { createItemMes } from "@/lib/pessoal-actions";
 import type { PessoalItemSecao } from "@/types";
 import { PESSOAL_SECAO_LABEL } from "@/lib/pessoal-status";
 
-export function LancarItemMesDialog({ mes, secao }: { mes: string; secao: PessoalItemSecao }) {
+export function LancarItemMesDialog({
+  mes,
+  secao,
+  triggerLabel,
+  descricaoPadrao,
+  valorPrevistoPadrao,
+}: {
+  mes: string;
+  secao: PessoalItemSecao;
+  triggerLabel?: string;
+  descricaoPadrao?: string;
+  valorPrevistoPadrao?: number;
+}) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -42,7 +54,7 @@ export function LancarItemMesDialog({ mes, secao }: { mes: string; secao: Pessoa
       <DialogTrigger asChild>
         <Button type="button" size="sm" variant="outline">
           <Plus className="size-4" />
-          Adicionar
+          {triggerLabel ?? "Adicionar"}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -54,14 +66,21 @@ export function LancarItemMesDialog({ mes, secao }: { mes: string; secao: Pessoa
             <Label htmlFor="descricao" className="mb-1.5 block">
               Descrição
             </Label>
-            <Input id="descricao" name="descricao" required placeholder="Ex: Água, Internet, Pedreiro..." className="uppercase" />
+            <Input
+              id="descricao"
+              name="descricao"
+              required
+              defaultValue={descricaoPadrao}
+              placeholder="Ex: Água, Internet, Pedreiro..."
+              className="uppercase"
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="valor_previsto" className="mb-1.5 block">
                 Valor previsto (R$)
               </Label>
-              <NumericInput id="valor_previsto" name="valor_previsto" required />
+              <NumericInput id="valor_previsto" name="valor_previsto" required defaultValue={valorPrevistoPadrao} />
             </div>
             <div>
               <Label htmlFor="forma_pagamento" className="mb-1.5 block">

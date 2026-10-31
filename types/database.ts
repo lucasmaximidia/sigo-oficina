@@ -54,7 +54,8 @@ export type PessoalCartaoCategoria =
   | "oficina"
   | "igreja"
   | "outra_pessoa"
-  | "outros";
+  | "outros"
+  | "voltcity";
 
 export interface EtiquetaCampoConfig {
   id: string;
