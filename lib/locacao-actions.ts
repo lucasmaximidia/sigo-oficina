@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoStatus, LocacaoVeiculoTipo } from "@/types";
+import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoStatus, LocacaoVeiculoTipo, LocacaoTipoContrato } from "@/types";
 import { hojeBR } from "@/lib/utils";
 import { cpfValido } from "@/lib/cpf";
 
@@ -52,6 +52,7 @@ export async function createVeiculo(formData: FormData) {
     observacoes: str(formData, "observacoes"),
     foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
     km_atual: intOuNull(formData, "km_atual"),
+    tipo_contrato: (str(formData, "tipo_contrato") as LocacaoTipoContrato) ?? "padrao",
   });
   if (error) throw new Error(error.message.includes("unique") ? "Já existe um veículo com esse chassi" : error.message);
   revalidarLocacao();
@@ -71,6 +72,7 @@ export async function updateVeiculo(id: string, formData: FormData) {
       observacoes: str(formData, "observacoes"),
       foto_url: str(formData, "foto_url") === "nenhuma" ? null : str(formData, "foto_url"),
       km_atual: intOuNull(formData, "km_atual"),
+      tipo_contrato: (str(formData, "tipo_contrato") as LocacaoTipoContrato) ?? "padrao",
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

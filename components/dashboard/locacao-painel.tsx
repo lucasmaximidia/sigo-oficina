@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Bike, Scooter, User, CalendarClock, AlertTriangle, Zap, ArrowRight } from "lucide-react";
+import { Bike, Scooter, Car, User, CalendarClock, AlertTriangle, Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { corVeiculo } from "@/lib/locacao-cores";
 import { cn } from "@/lib/utils";
 
 export interface AluguelPainel {
   id: string;
-  veiculoTipo: "scooter" | "bicicleta";
+  veiculoTipo: "scooter" | "bicicleta" | "quadriciclo";
   veiculoMarca: string;
   veiculoModelo: string;
   veiculoCor: string | null;
@@ -65,7 +65,7 @@ export function LocacaoPainel({ alugueis }: { alugueis: AluguelPainel[] }) {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {alugueis.map((a) => {
-            const Icon = a.veiculoTipo === "bicicleta" ? Bike : Scooter;
+            const Icon = a.veiculoTipo === "bicicleta" ? Bike : a.veiculoTipo === "quadriciclo" ? Car : Scooter;
             const cor = corVeiculo(a.veiculoCor);
             const { atrasado, dias, hora } = statusDevolucao(a.dataPrevistaDevolucao);
             return (

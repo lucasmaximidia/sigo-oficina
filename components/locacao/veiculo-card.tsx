@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { Bike, Scooter, PlayCircle, Wrench, Send } from "lucide-react";
+import { Bike, Scooter, Car, PlayCircle, Wrench, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VeiculoDialog } from "@/components/locacao/veiculo-dialog";
@@ -172,7 +172,7 @@ export function VeiculoCard({
   const [renovarOpen, setRenovarOpen] = useState(false);
   const [iconeComErro, setIconeComErro] = useState(false);
   const agora = useSyncExternalStore(inscreverRelogio, agoraCliente, agoraServidor);
-  const Icon = veiculo.tipo === "bicicleta" ? Bike : Scooter;
+  const Icon = veiculo.tipo === "bicicleta" ? Bike : veiculo.tipo === "quadriciclo" ? Car : Scooter;
   const mostrarIcone = !!veiculo.foto_url && !iconeComErro;
   const status = STATUS_INFO[veiculo.status] ?? STATUS_INFO.disponivel;
   const cor = corVeiculo(veiculo.cor);

@@ -1,15 +1,17 @@
 import { FileX, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils";
-import { CLAUSULAS_CONTRATO } from "@/lib/locacao-contrato-texto";
+import { getContratoTexto } from "@/lib/locacao-contrato-texto";
 import { ContratoAceiteForm } from "@/components/locacao/contrato-aceite-form";
 import { identificarDispositivo } from "@/lib/user-agent";
+import type { LocacaoTipoContrato } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 const TIPO_LABEL: Record<string, string> = {
   scooter: "Scooter Elétrica",
   bicicleta: "Bicicleta Elétrica",
+  quadriciclo: "Quadriciclo Elétrico Infantil",
 };
 
 const FORMA_LABEL: Record<string, string> = {
@@ -33,6 +35,8 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
     supabase.rpc("verificar_contrato_locacao", { p_aluguel_id: aluguelId }).maybeSingle(),
     supabase.rpc("obter_contrato_aceite_completo_v2", { p_aluguel_id: aluguelId }).maybeSingle(),
   ]);
+
+  const { clausulas } = getContratoTexto((contrato?.veiculo_tipo_contrato as LocacaoTipoContrato) ?? "padrao");
 
   const formatarDataHora = (iso: string) =>
     new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(
@@ -91,12 +95,24 @@ export default async function ContratoLocacaoPublicoPage({ params }: { params: P
         </div>
 
         <div style={{ background: "#ffffff", borderRadius: 16, padding: 24, boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08)", display: "flex", flexDirection: "column", gap: 16 }}>
-          {CLAUSULAS_CONTRATO.map((c) => (
-            <div key={c.titulo}>
-              <h2 style={{ fontSize: 12.5, fontWeight: 700, color: "#191c1e", margin: "0 0 4px" }}>{c.titulo}</h2>
-              <p style={{ fontSize: 12.5, color: "#3a4246", margin: 0, lineHeight: 1.5, textAlign: "justify" }}>{c.texto}</p>
-            </div>
-          ))}
+          {clausulas.map((c) =>
+            c.destaque ? (
+              <div
+                key={c.titulo}
+                style={{ background: "#fff3cd", border: "1px solid #f0c36d", borderRadius: 10, padding: 14 }}
+              >
+                <h2 style={{ fontSize: 12.5, fontWeight: 700, color: "#7a5b00", margin: "0 0 4px" }}>{c.titulo}</h2>
+                <p style={{ fontSize: 12.5, fontWeight: 700, color: "#7a5b00", margin: 0, lineHeight: 1.5, textAlign: "justify" }}>
+                  {c.texto}
+                </p>
+              </div>
+            ) : (
+              <div key={c.titulo}>
+                <h2 style={{ fontSize: 12.5, fontWeight: 700, color: "#191c1e", margin: "0 0 4px" }}>{c.titulo}</h2>
+                <p style={{ fontSize: 12.5, color: "#3a4246", margin: 0, lineHeight: 1.5, textAlign: "justify" }}>{c.texto}</p>
+              </div>
+            )
+          )}
         </div>
 
         <div style={{ background: "#ffffff", borderRadius: 16, padding: 24, boxShadow: "0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08)" }}>

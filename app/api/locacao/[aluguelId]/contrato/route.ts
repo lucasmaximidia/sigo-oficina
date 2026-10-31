@@ -3,7 +3,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { ContratoLocacaoPdf } from "@/components/locacao/contrato-pdf";
-import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo } from "@/types";
+import type { LocacaoFormaPagamento, LocacaoStatusPagamento, LocacaoVeiculoTipo, LocacaoTipoContrato } from "@/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +26,14 @@ interface AluguelComRelacoes {
   aceite_online_latitude: number | null;
   aceite_online_longitude: number | null;
   locacao_clientes: { nome: string; cpf: string | null; telefone: string | null } | null;
-  locacao_veiculos: { tipo: LocacaoVeiculoTipo; marca: string; modelo: string; cor: string | null; chassi: string } | null;
+  locacao_veiculos: {
+    tipo: LocacaoVeiculoTipo;
+    marca: string;
+    modelo: string;
+    cor: string | null;
+    chassi: string;
+    tipo_contrato: LocacaoTipoContrato;
+  } | null;
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ aluguelId: string }> }) {
@@ -45,7 +52,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
     const { data } = await supabase
       .from("locacao_alugueis")
       .select<string, AluguelComRelacoes>(
-        "numero, data_retirada, data_prevista_devolucao, valor, valor_pago, forma_pagamento, status_pagamento, observacoes, aceite_online_em, aceite_online_nome, aceite_online_telefone, aceite_online_ip, aceite_online_user_agent, aceite_online_fuso_horario, aceite_online_latitude, aceite_online_longitude, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi)"
+        "numero, data_retirada, data_prevista_devolucao, valor, valor_pago, forma_pagamento, status_pagamento, observacoes, aceite_online_em, aceite_online_nome, aceite_online_telefone, aceite_online_ip, aceite_online_user_agent, aceite_online_fuso_horario, aceite_online_latitude, aceite_online_longitude, locacao_clientes(nome, cpf, telefone), locacao_veiculos(tipo, marca, modelo, cor, chassi, tipo_contrato)"
       )
       .eq("id", aluguelId)
       .maybeSingle();
@@ -91,6 +98,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ alug
         modelo: contrato.veiculo_modelo,
         cor: contrato.veiculo_cor,
         chassi: contrato.veiculo_chassi,
+        tipo_contrato: contrato.veiculo_tipo_contrato as LocacaoTipoContrato,
       },
     };
   }
