@@ -71,6 +71,23 @@ export interface ParceiroPendente {
   meses: MesParceiroPendente[];
 }
 
+// Despesa no cartão da oficina: o gasto acontece agora, mas o dinheiro só
+// sai de verdade quando a fatura fecha (no fim do mês) — igual ao acerto com
+// loja parceira, mas sem a dimensão "loja" (é um cartão só).
+export interface DespesaCartaoPendenteItem {
+  id: string;
+  descricao: string;
+  categoria: string | null;
+  valor: number;
+  data: string;
+}
+
+export interface MesDespesaCartaoPendente {
+  mes: string; // "YYYY-MM"
+  total: number;
+  itens: DespesaCartaoPendenteItem[];
+}
+
 export interface ItemAutorizadaPendente {
   osId: string;
   osNumero: number;

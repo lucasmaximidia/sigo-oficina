@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Wallet2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ResponsiveList } from "@/components/ui/responsive-list";
@@ -12,6 +13,15 @@ import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
 import type { FinanceiroDespesa } from "@/types";
+
+function BadgeCartao({ despesa }: { despesa: FinanceiroDespesa }) {
+  if (!despesa.cartao) return null;
+  return (
+    <Badge variant={despesa.pago_em ? "secondary" : "warning"}>
+      {despesa.pago_em ? `Fatura paga em ${formatDate(despesa.pago_em)}` : "No cartão — aguardando fatura"}
+    </Badge>
+  );
+}
 
 export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
   const [ordenacao, setOrdenacao] = useState<Ordenacao>("data_desc");
@@ -61,7 +71,12 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
           }
           renderRow={(despesa) => (
             <TableRow key={despesa.id}>
-              <TableCell className="font-medium text-foreground">{despesa.descricao}</TableCell>
+              <TableCell className="font-medium text-foreground">
+                <div className="flex flex-wrap items-center gap-2">
+                  {despesa.descricao}
+                  <BadgeCartao despesa={despesa} />
+                </div>
+              </TableCell>
               <TableCell className="text-muted-foreground">{despesa.categoria || "—"}</TableCell>
               <TableCell className="text-muted-foreground">{formatDate(despesa.data)}</TableCell>
               <TableCell className="font-medium text-foreground">{formatCurrency(despesa.valor)}</TableCell>
@@ -78,6 +93,9 @@ export function DespesasTab({ despesas }: { despesas: FinanceiroDespesa[] }) {
                   {despesa.categoria || "—"} · {formatDate(despesa.data)}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-foreground">{formatCurrency(despesa.valor)}</p>
+                <div className="mt-1.5">
+                  <BadgeCartao despesa={despesa} />
+                </div>
               </div>
               <ExcluirDespesaButton id={despesa.id} descricao={despesa.descricao} osItemId={despesa.os_item_id} />
             </div>

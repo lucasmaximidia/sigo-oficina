@@ -1032,8 +1032,50 @@ export async function createDespesa(formData: FormData) {
     categoria: strUp(formData, "categoria"),
     valor: num(formData, "valor"),
     data: str(formData, "data") ?? hojeBR(),
+    cartao: formData.get("cartao") === "on",
   });
   if (error) throw new Error(error.message);
+  revalidatePath("/financeiro");
+}
+
+// Fecha a fatura do cartão: soma as despesas marcadas como "no cartão" e
+// ainda não fechadas (normalmente só as de um mês — ver
+// MesDespesaCartaoPendente/AcertoCartao, que separa por mês da compra),
+// lança uma retirada com o total e marca essas despesas como fechadas. O
+// gasto em si (financeiro_despesas) nunca é contado como saída sozinho —
+// só a retirada representa a saída real do caixa, no dia em que a fatura é
+// paga de verdade, não no dia da compra.
+export async function fecharFaturaCartao(despesaIds: string[], dataPagamento: string) {
+  if (despesaIds.length === 0) throw new Error("Nenhuma despesa selecionada");
+  const supabase = await createClient();
+  const { data: despesas } = await supabase
+    .from("financeiro_despesas")
+    .select("id, valor")
+    .eq("cartao", true)
+    .is("pago_em", null)
+    .in("id", despesaIds);
+
+  const pendentes = despesas ?? [];
+  if (pendentes.length === 0) throw new Error("Nada pendente pra fechar");
+  const total = pendentes.reduce((acc, d) => acc + d.valor, 0);
+
+  const { error: retiradaError } = await supabase.from("financeiro_retiradas").insert({
+    tipo: "fatura_cartao",
+    descricao: "Fatura do cartão",
+    valor: total,
+    data: dataPagamento,
+  });
+  if (retiradaError) throw new Error(retiradaError.message);
+
+  const { error: updateError } = await supabase
+    .from("financeiro_despesas")
+    .update({ pago_em: dataPagamento })
+    .in(
+      "id",
+      pendentes.map((d) => d.id)
+    );
+  if (updateError) throw new Error(updateError.message);
+
   revalidatePath("/financeiro");
 }
 

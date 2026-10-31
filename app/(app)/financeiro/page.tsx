@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LancarDespesaDialog } from "@/components/financeiro/lancar-despesa-dialog";
 import { AcertoParceiros } from "@/components/financeiro/acerto-parceiros";
+import { AcertoCartao } from "@/components/financeiro/acerto-cartao";
 import { EntradasTab } from "@/components/financeiro/entradas-tab";
 import { ContasTab } from "@/components/financeiro/contas-tab";
 import { DespesasTab } from "@/components/financeiro/despesas-tab";
@@ -32,7 +33,14 @@ import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-ca
 import { agoraBR, cn, dataBR, diasAPartirDe, formatCurrency, formatDate, hojeBR } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
-import type { ParceiroPendente, MesParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
+import type {
+  ParceiroPendente,
+  MesParceiroPendente,
+  AutorizadaPendente,
+  Entrada,
+  FreteComRelacoes,
+  MesDespesaCartaoPendente,
+} from "@/types";
 
 // Cada pagamento registrado numa OS (os_pagamentos) vira uma entrada própria
 // no Financeiro, com a data em que o dinheiro realmente entrou — inclusive
@@ -106,6 +114,14 @@ interface ItemParceiroPendenteRow {
   valor_unitario: number;
   ordens_servico: { numero: number; forma_pagamento: string | null; data_finalizacao: string | null } | null;
   lojas_parceiras: { nome: string } | null;
+}
+
+interface DespesaCartaoPendenteRow {
+  id: string;
+  descricao: string;
+  categoria: string | null;
+  valor: number;
+  data: string;
 }
 
 interface OsAutorizadaPendenteRow {
@@ -204,6 +220,7 @@ export default async function FinanceiroPage({
     { data: retiradasTotalRows },
     { data: ajustesTotalRows },
     { data: pagamentosOsStats },
+    { data: despesasCartaoPendentes },
   ] = await Promise.all([
     contasQuery,
     despesasQuery,
@@ -227,7 +244,9 @@ export default async function FinanceiroPage({
       .is("forma_pagamento", null)
       .not("empresa_autorizada_id", "is", null),
     ajustesCaixaQuery,
-    supabase.from("financeiro_despesas").select("valor").is("deletado_em", null),
+    // Despesas no cartão nunca contam como saída direta — só a retirada
+    // lançada ao fechar a fatura representa o dinheiro saindo de verdade.
+    supabase.from("financeiro_despesas").select("valor").is("deletado_em", null).eq("cartao", false),
     supabase
       .from("ordens_servico")
       .select<string, OsStatsRow>(
@@ -244,6 +263,11 @@ export default async function FinanceiroPage({
     supabase.from("financeiro_retiradas").select("valor").is("deletado_em", null),
     supabase.from("financeiro_ajustes_caixa").select("valor").is("deletado_em", null),
     supabase.from("os_pagamentos").select<string, PagamentoOsStatsRow>("data, forma_pagamento, valor, valor_recebido_liquido"),
+    supabase
+      .from("financeiro_despesas")
+      .select<string, DespesaCartaoPendenteRow>("id, descricao, categoria, valor, data")
+      .eq("cartao", true)
+      .is("pago_em", null),
   ]);
 
   // Pagamentos das vendas PDV — a partir do histórico COMPLETO (vendasStats),
@@ -446,6 +470,19 @@ export default async function FinanceiroPage({
     }, new Map<string, AutorizadaPendente>()).values()
   );
 
+  // Despesas no cartão agrupadas pelo mês da compra, aguardando o fechamento
+  // da fatura — ver comentário em fecharFaturaCartao (lib/actions.ts).
+  const despesasCartaoPendentesPorMes: MesDespesaCartaoPendente[] = Array.from(
+    (despesasCartaoPendentes ?? []).reduce((acc, d) => {
+      const mes = d.data.slice(0, 7);
+      const grupo = acc.get(mes) ?? { mes, total: 0, itens: [] };
+      grupo.total += d.valor;
+      grupo.itens.push({ id: d.id, descricao: d.descricao, categoria: d.categoria, valor: d.valor, data: d.data });
+      acc.set(mes, grupo);
+      return acc;
+    }, new Map<string, MesDespesaCartaoPendente>()).values()
+  ).sort((a, b) => b.mes.localeCompare(a.mes));
+
   return (
     <div>
       <PageHeader
@@ -598,7 +635,8 @@ export default async function FinanceiroPage({
           <ContasTab contas={contas ?? []} hojeStr={hojeStr} />
         </TabsContent>
 
-        <TabsContent value="despesas">
+        <TabsContent value="despesas" className="flex flex-col gap-4">
+          <AcertoCartao meses={despesasCartaoPendentesPorMes} />
           <DespesasTab despesas={despesas ?? []} />
         </TabsContent>
 

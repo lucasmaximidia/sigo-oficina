@@ -61,7 +61,9 @@ export async function GET(request: Request) {
   ] = await Promise.all([
     supabase.from("os_pagamentos").select<string, PagamentoOsRow>("data, forma_pagamento, valor, valor_recebido_liquido"),
     supabase.from("vendas_pdv").select("id, created_at, total, forma_pagamento").is("deletado_em", null),
-    supabase.from("financeiro_despesas").select("descricao, categoria, valor, data").is("deletado_em", null),
+    // Despesas no cartão nunca contam aqui — só a retirada lançada ao
+    // fechar a fatura representa o dinheiro saindo de verdade.
+    supabase.from("financeiro_despesas").select("descricao, categoria, valor, data").is("deletado_em", null).eq("cartao", false),
     supabase.from("financeiro_contas").select("descricao, fornecedor, valor, pago_em, status").is("deletado_em", null),
     supabase
       .from("fretes")
