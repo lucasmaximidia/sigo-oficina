@@ -32,7 +32,7 @@ import { FormasPagamentoCard } from "@/components/financeiro/formas-pagamento-ca
 import { agoraBR, cn, dataBR, diasAPartirDe, formatCurrency, formatDate, hojeBR } from "@/lib/utils";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { AcertoAutorizadas } from "@/components/financeiro/acerto-autorizadas";
-import type { ParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
+import type { ParceiroPendente, MesParceiroPendente, AutorizadaPendente, Entrada, FreteComRelacoes } from "@/types";
 
 interface OsEntradaRow {
   id: string;
@@ -99,7 +99,7 @@ interface ItemParceiroPendenteRow {
   descricao: string;
   quantidade: number;
   valor_unitario: number;
-  ordens_servico: { numero: number; forma_pagamento: string | null } | null;
+  ordens_servico: { numero: number; forma_pagamento: string | null; data_finalizacao: string | null } | null;
   lojas_parceiras: { nome: string } | null;
 }
 
@@ -209,7 +209,7 @@ export default async function FinanceiroPage({
     supabase
       .from("os_itens")
       .select<string, ItemParceiroPendenteRow>(
-        "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero, forma_pagamento), lojas_parceiras(nome)"
+        "id, loja_parceira_id, descricao, quantidade, valor_unitario, ordens_servico(numero, forma_pagamento, data_finalizacao), lojas_parceiras(nome)"
       )
       .eq("origem", "loja_parceira")
       .is("pago_em", null),
@@ -398,32 +398,39 @@ export default async function FinanceiroPage({
 
   // O acerto só pode ser fechado com itens de OS que o cliente já pagou,
   // mas a lista mostra todos os itens pendentes com o parceiro (o toggle
-  // decide o que aparece) — daí o total geral e o total fechável.
-  const parceirosPendentes = Array.from(
+  // decide o que aparece) — daí o total geral e o total fechável. Agrupado
+  // pelo mês em que a OS de origem foi finalizada, pra dar pra fechar um mês
+  // esquecido (com a data real) separado do mês corrente.
+  const parceirosPendentes: ParceiroPendente[] = Array.from(
     (itensParceiroPendentes ?? []).reduce((acc, item) => {
       if (!item.loja_parceira_id) return acc;
-      const atual = acc.get(item.loja_parceira_id) ?? {
+      const parceiro = acc.get(item.loja_parceira_id) ?? {
         lojaId: item.loja_parceira_id,
         lojaNome: item.lojas_parceiras?.nome ?? "Loja parceira",
-        totalFechavel: 0,
-        totalGeral: 0,
-        itens: [],
+        meses: new Map<string, MesParceiroPendente>(),
       };
       const valorItem = item.quantidade * item.valor_unitario;
       const clientePagou = item.ordens_servico?.forma_pagamento != null;
-      atual.totalGeral += valorItem;
-      if (clientePagou) atual.totalFechavel += valorItem;
-      atual.itens.push({
+      const mes = item.ordens_servico?.data_finalizacao ? dataBR(item.ordens_servico.data_finalizacao).slice(0, 7) : "sem-data";
+      const grupoMes = parceiro.meses.get(mes) ?? { mes, totalFechavel: 0, totalGeral: 0, itens: [] };
+      grupoMes.totalGeral += valorItem;
+      if (clientePagou) grupoMes.totalFechavel += valorItem;
+      grupoMes.itens.push({
         id: item.id,
         descricao: item.descricao,
         valor: valorItem,
         osNumero: item.ordens_servico?.numero ?? null,
         clientePagou,
       });
-      acc.set(item.loja_parceira_id, atual);
+      parceiro.meses.set(mes, grupoMes);
+      acc.set(item.loja_parceira_id, parceiro);
       return acc;
-    }, new Map<string, ParceiroPendente>()).values()
-  );
+    }, new Map<string, { lojaId: string; lojaNome: string; meses: Map<string, MesParceiroPendente> }>()).values()
+  ).map((parceiro) => ({
+    lojaId: parceiro.lojaId,
+    lojaNome: parceiro.lojaNome,
+    meses: Array.from(parceiro.meses.values()).sort((a, b) => b.mes.localeCompare(a.mes)),
+  }));
 
   const autorizadasPendentes = Array.from(
     (osAutorizadaPendentes ?? []).reduce((acc, os) => {

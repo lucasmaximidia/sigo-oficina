@@ -10,15 +10,38 @@ import { FecharContaParceiroButton } from "@/components/financeiro/fechar-conta-
 import { formatCurrency } from "@/lib/utils";
 import type { ParceiroPendente } from "@/types";
 
+const MESES_LABEL = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+function labelMes(mes: string) {
+  if (mes === "sem-data") return "Sem data de finalização";
+  const [ano, mesNum] = mes.split("-").map(Number);
+  return `${MESES_LABEL[mesNum - 1]} de ${ano}`;
+}
+
 export function AcertoParceiros({ parceiros }: { parceiros: ParceiroPendente[] }) {
   const [mostrarTodos, setMostrarTodos] = useState(false);
 
   const visiveis = parceiros
     .map((parceiro) => ({
       ...parceiro,
-      itens: parceiro.itens.filter((item) => mostrarTodos || item.clientePagou),
+      meses: parceiro.meses
+        .map((grupo) => ({ ...grupo, itens: grupo.itens.filter((item) => mostrarTodos || item.clientePagou) }))
+        .filter((grupo) => grupo.itens.length > 0),
     }))
-    .filter((parceiro) => parceiro.itens.length > 0);
+    .filter((parceiro) => parceiro.meses.length > 0);
 
   if (parceiros.length === 0) return null;
 
@@ -37,45 +60,53 @@ export function AcertoParceiros({ parceiros }: { parceiros: ParceiroPendente[] }
 
       {visiveis.map((parceiro) => (
         <Card key={parceiro.lojaId}>
-          <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="size-4.5 text-primary" />
-                {parceiro.lojaNome}
-              </CardTitle>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {parceiro.itens.length} {parceiro.itens.length === 1 ? "item" : "itens"}
-                {mostrarTodos ? " pendentes" : " pagos pelo cliente"}, aguardando acerto
-              </p>
-            </div>
-            {parceiro.totalFechavel > 0 && (
-              <FecharContaParceiroButton
-                lojaParceiraId={parceiro.lojaId}
-                lojaNome={parceiro.lojaNome}
-                total={parceiro.totalFechavel}
-              />
-            )}
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="size-4.5 text-primary" />
+              {parceiro.lojaNome}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {parceiro.itens.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-lg border border-border p-3 text-sm"
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="truncate text-foreground">
-                    {item.descricao}
-                    {item.osNumero && (
-                      <span className="text-muted-foreground"> · OS #OS-{String(item.osNumero).padStart(4, "0")}</span>
-                    )}
-                  </span>
-                  {!item.clientePagou && (
-                    <Badge variant="warning" className="w-fit">
-                      Aguardando cliente
-                    </Badge>
+          <CardContent className="flex flex-col gap-4">
+            {parceiro.meses.map((grupo) => (
+              <div key={grupo.mes} className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{labelMes(grupo.mes)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {grupo.itens.length} {grupo.itens.length === 1 ? "item" : "itens"}
+                      {mostrarTodos ? " pendentes" : " pagos pelo cliente"}, aguardando acerto
+                    </p>
+                  </div>
+                  {grupo.totalFechavel > 0 && (
+                    <FecharContaParceiroButton
+                      lojaParceiraId={parceiro.lojaId}
+                      lojaNome={parceiro.lojaNome}
+                      itemIds={grupo.itens.filter((item) => item.clientePagou).map((item) => item.id)}
+                      total={grupo.totalFechavel}
+                    />
                   )}
                 </div>
-                <span className="shrink-0 font-medium text-foreground">{formatCurrency(item.valor)}</span>
+                {grupo.itens.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 rounded-lg border border-border p-3 text-sm"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="truncate text-foreground">
+                        {item.descricao}
+                        {item.osNumero && (
+                          <span className="text-muted-foreground"> · OS #OS-{String(item.osNumero).padStart(4, "0")}</span>
+                        )}
+                      </span>
+                      {!item.clientePagou && (
+                        <Badge variant="warning" className="w-fit">
+                          Aguardando cliente
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="shrink-0 font-medium text-foreground">{formatCurrency(item.valor)}</span>
+                  </div>
+                ))}
               </div>
             ))}
           </CardContent>
