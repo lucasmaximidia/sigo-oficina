@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LancarItemMesDialog } from "@/components/pessoal/lancar-item-mes-dialog";
 import { ConfirmarItemMesDialog } from "@/components/pessoal/confirmar-item-mes-dialog";
+import { EditarItemMesDialog } from "@/components/pessoal/editar-item-mes-dialog";
 import { ExcluirItemMesButton } from "@/components/pessoal/pessoal-excluir-buttons";
 import { copiarItensMesAnterior } from "@/lib/pessoal-actions";
 import { PESSOAL_SECAO_LABEL, calcularDizimo, salarioDoDizimo } from "@/lib/pessoal-status";
@@ -111,6 +112,7 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
                           valorSugerido={valorSugerido}
                         />
                       )}
+                      <EditarItemMesDialog item={item} />
                       <ExcluirItemMesButton id={item.id} descricao={item.descricao} />
                     </div>
                   );
