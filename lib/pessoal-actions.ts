@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { PessoalRendaCategoria, PessoalItemSecao, PessoalCartaoCategoria } from "@/types";
 import { somarMeses } from "@/lib/pessoal-datas";
+import { CATEGORIAS_A_RECEBER, DESCRICAO_REPASSE_CARTAO } from "@/lib/pessoal-status";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -78,33 +79,69 @@ export async function confirmarRenda(id: string, valorReal: number) {
   revalidarPessoal();
 }
 
-// Marca o repasse de terceiros (oficina/VoltCity/empréstimos) do mês como
-// recebido, gravando o valor em Renda > "Contas pagas por Terceiros" — é
-// aqui que esse dinheiro já entrava na planilha quando caía na conta.
-export async function marcarRepasseRecebido(mes: string, valor: number) {
+// Soma dos lançamentos de cartão por conta de terceiros (oficina/VoltCity/
+// outra pessoa) já marcados como repassados de volta nesse mês, e
+// sincroniza com a renda fixa "CONTAS PAGAS POR TERCEIROS" — é assim que
+// esse dinheiro entra na renda do mês. Usa uma descrição fixa pra nunca
+// mexer num recebível avulso que o dono lançou na mão (ver createRenda com
+// categoria "terceiros").
+async function sincronizarRepasseCartao(mes: string) {
   const supabase = await createClient();
-  const { data: existentes } = await supabase
+  const { data: lancamentos } = await supabase
+    .from("pessoal_cartao_lancamentos")
+    .select("valor_real, categoria, repassado_em")
+    .eq("mes", mes)
+    .is("deletado_em", null);
+
+  const total = (lancamentos ?? [])
+    .filter(
+      (l) => l.repassado_em != null && l.valor_real != null && CATEGORIAS_A_RECEBER.includes(l.categoria as PessoalCartaoCategoria)
+    )
+    .reduce((acc, l) => acc + (l.valor_real ?? 0), 0);
+
+  const { data: existente } = await supabase
     .from("pessoal_renda")
     .select("id")
     .eq("mes", mes)
     .eq("categoria", "terceiros")
+    .eq("descricao", DESCRICAO_REPASSE_CARTAO)
     .is("deletado_em", null)
-    .order("created_at");
+    .maybeSingle();
 
-  const existente = existentes?.[0];
   if (existente) {
-    const { error } = await supabase.from("pessoal_renda").update({ valor_real: valor }).eq("id", existente.id);
+    const { error } = await supabase.from("pessoal_renda").update({ valor_previsto: total, valor_real: total }).eq("id", existente.id);
     if (error) throw new Error(error.message);
-  } else {
+  } else if (total > 0) {
     const { error } = await supabase.from("pessoal_renda").insert({
       mes,
-      descricao: "CONTAS PAGAS POR TERCEIROS",
+      descricao: DESCRICAO_REPASSE_CARTAO,
       categoria: "terceiros",
-      valor_previsto: valor,
-      valor_real: valor,
+      valor_previsto: total,
+      valor_real: total,
     });
     if (error) throw new Error(error.message);
   }
+}
+
+// Marca (ou desmarca) um lançamento de cartão por conta de terceiros como já
+// repassado de volta — cada um pode ser confirmado na hora que o dinheiro
+// realmente cair, em vez de um botão único pro total do mês inteiro.
+export async function marcarLancamentoRepassado(id: string, repassado: boolean) {
+  const supabase = await createClient();
+  const { data: lancamento, error: errSel } = await supabase
+    .from("pessoal_cartao_lancamentos")
+    .select("mes")
+    .eq("id", id)
+    .single();
+  if (errSel || !lancamento) throw new Error(errSel?.message ?? "Lançamento não encontrado");
+
+  const { error } = await supabase
+    .from("pessoal_cartao_lancamentos")
+    .update({ repassado_em: repassado ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+
+  await sincronizarRepasseCartao(lancamento.mes);
   revalidarPessoal();
 }
 
@@ -319,7 +356,7 @@ export async function updateLancamentoCartao(id: string, formData: FormData) {
   const descricao = strUp(formData, "descricao");
   const categoria = str(formData, "categoria") as PessoalCartaoCategoria | null;
   if (!descricao || !categoria) throw new Error("Preencha todos os campos obrigatórios");
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("pessoal_cartao_lancamentos")
     .update({
       descricao,
@@ -328,8 +365,13 @@ export async function updateLancamentoCartao(id: string, formData: FormData) {
       eh_fixa: formData.get("eh_fixa") === "on",
       ...(formData.has("valor_real") ? { valor_real: num(formData, "valor_real") } : {}),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("mes, repassado_em")
+    .single();
   if (error) throw new Error(error.message);
+  // Se já tinha sido marcado como repassado, o valor pode ter mudado —
+  // atualiza a renda sincronizada com o novo total.
+  if (data.repassado_em != null) await sincronizarRepasseCartao(data.mes);
   revalidarPessoal();
 }
 
@@ -364,11 +406,14 @@ export async function confirmarFaturaCartao(cartaoId: string, mes: string) {
 
 export async function deleteLancamentoCartao(id: string) {
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("pessoal_cartao_lancamentos")
     .update({ deletado_em: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("mes, repassado_em")
+    .single();
   if (error) throw new Error(error.message);
+  if (data.repassado_em != null) await sincronizarRepasseCartao(data.mes);
   revalidarPessoal();
 }
 
@@ -377,10 +422,20 @@ export async function deleteLancamentoCartao(id: string) {
 // linha.
 export async function deleteCompraCartao(compraId: string) {
   const supabase = await createClient();
+  const { data: linhas, error: errSel } = await supabase
+    .from("pessoal_cartao_lancamentos")
+    .select("mes, repassado_em")
+    .eq("compra_id", compraId)
+    .is("deletado_em", null);
+  if (errSel) throw new Error(errSel.message);
+
   const { error } = await supabase
     .from("pessoal_cartao_lancamentos")
     .update({ deletado_em: new Date().toISOString() })
     .eq("compra_id", compraId);
   if (error) throw new Error(error.message);
+
+  const mesesComRepasse = [...new Set((linhas ?? []).filter((l) => l.repassado_em != null).map((l) => l.mes))];
+  await Promise.all(mesesComRepasse.map((mes) => sincronizarRepasseCartao(mes)));
   revalidarPessoal();
 }
