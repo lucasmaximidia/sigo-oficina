@@ -21,12 +21,11 @@ export function CartoesSection({
   lancamentos: PessoalCartaoLancamento[];
   mes: string;
 }) {
+  const cartoesAtivos = cartoes.filter((c) => c.ativo);
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <LancarCompraCartaoDialog cartoes={cartoes.filter((c) => c.ativo)} mes={mes} />
-        </div>
+      <div className="flex justify-end">
         <CartaoDialog />
       </div>
 
@@ -54,7 +53,10 @@ export function CartoesSection({
                   </p>
                 </div>
               </div>
-              {temPendente && <FecharFaturaButton cartaoId={cartao.id} mes={mes} />}
+              <div className="flex items-center gap-2">
+                {cartao.ativo && <LancarCompraCartaoDialog cartoes={cartoesAtivos} mes={mes} cartaoIdPadrao={cartao.id} />}
+                {temPendente && <FecharFaturaButton cartaoId={cartao.id} mes={mes} />}
+              </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               {lancamentosDoCartao.length === 0 ? (
