@@ -12,20 +12,23 @@ import { CartoesSection } from "@/components/pessoal/cartoes-section";
 import { CategoriaChart } from "@/components/pessoal/categoria-chart";
 import { ARecemberSection } from "@/components/pessoal/a-receber-section";
 import { formatCurrency } from "@/lib/utils";
-import { agoraBR } from "@/lib/utils";
+import { mesAtualStr } from "@/lib/pessoal-datas";
+import { copiarFixasCartaoMesAtual } from "@/lib/pessoal-copiar-fixas";
 import type { PessoalCartaoCategoria } from "@/types";
 
 export const dynamic = "force-dynamic";
-
-function mesAtualStr() {
-  const { ano, mes } = agoraBR();
-  return `${ano}-${String(mes).padStart(2, "0")}-01`;
-}
 
 export default async function PessoalPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
   const supabase = await createClient();
   const { mes: mesParam } = await searchParams;
   const mes = mesParam && /^\d{4}-\d{2}-\d{2}$/.test(mesParam) ? mesParam : mesAtualStr();
+
+  // Conta fixa no cartão repete sozinha a cada mês — ao abrir a página no
+  // mês atual, garante que já esteja copiada antes de buscar os dados
+  // (só faz sentido pro mês corrente, nunca ao navegar pra um mês passado).
+  if (mes === mesAtualStr()) {
+    await copiarFixasCartaoMesAtual();
+  }
 
   const [{ data: renda }, { data: itensMes }, { data: cartoes }, { data: lancamentos }] = await Promise.all([
     supabase.from("pessoal_renda").select("*").eq("mes", mes).is("deletado_em", null).order("created_at"),
