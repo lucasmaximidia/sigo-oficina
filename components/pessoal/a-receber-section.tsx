@@ -9,10 +9,14 @@ import type { PessoalCartaoLancamento } from "@/types";
 // a terceiros — dinheiro que deve ser repassado de volta. Só conta o que já
 // foi confirmado (valor_real), pra não contar fatura que ainda pode mudar.
 export function ARecemberSection({ lancamentos, mes }: { lancamentos: PessoalCartaoLancamento[]; mes: string }) {
-  const porCategoria = CATEGORIAS_A_RECEBER.map((categoria) => ({
-    categoria,
-    valor: lancamentos.filter((l) => l.categoria === categoria && l.valor_real != null).reduce((acc, l) => acc + (l.valor_real ?? 0), 0),
-  })).filter((c) => c.valor !== 0);
+  const porCategoria = CATEGORIAS_A_RECEBER.map((categoria) => {
+    const itens = lancamentos.filter((l) => l.categoria === categoria && l.valor_real != null);
+    return {
+      categoria,
+      itens,
+      valor: itens.reduce((acc, l) => acc + (l.valor_real ?? 0), 0),
+    };
+  }).filter((c) => c.valor !== 0);
 
   const total = porCategoria.reduce((acc, c) => acc + c.valor, 0);
 
@@ -32,11 +36,21 @@ export function ARecemberSection({ lancamentos, mes }: { lancamentos: PessoalCar
           <p className="text-sm text-muted-foreground">Nenhum gasto confirmado dessas categorias neste mês ainda.</p>
         ) : (
           <>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-3">
               {porCategoria.map((c) => (
-                <div key={c.categoria} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{PESSOAL_CARTAO_CATEGORIA_LABEL[c.categoria]}</span>
-                  <span className="font-medium text-foreground">{formatCurrency(c.valor)}</span>
+                <div key={c.categoria} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground">{PESSOAL_CARTAO_CATEGORIA_LABEL[c.categoria]}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(c.valor)}</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    {c.itens.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                        <span className="truncate">{item.descricao}</span>
+                        <span className="shrink-0">{formatCurrency(item.valor_real ?? 0)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

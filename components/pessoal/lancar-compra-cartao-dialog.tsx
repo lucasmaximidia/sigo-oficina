@@ -25,7 +25,15 @@ function novoRateio() {
   return { key: crypto.randomUUID() };
 }
 
-export function LancarCompraCartaoDialog({ cartoes, mes }: { cartoes: PessoalCartao[]; mes: string }) {
+export function LancarCompraCartaoDialog({
+  cartoes,
+  mes,
+  cartaoIdPadrao,
+}: {
+  cartoes: PessoalCartao[];
+  mes: string;
+  cartaoIdPadrao?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [ehFixa, setEhFixa] = useState(false);
   const [rateios, setRateios] = useState([novoRateio()]);
@@ -57,7 +65,7 @@ export function LancarCompraCartaoDialog({ cartoes, mes }: { cartoes: PessoalCar
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button type="button" size="sm" variant="outline">
+        <Button type="button" size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
           <Plus className="size-4" />
           Lançar compra
         </Button>
@@ -69,7 +77,7 @@ export function LancarCompraCartaoDialog({ cartoes, mes }: { cartoes: PessoalCar
         <form action={handleSubmit} className="flex flex-col gap-4">
           <div>
             <Label className="mb-1.5 block">Cartão</Label>
-            <Select name="cartao_id" defaultValue={cartoes[0]?.id}>
+            <Select name="cartao_id" defaultValue={cartaoIdPadrao ?? cartoes[0]?.id}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -137,11 +145,19 @@ export function LancarCompraCartaoDialog({ cartoes, mes }: { cartoes: PessoalCar
             </Button>
           </div>
 
-          <div>
-            <Label htmlFor="parcela_total" className="mb-1.5 block">
-              Parcelas
-            </Label>
-            <Input id="parcela_total" name="parcela_total" type="number" min={1} defaultValue={1} disabled={ehFixa} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="parcela_atual" className="mb-1.5 block">
+                Começando na parcela
+              </Label>
+              <Input id="parcela_atual" name="parcela_atual" type="number" min={1} defaultValue={1} disabled={ehFixa} />
+            </div>
+            <div>
+              <Label htmlFor="parcela_total" className="mb-1.5 block">
+                Total de parcelas
+              </Label>
+              <Input id="parcela_total" name="parcela_total" type="number" min={1} defaultValue={1} disabled={ehFixa} />
+            </div>
           </div>
           <label className="flex items-center gap-2.5 text-sm text-foreground">
             <Checkbox name="eh_fixa" checked={ehFixa} onCheckedChange={(v) => setEhFixa(v === true)} />
@@ -150,7 +166,7 @@ export function LancarCompraCartaoDialog({ cartoes, mes }: { cartoes: PessoalCar
           <p className="text-xs text-muted-foreground">
             {ehFixa
               ? "Lança só este mês; use \"Copiar do mês anterior\" nos próximos pra repetir."
-              : "Se for parcelado, lança automaticamente uma linha em cada mês seguinte, com o mesmo valor. Se dividir em mais de uma categoria, as parcelas valem pra cada uma."}
+              : "Se for parcelado, lança automaticamente uma linha em cada mês seguinte, com o mesmo valor. Se a compra já começou antes (ex: já tá na 2ª de 5), mude \"Começando na parcela\" — só lança as que faltam. Se dividir em mais de uma categoria, as parcelas valem pra cada uma."}
           </p>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>

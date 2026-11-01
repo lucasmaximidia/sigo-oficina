@@ -284,17 +284,21 @@ export async function createLancamentoCartao(formData: FormData) {
   // o número de parcelas e lança só o mês atual; o "copiar do mês anterior"
   // é quem traz ela pros meses seguintes.
   const parcelaTotal = ehFixa ? 1 : Math.max(1, intOuNull(formData, "parcela_total") ?? 1);
+  // Compra que começou antes de entrar no sistema (ex: já tá na 2ª de 5) —
+  // "parcela_atual" deixa começar o lançamento dali em diante, sem recriar
+  // as parcelas que já passaram.
+  const parcelaInicial = ehFixa ? 1 : Math.min(parcelaTotal, Math.max(1, intOuNull(formData, "parcela_atual") ?? 1));
 
   const linhas = categorias.flatMap((categoria, idx) => {
     const compraId = crypto.randomUUID();
     const valorPrevisto = parseValor(valores[idx]);
-    return Array.from({ length: parcelaTotal }, (_, i) => ({
+    return Array.from({ length: parcelaTotal - parcelaInicial + 1 }, (_, i) => ({
       cartao_id: cartaoId,
       compra_id: compraId,
       mes: somarMeses(mes, i),
       categoria: categoria as PessoalCartaoCategoria,
       descricao,
-      parcela_atual: i + 1,
+      parcela_atual: parcelaInicial + i,
       parcela_total: parcelaTotal,
       valor_previsto: valorPrevisto,
       eh_fixa: ehFixa,
