@@ -112,7 +112,7 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
                           valorSugerido={valorSugerido}
                         />
                       )}
-                      <EditarItemMesDialog item={item} />
+                      <EditarItemMesDialog item={item} renda={renda} />
                       <ExcluirItemMesButton id={item.id} descricao={item.descricao} />
                     </div>
                   );
