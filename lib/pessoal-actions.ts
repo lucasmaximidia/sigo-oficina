@@ -13,10 +13,13 @@ function strUp(fd: FormData, key: string) {
   const v = str(fd, key);
   return v ? v.toUpperCase() : v;
 }
+function parseValor(v: string) {
+  const n = parseFloat(v.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
 function num(fd: FormData, key: string) {
   const v = fd.get(key);
-  const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : NaN;
-  return Number.isFinite(n) ? n : 0;
+  return typeof v === "string" ? parseValor(v) : 0;
 }
 function intOuNull(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -259,33 +262,44 @@ export async function setCartaoAtivo(id: string, ativo: boolean) {
 // Registra uma compra no cartão. Se for parcelada (parcela_total > 1), gera
 // uma linha por mês (mesmo valor em cada uma), todas com o mesmo compra_id
 // — assim dá pra ver "3/6" e também excluir a compra inteira de uma vez.
+// Uma mesma compra pode ser rateada em mais de uma categoria (ex: assinatura
+// dividida entre Oficina e VoltCity) — cada categoria do rateio vira seu
+// próprio compra_id, com as parcelas dela, pra poder editar/excluir cada
+// parte do rateio sem afetar as outras.
 export async function createLancamentoCartao(formData: FormData) {
   const supabase = await createClient();
   const cartaoId = str(formData, "cartao_id");
   const descricao = strUp(formData, "descricao");
   const mes = str(formData, "mes");
-  const categoria = str(formData, "categoria") as PessoalCartaoCategoria | null;
-  if (!cartaoId || !descricao || !mes || !categoria) throw new Error("Preencha todos os campos obrigatórios");
+  if (!cartaoId || !descricao || !mes) throw new Error("Preencha todos os campos obrigatórios");
 
-  const valorPrevisto = num(formData, "valor_previsto");
+  const categorias = formData.getAll("rateio_categoria") as string[];
+  const valores = formData.getAll("rateio_valor") as string[];
+  if (categorias.length === 0 || categorias.length !== valores.length) {
+    throw new Error("Preencha todos os campos obrigatórios");
+  }
+
   const ehFixa = formData.get("eh_fixa") === "on";
   // Conta fixa (assinatura, seguro) não é parcela com fim marcado — ignora
   // o número de parcelas e lança só o mês atual; o "copiar do mês anterior"
   // é quem traz ela pros meses seguintes.
   const parcelaTotal = ehFixa ? 1 : Math.max(1, intOuNull(formData, "parcela_total") ?? 1);
-  const compraId = crypto.randomUUID();
 
-  const linhas = Array.from({ length: parcelaTotal }, (_, i) => ({
-    cartao_id: cartaoId,
-    compra_id: compraId,
-    mes: somarMeses(mes, i),
-    categoria,
-    descricao,
-    parcela_atual: i + 1,
-    parcela_total: parcelaTotal,
-    valor_previsto: valorPrevisto,
-    eh_fixa: ehFixa,
-  }));
+  const linhas = categorias.flatMap((categoria, idx) => {
+    const compraId = crypto.randomUUID();
+    const valorPrevisto = parseValor(valores[idx]);
+    return Array.from({ length: parcelaTotal }, (_, i) => ({
+      cartao_id: cartaoId,
+      compra_id: compraId,
+      mes: somarMeses(mes, i),
+      categoria: categoria as PessoalCartaoCategoria,
+      descricao,
+      parcela_atual: i + 1,
+      parcela_total: parcelaTotal,
+      valor_previsto: valorPrevisto,
+      eh_fixa: ehFixa,
+    }));
+  });
 
   const { error } = await supabase.from("pessoal_cartao_lancamentos").insert(linhas);
   if (error) throw new Error(error.message);
