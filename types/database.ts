@@ -1782,6 +1782,7 @@ export interface Database {
           valor_previsto: number;
           valor_real: number | null;
           eh_fixa: boolean;
+          repassado_em: string | null;
           created_at: string;
           deletado_em: string | null;
         };
@@ -1797,6 +1798,7 @@ export interface Database {
           valor_previsto?: number;
           valor_real?: number | null;
           eh_fixa?: boolean;
+          repassado_em?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };
@@ -1812,6 +1814,7 @@ export interface Database {
           valor_previsto?: number;
           valor_real?: number | null;
           eh_fixa?: boolean;
+          repassado_em?: string | null;
           created_at?: string;
           deletado_em?: string | null;
         };

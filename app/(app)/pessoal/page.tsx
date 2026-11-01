@@ -105,7 +105,7 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
               <CategoriaChart dados={categorias} />
             </CardContent>
           </Card>
-          <ARecemberSection lancamentos={lancamentos ?? []} mes={mes} />
+          <ARecemberSection lancamentos={lancamentos ?? []} renda={renda ?? []} mes={mes} />
         </div>
       </div>
 
