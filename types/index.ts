@@ -43,6 +43,7 @@ export type PessoalRenda = Database["public"]["Tables"]["pessoal_renda"]["Row"];
 export type PessoalItemMes = Database["public"]["Tables"]["pessoal_itens_mes"]["Row"];
 export type PessoalCartao = Database["public"]["Tables"]["pessoal_cartoes"]["Row"];
 export type PessoalCartaoLancamento = Database["public"]["Tables"]["pessoal_cartao_lancamentos"]["Row"];
+export type PessoalCartaoFatura = Database["public"]["Tables"]["pessoal_cartao_faturas"]["Row"];
 
 export type OrdemServicoComRelacoes = OrdemServico & {
   clientes: Pick<Cliente, "id" | "nome" | "telefone" | "email"> | null;

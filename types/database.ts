@@ -1826,6 +1826,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      pessoal_cartao_faturas: {
+        Row: {
+          id: string;
+          cartao_id: string;
+          mes: string;
+          pago_em: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          cartao_id: string;
+          mes: string;
+          pago_em: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          cartao_id?: string;
+          mes?: string;
+          pago_em?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       vw_garantias: {
