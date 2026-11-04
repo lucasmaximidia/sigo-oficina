@@ -1,14 +1,16 @@
 // Cliente HTTP para a Notaas (https://www.notaas.com.br), o gateway de
 // NFS-e escolhido para a emissão automática.
 //
-// Base URL, autenticação (x-api-key) e o payload de POST /nfse abaixo
-// conferem com a API Reference real da conta (aba "Emissão"). A Notaas
-// emite de forma ASSÍNCRONA: a resposta chega com HTTP 202 (job
-// publicado na fila) e o status final só é conhecido depois, por
-// polling em GET /nfse/:id ou por webhook — as abas "Status", "Cancelar"
-// e "Webhooks" da documentação ainda não foram conferidas aqui, então o
-// parsing de consultarNfse/cancelarNfse abaixo continua sendo uma
-// estimativa; ajuste parseNota() se o formato real divergir.
+// Base URL, autenticação (x-api-key) e o payload abaixo conferem com o
+// Quick Start real da conta. O endpoint de emissão é POST /api/v1/emitir
+// (não /nfse — isso gerava 404 antes, porque a página de "API Reference"
+// da conta mostra um endpoint diferente do Quick Start; o Quick Start é
+// quem bateu com a URL de verdade). A Notaas emite de forma ASSÍNCRONA: a
+// resposta chega com HTTP 202 (job na fila, com invoiceId) e o status
+// final só é conhecido depois, por polling em GET
+// /api/v1/invoices/:invoiceId/status ou por webhook. cancelarNfse() ainda
+// não foi confirmado contra a documentação (aba "Cancelar" não recebida
+// ainda) — ajuste se o formato real divergir.
 //
 // A Notaas não tem um campo dedicado de "observações"/"informações
 // complementares" na emissão — o único texto livre que chega na nota é
@@ -105,13 +107,13 @@ function normalizarStatus(status: unknown): NotaasNota["status"] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function parseNota(data: any): NotaasNota {
   return {
-    providerId: String(data?.id ?? ""),
+    providerId: String(data?.invoiceId ?? data?.id ?? ""),
     status: normalizarStatus(data?.status),
-    numeroNfse: data?.numero ?? data?.numero_nfse ?? null,
-    codigoVerificacao: data?.codigo_verificacao ?? null,
+    numeroNfse: data?.numeroNfse ?? data?.numero ?? data?.numero_nfse ?? null,
+    codigoVerificacao: data?.chNFSe ?? data?.codigo_verificacao ?? null,
     urlPdf: data?.url_pdf ?? data?.pdf_url ?? null,
     urlXml: data?.url_xml ?? data?.xml_url ?? null,
-    erro: data?.erro ?? data?.motivo_erro ?? null,
+    erro: data?.erro ?? data?.motivo_erro ?? data?.message ?? null,
   };
 }
 
@@ -130,7 +132,7 @@ export async function emitirNfse(input: NotaasEmissaoInput): Promise<NotaasResul
   const descricao = input.observacoes ? `${input.descricaoServico}\n\n${input.observacoes}` : input.descricaoServico;
   const competencia = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-  const resultado = await notaasFetch<unknown>("/nfse", {
+  const resultado = await notaasFetch<unknown>("/emitir", {
     method: "POST",
     body: JSON.stringify({
       referencia: input.referenciaExterna,
@@ -151,13 +153,16 @@ export async function emitirNfse(input: NotaasEmissaoInput): Promise<NotaasResul
 }
 
 export async function consultarNfse(providerId: string): Promise<NotaasResultado<NotaasNota>> {
-  const resultado = await notaasFetch<unknown>(`/nfse/${providerId}`, { method: "GET" });
+  const resultado = await notaasFetch<unknown>(`/invoices/${providerId}/status`, { method: "GET" });
   if (!resultado.ok) return resultado;
   return { ok: true, data: parseNota(resultado.data) };
 }
 
+// Endpoint de cancelamento ainda não confirmado contra a documentação real
+// (não recebemos a aba "Cancelar") — segue o mesmo padrão /invoices/:id
+// dos outros dois endpoints já confirmados, mas pode precisar de ajuste.
 export async function cancelarNfse(providerId: string, motivo: string): Promise<NotaasResultado<NotaasNota>> {
-  const resultado = await notaasFetch<unknown>(`/nfse/${providerId}/cancelar`, {
+  const resultado = await notaasFetch<unknown>(`/invoices/${providerId}/cancel`, {
     method: "POST",
     body: JSON.stringify({ motivo }),
   });
