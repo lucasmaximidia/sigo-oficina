@@ -27,6 +27,10 @@ export interface NotaasEmissaoInput {
   referenciaExterna: string;
   clienteNome: string;
   clienteDocumento: string | null;
+  clienteEndereco?: string | null;
+  clienteBairro?: string | null;
+  clienteCidade?: string | null;
+  clienteEstado?: string | null;
   descricaoServico: string;
   valor: number;
   codigoServico: string | null;
@@ -120,12 +124,30 @@ function parseNota(data: any): NotaasNota {
 // cnpj/cpf são campos exclusivos entre si no payload da Notaas — decide
 // qual mandar pela quantidade de dígitos do documento do cliente. Sem
 // documento válido, omite o tomador inteiro: a API aceita emissão B2C
-// pra consumidor final não identificado.
-function tomadorPayload(nome: string, documento: string | null) {
+// pra consumidor final não identificado. O endereço do cliente (quando
+// cadastrado) é opcional pra Notaas, mas sem ele a nota sai sem
+// cidade/UF/CEP do tomador — por isso manda quando disponível. Nosso
+// cadastro de cliente guarda a rua e o número juntos num campo só
+// (sem CEP separado), então vira "logradouro" inteiro.
+function tomadorPayload(nome: string, documento: string | null, endereco?: NotaasEmissaoInput) {
   const digitos = (documento || "").replace(/\D/g, "");
-  if (digitos.length === 11) return { cpf: digitos, nome };
-  if (digitos.length === 14) return { cnpj: digitos, nome };
-  return undefined;
+  if (digitos.length !== 11 && digitos.length !== 14) return undefined;
+
+  const enderecoPayload =
+    endereco?.clienteEndereco || endereco?.clienteBairro || endereco?.clienteCidade || endereco?.clienteEstado
+      ? {
+          logradouro: endereco?.clienteEndereco || undefined,
+          bairro: endereco?.clienteBairro || undefined,
+          cidade: endereco?.clienteCidade || undefined,
+          uf: endereco?.clienteEstado || undefined,
+        }
+      : undefined;
+
+  return {
+    ...(digitos.length === 11 ? { cpf: digitos } : { cnpj: digitos }),
+    nome,
+    ...(enderecoPayload ? { endereco: enderecoPayload } : {}),
+  };
 }
 
 export async function emitirNfse(input: NotaasEmissaoInput): Promise<NotaasResultado<NotaasNota>> {
@@ -136,7 +158,7 @@ export async function emitirNfse(input: NotaasEmissaoInput): Promise<NotaasResul
     method: "POST",
     body: JSON.stringify({
       referencia: input.referenciaExterna,
-      tomador: tomadorPayload(input.clienteNome, input.clienteDocumento),
+      tomador: tomadorPayload(input.clienteNome, input.clienteDocumento, input),
       servico: {
         codigo: input.codigoServico || undefined,
         descricao,

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getOsTotais } from "@/lib/actions";
-import { criarNotaFiscalComDecisao, criarNotaFiscal, tentarEmitir } from "@/lib/notas-fiscais-core";
+import { criarNotaFiscalComDecisao, criarNotaFiscal, tentarEmitir, getClienteEndereco } from "@/lib/notas-fiscais-core";
 import { cancelarNfse } from "@/lib/notaas";
 import type { FormaPagamento } from "@/types";
 
@@ -78,21 +78,24 @@ export async function reemitirNotaFiscal(notaId: string) {
   const supabase = await createClient();
   const { data: nota, error } = await supabase
     .from("notas_fiscais")
-    .select("cliente_nome, cliente_documento, descricao_servico, valor, observacoes")
+    .select("cliente_id, cliente_nome, cliente_documento, descricao_servico, valor, observacoes")
     .eq("id", notaId)
     .single();
   if (error || !nota) throw new Error("Nota fiscal não encontrada");
 
-  const { data: config } = await supabase
-    .from("configuracoes")
-    .select("nfse_codigo_servico, nfse_aliquota_iss")
-    .eq("id", 1)
-    .single();
+  const [{ data: config }, endereco] = await Promise.all([
+    supabase.from("configuracoes").select("nfse_codigo_servico, nfse_aliquota_iss").eq("id", 1).single(),
+    nota.cliente_id ? getClienteEndereco(nota.cliente_id) : Promise.resolve(null),
+  ]);
 
   await supabase.from("notas_fiscais").update({ status: "pendente", erro_mensagem: null }).eq("id", notaId);
   await tentarEmitir(notaId, {
     clienteNome: nota.cliente_nome,
     clienteDocumento: nota.cliente_documento,
+    clienteEndereco: endereco?.endereco ?? null,
+    clienteBairro: endereco?.bairro ?? null,
+    clienteCidade: endereco?.cidade ?? null,
+    clienteEstado: endereco?.estado ?? null,
     descricaoServico: nota.descricao_servico,
     valor: nota.valor,
     codigoServico: config?.nfse_codigo_servico ?? null,
@@ -153,17 +156,16 @@ export async function marcarNotaFiscalComoDesejada(notaId: string) {
   const supabase = await createClient();
   const { data: nota, error } = await supabase
     .from("notas_fiscais")
-    .select("cliente_nome, cliente_documento, descricao_servico, valor, status, observacoes")
+    .select("cliente_id, cliente_nome, cliente_documento, descricao_servico, valor, status, observacoes")
     .eq("id", notaId)
     .single();
   if (error || !nota) throw new Error("Nota fiscal não encontrada");
   if (nota.status !== "nao_emitir") throw new Error("Essa nota não está marcada como 'não emitir'");
 
-  const { data: config } = await supabase
-    .from("configuracoes")
-    .select("nfse_codigo_servico, nfse_aliquota_iss")
-    .eq("id", 1)
-    .single();
+  const [{ data: config }, endereco] = await Promise.all([
+    supabase.from("configuracoes").select("nfse_codigo_servico, nfse_aliquota_iss").eq("id", 1).single(),
+    nota.cliente_id ? getClienteEndereco(nota.cliente_id) : Promise.resolve(null),
+  ]);
 
   await supabase
     .from("notas_fiscais")
@@ -172,6 +174,10 @@ export async function marcarNotaFiscalComoDesejada(notaId: string) {
   await tentarEmitir(notaId, {
     clienteNome: nota.cliente_nome,
     clienteDocumento: nota.cliente_documento,
+    clienteEndereco: endereco?.endereco ?? null,
+    clienteBairro: endereco?.bairro ?? null,
+    clienteCidade: endereco?.cidade ?? null,
+    clienteEstado: endereco?.estado ?? null,
     descricaoServico: nota.descricao_servico,
     valor: nota.valor,
     codigoServico: config?.nfse_codigo_servico ?? null,

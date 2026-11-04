@@ -70,9 +70,14 @@ export async function criarNotaFiscal(input: {
   if (error) throw new Error(error.message);
 
   if (deveEmitir && config) {
+    const endereco = input.clienteId ? await getClienteEndereco(input.clienteId) : null;
     await tentarEmitir(nota.id, {
       clienteNome: input.clienteNome,
       clienteDocumento: input.clienteDocumento,
+      clienteEndereco: endereco?.endereco ?? null,
+      clienteBairro: endereco?.bairro ?? null,
+      clienteCidade: endereco?.cidade ?? null,
+      clienteEstado: endereco?.estado ?? null,
       descricaoServico,
       valor: input.valor,
       codigoServico: config.codigoServico,
@@ -82,6 +87,19 @@ export async function criarNotaFiscal(input: {
   }
 
   return nota.id as string;
+}
+
+// Endereço do tomador não é obrigatório pra Notaas, mas sem ele a nota sai
+// sem cidade/UF — busca do cadastro do cliente quando existe, pra não
+// precisar perguntar de novo numa tela separada.
+export async function getClienteEndereco(clienteId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("clientes")
+    .select("endereco, bairro, cidade, estado")
+    .eq("id", clienteId)
+    .maybeSingle();
+  return data;
 }
 
 async function getNfseObrigatoriaAtiva(): Promise<boolean> {
@@ -116,6 +134,10 @@ export async function tentarEmitir(
   dados: {
     clienteNome: string;
     clienteDocumento: string | null;
+    clienteEndereco?: string | null;
+    clienteBairro?: string | null;
+    clienteCidade?: string | null;
+    clienteEstado?: string | null;
     descricaoServico: string;
     valor: number;
     codigoServico: string | null;
@@ -144,6 +166,10 @@ export async function tentarEmitir(
     referenciaExterna: notaId,
     clienteNome: dados.clienteNome,
     clienteDocumento: dados.clienteDocumento,
+    clienteEndereco: dados.clienteEndereco,
+    clienteBairro: dados.clienteBairro,
+    clienteCidade: dados.clienteCidade,
+    clienteEstado: dados.clienteEstado,
     descricaoServico: dados.descricaoServico,
     valor: dados.valor,
     codigoServico: dados.codigoServico,
