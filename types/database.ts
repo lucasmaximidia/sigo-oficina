@@ -650,6 +650,7 @@ export interface Database {
           url_xml: string | null;
           erro_mensagem: string | null;
           observacoes: string | null;
+          webhook_bruto: unknown | null;
           created_at: string;
           emitida_em: string | null;
         };
@@ -673,6 +674,7 @@ export interface Database {
           url_xml?: string | null;
           erro_mensagem?: string | null;
           observacoes?: string | null;
+          webhook_bruto?: unknown | null;
           created_at?: string;
           emitida_em?: string | null;
         };
@@ -696,6 +698,7 @@ export interface Database {
           url_xml?: string | null;
           erro_mensagem?: string | null;
           observacoes?: string | null;
+          webhook_bruto?: unknown | null;
           created_at?: string;
           emitida_em?: string | null;
         };
