@@ -78,7 +78,7 @@ export async function reemitirNotaFiscal(notaId: string) {
   const supabase = await createClient();
   const { data: nota, error } = await supabase
     .from("notas_fiscais")
-    .select("cliente_nome, cliente_documento, descricao_servico, valor")
+    .select("cliente_nome, cliente_documento, descricao_servico, valor, observacoes")
     .eq("id", notaId)
     .single();
   if (error || !nota) throw new Error("Nota fiscal não encontrada");
@@ -97,7 +97,34 @@ export async function reemitirNotaFiscal(notaId: string) {
     valor: nota.valor,
     codigoServico: config?.nfse_codigo_servico ?? null,
     aliquotaIss: config?.nfse_aliquota_iss ?? null,
+    observacoes: nota.observacoes,
   });
+
+  revalidatePath("/notas-fiscais");
+}
+
+// Edição pontual de uma nota específica — mantém o texto padrão pra todas as
+// outras, mas permite trocar a descrição (ex: quando não serve pra esse
+// caso) e/ou acrescentar observações. Só faz sentido antes de emitir: a
+// nota já emitida é um documento fiscal fechado, não dá pra só editar o
+// registro aqui sem cancelar e reemitir de verdade.
+export async function editarNotaFiscalAction(
+  notaId: string,
+  input: { descricaoServico: string; observacoes: string | null }
+) {
+  if (!input.descricaoServico.trim()) throw new Error("Informe a descrição do serviço");
+
+  const supabase = await createClient();
+  const { data: nota, error } = await supabase.from("notas_fiscais").select("status").eq("id", notaId).single();
+  if (error || !nota) throw new Error("Nota fiscal não encontrada");
+  if (nota.status === "emitida" || nota.status === "cancelada") {
+    throw new Error("Essa nota já foi emitida/cancelada — não dá pra editar, só reemitir uma nova se precisar.");
+  }
+
+  await supabase
+    .from("notas_fiscais")
+    .update({ descricao_servico: input.descricaoServico.trim(), observacoes: input.observacoes?.trim() || null })
+    .eq("id", notaId);
 
   revalidatePath("/notas-fiscais");
 }
@@ -126,7 +153,7 @@ export async function marcarNotaFiscalComoDesejada(notaId: string) {
   const supabase = await createClient();
   const { data: nota, error } = await supabase
     .from("notas_fiscais")
-    .select("cliente_nome, cliente_documento, descricao_servico, valor, status")
+    .select("cliente_nome, cliente_documento, descricao_servico, valor, status, observacoes")
     .eq("id", notaId)
     .single();
   if (error || !nota) throw new Error("Nota fiscal não encontrada");
@@ -149,6 +176,7 @@ export async function marcarNotaFiscalComoDesejada(notaId: string) {
     valor: nota.valor,
     codigoServico: config?.nfse_codigo_servico ?? null,
     aliquotaIss: config?.nfse_aliquota_iss ?? null,
+    observacoes: nota.observacoes,
   });
 
   revalidatePath("/notas-fiscais");

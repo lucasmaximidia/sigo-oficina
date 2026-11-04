@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { notaFiscalStatusMap, notaFiscalMotivoLabel } from "@/lib/notas-fiscais";
 import { reemitirNotaFiscal, cancelarNotaFiscalAction, marcarNotaFiscalComoDesejada } from "@/lib/notas-fiscais-actions";
+import { EditarNotaFiscalDialog } from "@/components/notas-fiscais/editar-nota-fiscal-dialog";
 import type { NotaFiscal } from "@/types";
 
 const origemInfo: Record<NotaFiscal["origem"], { label: string; icon: typeof Wrench }> = {
@@ -65,7 +66,10 @@ export function NotaFiscalCard({ nota }: { nota: NotaFiscal }) {
           <p className="truncate text-sm font-semibold text-foreground">{nota.cliente_nome}</p>
           <p className="text-xs text-muted-foreground">{formatDateTime(nota.created_at)}</p>
         </div>
-        <Badge variant={status.variant}>{status.label}</Badge>
+        <div className="flex shrink-0 items-center gap-1">
+          <Badge variant={status.variant}>{status.label}</Badge>
+          {nota.status !== "emitida" && nota.status !== "cancelada" && <EditarNotaFiscalDialog nota={nota} />}
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2">
@@ -83,6 +87,12 @@ export function NotaFiscalCard({ nota }: { nota: NotaFiscal }) {
       </div>
 
       <p className="text-xs text-muted-foreground">{notaFiscalMotivoLabel[nota.motivo]}</p>
+
+      {nota.observacoes && (
+        <p className="rounded-lg border border-border bg-secondary/40 p-2.5 text-xs text-secondary-foreground">
+          {nota.observacoes}
+        </p>
+      )}
 
       {nota.status === "erro" && nota.erro_mensagem && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
