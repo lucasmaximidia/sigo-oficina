@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { criarNotaFiscalAvulsa } from "@/lib/notas-fiscais-actions";
+import { atualizarDocumentoCliente } from "@/lib/actions";
+import { cpfCnpjValido } from "@/lib/cpf";
 import type { Cliente } from "@/types";
 
 type ClienteBusca = Pick<Cliente, "id" | "nome" | "cpf_cnpj">;
@@ -56,12 +58,21 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
       toast.error("Informe um valor válido");
       return;
     }
+    if (!cpfCnpjValido(documento)) {
+      toast.error("Informe um CPF ou CNPJ válido — obrigatório pra emitir nota fiscal");
+      return;
+    }
     startTransition(async () => {
       try {
+        // Se o cliente já existe no cadastro, aproveita e salva/atualiza o
+        // documento lá também — assim não precisa pedir de novo da próxima vez.
+        if (clienteId) {
+          await atualizarDocumentoCliente(clienteId, { nome: busca, cpfCnpj: documento });
+        }
         await criarNotaFiscalAvulsa({
           clienteId,
           clienteNome: busca,
-          clienteDocumento: documento || null,
+          clienteDocumento: documento,
           valor,
         });
         toast.success("Nota fiscal avulsa lançada");
@@ -136,9 +147,12 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
           </div>
           <div>
             <Label htmlFor="documento" className="mb-1.5 block">
-              CPF/CNPJ (opcional)
+              CPF/CNPJ
             </Label>
             <Input id="documento" value={documento} onChange={(e) => setDocumento(e.target.value)} />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Obrigatório pra emitir nota fiscal — nome e documento vão salvos no cadastro do cliente.
+            </p>
           </div>
           <div>
             <Label htmlFor="valor" className="mb-1.5 block">
