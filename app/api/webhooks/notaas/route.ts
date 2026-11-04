@@ -112,7 +112,7 @@ export async function POST(request: Request) {
         status: "emitida",
         provider_id: providerId,
         numero_nfse: campo(body, "numeroNfse", "data.numeroNfse", "numero", "data.numero", "nfse.numero"),
-        codigo_verificacao: campo(body, "chNFSe", "data.chNFSe", "codigoVerificacao", "data.codigoVerificacao", "nfse.codigoVerificacao"),
+        codigo_verificacao: campo(body, "chaveAcesso", "data.chaveAcesso", "chNFSe", "data.chNFSe", "codigoVerificacao", "data.codigoVerificacao", "nfse.codigoVerificacao"),
         url_pdf: urlPdf,
         url_xml: campo(body, "urlXml", "data.urlXml", "nfse.urlXml", "url_xml", "data.url_xml"),
         erro_mensagem: null,
