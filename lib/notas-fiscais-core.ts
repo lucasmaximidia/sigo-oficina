@@ -4,6 +4,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { nfseObrigatoria, motivoNotaFiscal } from "@/lib/notas-fiscais";
 import { emitirNfse } from "@/lib/notaas";
+import { cpfCnpjValido } from "@/lib/cpf";
 import type { FormaPagamento, NotaFiscalMotivo, NotaFiscalOrigem } from "@/types";
 
 interface ConfigNfse {
@@ -123,6 +124,22 @@ export async function tentarEmitir(
   }
 ) {
   const supabase = await createClient();
+
+  // Não emite sem CPF/CNPJ válido do cliente — mesmo que a Notaas aceite
+  // consumidor final não identificado, a oficina quer sempre nota com
+  // documento. Fica com status "erro" até alguém completar o cadastro do
+  // cliente e reemitir.
+  if (!cpfCnpjValido(dados.clienteDocumento ?? "")) {
+    await supabase
+      .from("notas_fiscais")
+      .update({
+        status: "erro",
+        erro_mensagem: "Cliente sem CPF/CNPJ válido cadastrado — complete o cadastro do cliente e reemita.",
+      })
+      .eq("id", notaId);
+    return;
+  }
+
   const resultado = await emitirNfse({
     referenciaExterna: notaId,
     clienteNome: dados.clienteNome,

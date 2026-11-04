@@ -91,6 +91,23 @@ export async function updateCliente(id: string, formData: FormData) {
   revalidatePath("/clientes");
 }
 
+// Atualização pontual de nome + CPF/CNPJ — usada quando o sistema precisa
+// desse dado na hora de emitir nota fiscal (ex.: nota avulsa) e o cliente
+// ainda não tinha. Ao contrário de updateCliente, não mexe nos outros
+// campos do cadastro (telefone, endereço etc.), só nome e documento.
+export async function atualizarDocumentoCliente(clienteId: string, input: { nome: string; cpfCnpj: string }) {
+  if (!input.nome.trim()) throw new Error("Nome é obrigatório");
+  if (!cpfCnpjValido(input.cpfCnpj)) throw new Error("CPF/CNPJ inválido");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("clientes")
+    .update({ nome: input.nome.trim().toUpperCase(), cpf_cnpj: input.cpfCnpj })
+    .eq("id", clienteId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/clientes");
+  revalidatePath("/notas-fiscais");
+}
+
 export async function createEquipamento(clienteId: string, formData: FormData) {
   const supabase = await createClient();
   const tipo = strUp(formData, "tipo");
