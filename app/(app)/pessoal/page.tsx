@@ -30,11 +30,12 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
     await copiarFixasCartaoMesAtual();
   }
 
-  const [{ data: renda }, { data: itensMes }, { data: cartoes }, { data: lancamentos }] = await Promise.all([
+  const [{ data: renda }, { data: itensMes }, { data: cartoes }, { data: lancamentos }, { data: faturas }] = await Promise.all([
     supabase.from("pessoal_renda").select("*").eq("mes", mes).is("deletado_em", null).order("created_at"),
     supabase.from("pessoal_itens_mes").select("*").eq("mes", mes).is("deletado_em", null).order("created_at"),
     supabase.from("pessoal_cartoes").select("*").order("nome"),
     supabase.from("pessoal_cartao_lancamentos").select("*").eq("mes", mes).is("deletado_em", null).order("created_at"),
+    supabase.from("pessoal_cartao_faturas").select("*").eq("mes", mes),
   ]);
 
   const totalRendaPrevisto = (renda ?? []).reduce((acc, r) => acc + r.valor_previsto, 0);
@@ -113,7 +114,7 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="mt-4">
-        <CartoesSection cartoes={cartoes ?? []} lancamentos={lancamentos ?? []} mes={mes} />
+        <CartoesSection cartoes={cartoes ?? []} lancamentos={lancamentos ?? []} faturas={faturas ?? []} mes={mes} />
       </div>
     </div>
   );

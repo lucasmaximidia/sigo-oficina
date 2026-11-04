@@ -4,21 +4,24 @@ import { CreditCard } from "lucide-react";
 import { CartaoDialog } from "@/components/pessoal/cartao-dialog";
 import { LancarCompraCartaoDialog } from "@/components/pessoal/lancar-compra-cartao-dialog";
 import { FecharFaturaButton } from "@/components/pessoal/fechar-fatura-button";
+import { MarcarFaturaPagaButton } from "@/components/pessoal/marcar-fatura-paga-button";
 import { ConfirmarValorInline } from "@/components/pessoal/confirmar-valor-inline";
 import { EditarLancamentoCartaoDialog } from "@/components/pessoal/editar-lancamento-cartao-dialog";
 import { ExcluirLancamentoCartaoButton } from "@/components/pessoal/pessoal-excluir-buttons";
 import { confirmarLancamentoCartao } from "@/lib/pessoal-actions";
 import { PESSOAL_CARTAO_CATEGORIA_LABEL } from "@/lib/pessoal-status";
 import { formatCurrency } from "@/lib/utils";
-import type { PessoalCartao, PessoalCartaoLancamento } from "@/types";
+import type { PessoalCartao, PessoalCartaoLancamento, PessoalCartaoFatura } from "@/types";
 
 export function CartoesSection({
   cartoes,
   lancamentos,
+  faturas,
   mes,
 }: {
   cartoes: PessoalCartao[];
   lancamentos: PessoalCartaoLancamento[];
+  faturas: PessoalCartaoFatura[];
   mes: string;
 }) {
   const cartoesAtivos = cartoes.filter((c) => c.ativo);
@@ -36,6 +39,7 @@ export function CartoesSection({
         const totalPrevisto = lancamentosDoCartao.reduce((acc, l) => acc + l.valor_previsto, 0);
         const totalReal = lancamentosDoCartao.reduce((acc, l) => acc + (l.valor_real ?? 0), 0);
         const temPendente = lancamentosDoCartao.some((l) => l.valor_real == null);
+        const fatura = faturas.find((f) => f.cartao_id === cartao.id);
 
         return (
           <Card key={cartao.id}>
@@ -53,9 +57,10 @@ export function CartoesSection({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 {cartao.ativo && <LancarCompraCartaoDialog cartoes={cartoesAtivos} mes={mes} cartaoIdPadrao={cartao.id} />}
                 {temPendente && <FecharFaturaButton cartaoId={cartao.id} mes={mes} />}
+                <MarcarFaturaPagaButton cartaoId={cartao.id} mes={mes} pagoEm={fatura?.pago_em ?? null} />
               </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">

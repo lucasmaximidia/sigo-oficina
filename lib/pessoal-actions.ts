@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { PessoalRendaCategoria, PessoalItemSecao, PessoalCartaoCategoria } from "@/types";
 import { somarMeses } from "@/lib/pessoal-datas";
 import { CATEGORIAS_A_RECEBER, DESCRICAO_REPASSE_CARTAO } from "@/lib/pessoal-status";
+import { hojeBR } from "@/lib/utils";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -401,6 +402,26 @@ export async function confirmarFaturaCartao(cartaoId: string, mes: string) {
   await Promise.all(
     pendentes.map((p) => supabase.from("pessoal_cartao_lancamentos").update({ valor_real: p.valor_previsto }).eq("id", p.id))
   );
+  revalidarPessoal();
+}
+
+// Marca que a fatura em si (o total, pago pra administradora do cartão) foi
+// quitada — diferente de confirmarFaturaCartao() acima, que só confirma o
+// valor de cada compra. Cartões vencem em dias diferentes, por isso é por
+// cartão/mês, não um controle só pro mês todo.
+export async function marcarFaturaPaga(cartaoId: string, mes: string, dataPagamento?: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("pessoal_cartao_faturas")
+    .upsert({ cartao_id: cartaoId, mes, pago_em: dataPagamento || hojeBR() }, { onConflict: "cartao_id,mes" });
+  if (error) throw new Error(error.message);
+  revalidarPessoal();
+}
+
+export async function desmarcarFaturaPaga(cartaoId: string, mes: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("pessoal_cartao_faturas").delete().eq("cartao_id", cartaoId).eq("mes", mes);
+  if (error) throw new Error(error.message);
   revalidarPessoal();
 }
 
