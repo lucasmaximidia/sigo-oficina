@@ -60,20 +60,37 @@ async function notaasFetch<T>(path: string, init?: RequestInit): Promise<NotaasR
       erro: "Chave da Notaas não configurada (variável de ambiente NOTAAS_API_KEY ausente).",
     };
   }
+  const url = `${NOTAAS_BASE_URL}${path}`;
   let res: Response;
   try {
-    res = await fetch(`${NOTAAS_BASE_URL}${path}`, {
+    // Header em minúsculas, igual à documentação (x-api-key) — HTTP não
+    // deveria se importar com maiúscula/minúscula, mas alguma camada de
+    // borda (CDN/WAF) na frente da Notaas pode ser mais estrita que isso.
+    res = await fetch(url, {
       ...init,
-      headers: { "Content-Type": "application/json", "X-API-Key": apiKey, ...init?.headers },
+      headers: { "content-type": "application/json", "x-api-key": apiKey, ...init?.headers },
     });
   } catch (error) {
     return { ok: false, erro: error instanceof Error ? error.message : "Erro de conexão com a Notaas" };
   }
 
-  const body = await res.json().catch(() => null);
+  const textoBruto = await res.text();
+  let body: unknown = null;
+  try {
+    body = textoBruto ? JSON.parse(textoBruto) : null;
+  } catch {
+    body = null;
+  }
+
   if (!res.ok) {
-    const mensagem =
-      (body && typeof body === "object" && (body.message || body.erro || body.error)) || `Erro ${res.status} na Notaas`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const b = body as any;
+    const mensagemEstruturada = body && typeof body === "object" && (b.message || b.erro || b.error);
+    // Sem mensagem estruturada no corpo (ex.: resposta não é da Notaas, veio
+    // de um CDN/WAF antes de chegar no app deles) — mostra a URL chamada e
+    // um pedaço do corpo bruto, pra dar pista de diagnóstico direto no card
+    // da nota em vez de só "Erro 404 na Notaas".
+    const mensagem = mensagemEstruturada || `Erro ${res.status} em ${url}${textoBruto ? ": " + textoBruto.slice(0, 200) : ""}`;
     return { ok: false, erro: String(mensagem) };
   }
   return { ok: true, data: body as T };
