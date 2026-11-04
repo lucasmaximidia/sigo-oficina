@@ -40,6 +40,7 @@ export async function criarNotaFiscal(input: {
   clienteDocumento: string | null;
   valor: number;
   motivo: NotaFiscalMotivo;
+  observacoes?: string | null;
 }) {
   // Venda/OS com valor zerado (ex: 100% de desconto, troca em garantia) não
   // gera nota — evita violar o check de valor > 0 no banco por uma venda
@@ -63,6 +64,7 @@ export async function criarNotaFiscal(input: {
       descricao_servico: descricaoServico,
       valor: input.valor,
       motivo: input.motivo,
+      observacoes: input.observacoes?.trim() || null,
       status: deveEmitir ? "pendente" : "nao_emitir",
     })
     .select("id")
@@ -82,7 +84,7 @@ export async function criarNotaFiscal(input: {
       valor: input.valor,
       codigoServico: config.codigoServico,
       aliquotaIss: config.aliquotaIss,
-      observacoes: null,
+      observacoes: input.observacoes,
     });
   }
 

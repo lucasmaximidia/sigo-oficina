@@ -37,6 +37,37 @@ function campo(obj: any, ...caminhos: string[]): string | null {
   return null;
 }
 
+// Baixa o PDF da Notaas e guarda uma cópia permanente no nosso Storage —
+// não depender do link deles ficar no ar pra sempre. Se qualquer passo
+// falhar (rede, formato inesperado), cai pro link original da Notaas em
+// vez de deixar a nota sem PDF nenhum.
+async function salvarPdfPermanente(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  notaId: string,
+  urlPdfOriginal: string | null
+): Promise<string | null> {
+  if (!urlPdfOriginal) return null;
+  try {
+    const res = await fetch(urlPdfOriginal);
+    if (!res.ok) return urlPdfOriginal;
+    const bytes = await res.arrayBuffer();
+    const caminho = `${notaId}.pdf`;
+    const { error } = await supabase.storage
+      .from("notas-fiscais")
+      .upload(caminho, bytes, { contentType: "application/pdf", upsert: true });
+    if (error) {
+      console.warn("Webhook Notaas: falhou ao salvar PDF no Storage, mantendo link original", error);
+      return urlPdfOriginal;
+    }
+    const { data } = supabase.storage.from("notas-fiscais").getPublicUrl(caminho);
+    return data?.publicUrl || urlPdfOriginal;
+  } catch (error) {
+    console.warn("Webhook Notaas: erro ao baixar/salvar PDF, mantendo link original", error);
+    return urlPdfOriginal;
+  }
+}
+
 export async function POST(request: Request) {
   const corpoBruto = await request.text();
   const assinatura = request.headers.get("x-notaas-signature");
@@ -73,6 +104,8 @@ export async function POST(request: Request) {
   }
 
   if (evento === "nfse.issued" || evento === "nfse.documents_ready") {
+    const urlPdfNotaas = campo(body, "urlPdf", "data.urlPdf", "nfse.urlPdf", "url_pdf", "data.url_pdf");
+    const urlPdf = await salvarPdfPermanente(supabase, notaId, urlPdfNotaas);
     await supabase
       .from("notas_fiscais")
       .update({
@@ -80,7 +113,7 @@ export async function POST(request: Request) {
         provider_id: providerId,
         numero_nfse: campo(body, "numeroNfse", "data.numeroNfse", "numero", "data.numero", "nfse.numero"),
         codigo_verificacao: campo(body, "chNFSe", "data.chNFSe", "codigoVerificacao", "data.codigoVerificacao", "nfse.codigoVerificacao"),
-        url_pdf: campo(body, "urlPdf", "data.urlPdf", "nfse.urlPdf", "url_pdf", "data.url_pdf"),
+        url_pdf: urlPdf,
         url_xml: campo(body, "urlXml", "data.urlXml", "nfse.urlXml", "url_xml", "data.url_xml"),
         erro_mensagem: null,
         emitida_em: new Date().toISOString(),
