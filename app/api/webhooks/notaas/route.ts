@@ -117,6 +117,7 @@ export async function POST(request: Request) {
         url_xml: campo(body, "urlXml", "data.urlXml", "nfse.urlXml", "url_xml", "data.url_xml"),
         erro_mensagem: null,
         emitida_em: new Date().toISOString(),
+        webhook_bruto: body,
       })
       .eq("id", notaId);
   } else if (evento === "nfse.error") {
@@ -126,10 +127,11 @@ export async function POST(request: Request) {
         status: "erro",
         provider_id: providerId,
         erro_mensagem: campo(body, "motivo", "data.motivo", "erro", "data.erro", "mensagem", "data.mensagem") ?? "Erro na emissão (Notaas)",
+        webhook_bruto: body,
       })
       .eq("id", notaId);
   } else if (evento === "nfse.cancelled") {
-    await supabase.from("notas_fiscais").update({ status: "cancelada" }).eq("id", notaId);
+    await supabase.from("notas_fiscais").update({ status: "cancelada", webhook_bruto: body }).eq("id", notaId);
   }
 
   return NextResponse.json({ ok: true });
