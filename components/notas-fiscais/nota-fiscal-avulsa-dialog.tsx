@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { criarNotaFiscalAvulsa } from "@/lib/notas-fiscais-actions";
 import { atualizarDocumentoCliente } from "@/lib/actions";
@@ -28,6 +29,7 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [documento, setDocumento] = useState("");
   const [valor, setValor] = useState(0);
+  const [observacoes, setObservacoes] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const resultados = useMemo(() => {
@@ -47,6 +49,7 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
     setClienteId(null);
     setDocumento("");
     setValor(0);
+    setObservacoes("");
   }
 
   function handleSubmit() {
@@ -74,6 +77,7 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
           clienteNome: busca,
           clienteDocumento: documento,
           valor,
+          observacoes: observacoes || null,
         });
         toast.success("Nota fiscal avulsa lançada");
         setOpen(false);
@@ -159,6 +163,18 @@ export function NotaFiscalAvulsaDialog({ clientes }: { clientes: ClienteBusca[] 
               Valor (R$)
             </Label>
             <NumericInput id="valor" defaultValue={valor} onValueChange={setValor} />
+          </div>
+          <div>
+            <Label htmlFor="observacoes" className="mb-1.5 block">
+              Informações complementares (opcional)
+            </Label>
+            <Textarea
+              id="observacoes"
+              placeholder="Aparece na nota, além da descrição padrão."
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              rows={3}
+            />
           </div>
         </div>
         <DialogFooter>

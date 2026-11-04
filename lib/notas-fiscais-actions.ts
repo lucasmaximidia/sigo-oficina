@@ -58,6 +58,7 @@ export async function criarNotaFiscalAvulsa(input: {
   clienteNome: string;
   clienteDocumento: string | null;
   valor: number;
+  observacoes?: string | null;
 }) {
   if (!input.clienteNome.trim()) throw new Error("Informe o nome do cliente");
   if (input.valor <= 0) throw new Error("Informe um valor válido");
@@ -69,6 +70,7 @@ export async function criarNotaFiscalAvulsa(input: {
     clienteDocumento: input.clienteDocumento,
     valor: input.valor,
     motivo: "opcional_cliente_sim",
+    observacoes: input.observacoes,
   });
 
   revalidatePath("/notas-fiscais");
