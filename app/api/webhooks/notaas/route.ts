@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   const referencia = campo(body, "referencia", "data.referencia", "nfse.referencia");
-  const providerId = campo(body, "id", "data.id", "nfse.id");
+  const providerId = campo(body, "invoiceId", "data.invoiceId", "id", "data.id", "nfse.id");
   const supabase = createServiceClient();
 
   let notaId: string | null = referencia;
@@ -78,8 +78,8 @@ export async function POST(request: Request) {
       .update({
         status: "emitida",
         provider_id: providerId,
-        numero_nfse: campo(body, "numero", "data.numero", "nfse.numero"),
-        codigo_verificacao: campo(body, "codigoVerificacao", "data.codigoVerificacao", "nfse.codigoVerificacao"),
+        numero_nfse: campo(body, "numeroNfse", "data.numeroNfse", "numero", "data.numero", "nfse.numero"),
+        codigo_verificacao: campo(body, "chNFSe", "data.chNFSe", "codigoVerificacao", "data.codigoVerificacao", "nfse.codigoVerificacao"),
         url_pdf: campo(body, "urlPdf", "data.urlPdf", "nfse.urlPdf", "url_pdf", "data.url_pdf"),
         url_xml: campo(body, "urlXml", "data.urlXml", "nfse.urlXml", "url_xml", "data.url_xml"),
         erro_mensagem: null,
