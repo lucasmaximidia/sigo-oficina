@@ -1,19 +1,25 @@
 // Cliente HTTP para a Notaas (https://www.notaas.com.br), o gateway de
 // NFS-e escolhido para a emissão automática.
 //
-// IMPORTANTE: a URL base e o formato de payload abaixo são uma estimativa
-// a partir do material público da Notaas (autenticação por cabeçalho
-// X-API-Key, chaves sk_test_/sk_live_, API REST com JSON) — não tivemos
-// acesso à documentação completa da conta ainda. Antes de usar em
-// produção, confira no painel da Notaas (Documentação da API) os
-// endpoints e nomes de campo reais e ajuste as três funções abaixo; o
-// resto do sistema (banco, telas, regra obrigatória/opcional) não precisa
-// mudar, só esta camada.
+// Base URL, autenticação (x-api-key) e o payload de POST /nfse abaixo
+// conferem com a API Reference real da conta (aba "Emissão"). A Notaas
+// emite de forma ASSÍNCRONA: a resposta chega com HTTP 202 (job
+// publicado na fila) e o status final só é conhecido depois, por
+// polling em GET /nfse/:id ou por webhook — as abas "Status", "Cancelar"
+// e "Webhooks" da documentação ainda não foram conferidas aqui, então o
+// parsing de consultarNfse/cancelarNfse abaixo continua sendo uma
+// estimativa; ajuste parseNota() se o formato real divergir.
+//
+// A Notaas não tem um campo dedicado de "observações"/"informações
+// complementares" na emissão — o único texto livre que chega na nota é
+// servico.descricao, então observações do operador são concatenadas ali
+// (ver emitirNfse).
 //
 // Credenciais nunca ficam no banco nem no código: NOTAAS_API_KEY é lida
-// de variável de ambiente (configurada no Vercel), e o certificado
-// digital é cadastrado direto no painel da Notaas, não neste sistema.
-const NOTAAS_BASE_URL = process.env.NOTAAS_BASE_URL || "https://api.notaas.com.br/v1";
+// de variável de ambiente (configurada no Vercel, valor começando com
+// "ntaas_..."), e o certificado digital é cadastrado direto no painel da
+// Notaas, não neste sistema.
+const NOTAAS_BASE_URL = process.env.NOTAAS_BASE_URL || "https://platform.notaas.com.br/api/v1";
 
 export interface NotaasEmissaoInput {
   referenciaExterna: string;
@@ -23,6 +29,7 @@ export interface NotaasEmissaoInput {
   valor: number;
   codigoServico: string | null;
   aliquotaIss: number | null;
+  observacoes?: string | null;
 }
 
 export interface NotaasNota {
@@ -91,18 +98,35 @@ function parseNota(data: any): NotaasNota {
   };
 }
 
+// cnpj/cpf são campos exclusivos entre si no payload da Notaas — decide
+// qual mandar pela quantidade de dígitos do documento do cliente. Sem
+// documento válido, omite o tomador inteiro: a API aceita emissão B2C
+// pra consumidor final não identificado.
+function tomadorPayload(nome: string, documento: string | null) {
+  const digitos = (documento || "").replace(/\D/g, "");
+  if (digitos.length === 11) return { cpf: digitos, nome };
+  if (digitos.length === 14) return { cnpj: digitos, nome };
+  return undefined;
+}
+
 export async function emitirNfse(input: NotaasEmissaoInput): Promise<NotaasResultado<NotaasNota>> {
+  const descricao = input.observacoes ? `${input.descricaoServico}\n\n${input.observacoes}` : input.descricaoServico;
+  const competencia = new Date().toISOString().slice(0, 7); // YYYY-MM
+
   const resultado = await notaasFetch<unknown>("/nfse", {
     method: "POST",
     body: JSON.stringify({
-      referencia_externa: input.referenciaExterna,
-      tomador: { nome: input.clienteNome, documento: input.clienteDocumento },
+      referencia: input.referenciaExterna,
+      tomador: tomadorPayload(input.clienteNome, input.clienteDocumento),
       servico: {
-        descricao: input.descricaoServico,
-        valor: input.valor,
-        codigo: input.codigoServico,
-        aliquota_iss: input.aliquotaIss,
+        codigo: input.codigoServico || undefined,
+        descricao,
       },
+      valores: {
+        total: input.valor,
+        aliquotaIss: input.aliquotaIss ?? 0,
+      },
+      competencia,
     }),
   });
   if (!resultado.ok) return resultado;

@@ -76,6 +76,7 @@ export async function criarNotaFiscal(input: {
       valor: input.valor,
       codigoServico: config.codigoServico,
       aliquotaIss: config.aliquotaIss,
+      observacoes: null,
     });
   }
 
@@ -118,6 +119,7 @@ export async function tentarEmitir(
     valor: number;
     codigoServico: string | null;
     aliquotaIss: number | null;
+    observacoes?: string | null;
   }
 ) {
   const supabase = await createClient();
@@ -129,6 +131,7 @@ export async function tentarEmitir(
     valor: dados.valor,
     codigoServico: dados.codigoServico,
     aliquotaIss: dados.aliquotaIss,
+    observacoes: dados.observacoes,
   });
 
   if (!resultado.ok) {

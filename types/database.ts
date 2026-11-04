@@ -649,6 +649,7 @@ export interface Database {
           url_pdf: string | null;
           url_xml: string | null;
           erro_mensagem: string | null;
+          observacoes: string | null;
           created_at: string;
           emitida_em: string | null;
         };
@@ -671,6 +672,7 @@ export interface Database {
           url_pdf?: string | null;
           url_xml?: string | null;
           erro_mensagem?: string | null;
+          observacoes?: string | null;
           created_at?: string;
           emitida_em?: string | null;
         };
@@ -693,6 +695,7 @@ export interface Database {
           url_pdf?: string | null;
           url_xml?: string | null;
           erro_mensagem?: string | null;
+          observacoes?: string | null;
           created_at?: string;
           emitida_em?: string | null;
         };

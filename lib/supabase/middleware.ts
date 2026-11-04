@@ -13,6 +13,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholde
 // de assinado) — nenhuma exige conta no sistema. A rota do PDF (/api/locacao)
 // também é usada pela equipe logada; a função da rota decide o que cada um
 // pode baixar, aqui só liberamos o acesso sem redirecionar pro login.
+// /api/webhooks é chamada por serviços externos (ex.: Notaas) sem cookie de
+// sessão — cada rota ali dentro faz sua própria verificação (assinatura,
+// segredo compartilhado etc.), não a sessão do usuário. /api/cron é chamada
+// pelo Cron da Vercel, também sem cookie — valida sozinha o CRON_SECRET (ver
+// app/api/cron/notificacoes/route.ts) e sem essa liberação aqui o Cron
+// sempre caía no redirect pro login em vez de rodar.
 const ROTAS_PUBLICAS = [
   "/login",
   "/",
@@ -22,6 +28,8 @@ const ROTAS_PUBLICAS = [
   "/locacao/contrato",
   "/locacao/renovar",
   "/api/locacao",
+  "/api/webhooks",
+  "/api/cron",
 ];
 
 function isRotaPublica(pathname: string) {
