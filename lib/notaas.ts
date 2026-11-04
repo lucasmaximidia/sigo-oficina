@@ -114,7 +114,7 @@ function parseNota(data: any): NotaasNota {
     providerId: String(data?.invoiceId ?? data?.id ?? ""),
     status: normalizarStatus(data?.status),
     numeroNfse: data?.numeroNfse ?? data?.numero ?? data?.numero_nfse ?? null,
-    codigoVerificacao: data?.chNFSe ?? data?.codigo_verificacao ?? null,
+    codigoVerificacao: data?.chaveAcesso ?? data?.chNFSe ?? data?.codigo_verificacao ?? null,
     urlPdf: data?.url_pdf ?? data?.pdf_url ?? null,
     urlXml: data?.url_xml ?? data?.xml_url ?? null,
     erro: data?.erro ?? data?.motivo_erro ?? data?.message ?? null,
