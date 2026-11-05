@@ -25,7 +25,7 @@ export async function GET() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={config.logo_url} width={140} height={140} style={{ objectFit: "contain" }} alt="" />
         ) : (
-          <span style={{ color: "#2542b8", fontSize: 110, fontWeight: 700 }}>S</span>
+          <span style={{ color: "#e2793d", fontSize: 110, fontWeight: 700 }}>S</span>
         )}
       </div>
     ),

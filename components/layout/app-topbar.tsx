@@ -81,8 +81,14 @@ export function AppTopbar({
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className={cn("w-72 p-0", dentroLocacao && "locacao-theme")}>
-          <SheetHeader>
+        <SheetContent
+          side="left"
+          className={cn(
+            "w-72 border-sidebar-border bg-sidebar p-0 text-sidebar-foreground [&>button]:text-sidebar-foreground/70",
+            dentroLocacao && "locacao-theme"
+          )}
+        >
+          <SheetHeader className="border-sidebar-border">
             <SheetTitle className="sr-only">Menu</SheetTitle>
             <Brand />
           </SheetHeader>
@@ -92,7 +98,7 @@ export function AppTopbar({
                 <Link
                   href="/dashboard"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-1.5 text-xs font-medium text-sidebar-foreground/60 hover:text-sidebar-foreground"
                 >
                   <ArrowLeft className="size-3.5" />
                   Voltar à oficina
@@ -111,7 +117,7 @@ export function AppTopbar({
                         "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                         ativo
                           ? "bg-sidebar-active text-sidebar-active-foreground"
-                          : "text-sidebar-foreground/80 hover:bg-secondary hover:text-sidebar-foreground"
+                          : "text-sidebar-foreground/80 hover:bg-accent/15 hover:text-sidebar-foreground"
                       )}
                     >
                       <Icon className="size-5 shrink-0" strokeWidth={2} />

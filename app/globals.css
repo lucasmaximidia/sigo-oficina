@@ -6,53 +6,57 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f4f5fb;
-  --foreground: #14162a;
+  /* Precision Workshop — identidade grafite + laranja de marca, fundo
+     off-white mineral. A sidebar é sempre grafite escuro (não segue o
+     tema claro/escuro do conteúdo) — ver bloco .dark abaixo, que
+     deliberadamente não redefine --sidebar-*. */
+  --background: #f5f4f0;
+  --foreground: #202522;
 
   --card: #ffffff;
-  --card-foreground: #14162a;
+  --card-foreground: #202522;
 
   --popover: #ffffff;
-  --popover-foreground: #14162a;
+  --popover-foreground: #202522;
 
-  --primary: #2542b8;
-  --primary-hover: #1e3593;
+  --primary: #202522;
+  --primary-hover: #3a4139;
   --primary-foreground: #ffffff;
 
   --action: #e2793d;
   --action-hover: #c96a30;
   --action-foreground: #ffffff;
 
-  --secondary: #eceefa;
-  --secondary-foreground: #4a4d68;
+  --secondary: #eceae4;
+  --secondary-foreground: #4b5049;
 
-  --muted: #eceefa;
-  --muted-foreground: #6b6e85;
+  --muted: #efede8;
+  --muted-foreground: #777e78;
 
-  --accent: #e9ecfa;
-  --accent-foreground: #2542b8;
+  --accent: #fbeadd;
+  --accent-foreground: #b85f23;
 
-  --destructive: #dc2626;
+  --destructive: #c34e43;
   --destructive-foreground: #ffffff;
 
-  --success: #4f7a24;
+  --success: #27835e;
   --success-foreground: #ffffff;
 
-  --warning: #f59e0b;
-  --warning-foreground: #7c4a05;
+  --warning: #d69a38;
+  --warning-foreground: #6b4710;
 
-  --info: #2563eb;
+  --info: #4c6fa3;
   --info-foreground: #ffffff;
 
-  --border: #dfe1f0;
-  --input: #cfd3ea;
-  --ring: #2542b8;
+  --border: #e8e5de;
+  --input: #d8d3c8;
+  --ring: #e2793d;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #14162a;
-  --sidebar-border: #eceefa;
-  --sidebar-active: #e9ecfa;
-  --sidebar-active-foreground: #2542b8;
+  --sidebar: #202522;
+  --sidebar-foreground: #ffffff;
+  --sidebar-border: #363d37;
+  --sidebar-active: #353d37;
+  --sidebar-active-foreground: #ffffff;
 
   /* Identidade visual da Locação (VoltCity) — verde e preto, as cores reais
      da marca (logo "VOLT" em verde + "CITY" em preto), deliberadamente
@@ -83,53 +87,51 @@
 }
 
 .dark {
-  --background: #0e1018;
-  --foreground: #eceefb;
+  --background: #171914;
+  --foreground: #edeee9;
 
-  --card: #171a28;
-  --card-foreground: #eceefb;
+  --card: #1d201a;
+  --card-foreground: #edeee9;
 
-  --popover: #171a28;
-  --popover-foreground: #eceefb;
+  --popover: #1d201a;
+  --popover-foreground: #edeee9;
 
-  --primary: #6a86ff;
-  --primary-hover: #8fa3ff;
-  --primary-foreground: #0b1030;
+  --primary: #edeee9;
+  --primary-hover: #ffffff;
+  --primary-foreground: #202522;
 
-  --action: #e2793d;
-  --action-hover: #ef8a52;
-  --action-foreground: #1f0f04;
+  --action: #ef9359;
+  --action-hover: #f3a877;
+  --action-foreground: #231104;
 
-  --secondary: #1d2233;
-  --secondary-foreground: #c7cadf;
+  --secondary: #262921;
+  --secondary-foreground: #c7cbbf;
 
-  --muted: #1a1e2e;
-  --muted-foreground: #9296b0;
+  --muted: #212318;
+  --muted-foreground: #9ba395;
 
-  --accent: #1c2246;
-  --accent-foreground: #b9c6ff;
+  --accent: #30261a;
+  --accent-foreground: #f0a26b;
 
-  --destructive: #f0605c;
-  --destructive-foreground: #200404;
+  --destructive: #e8897a;
+  --destructive-foreground: #2b0d08;
 
-  --success: #9ccc65;
-  --success-foreground: #12210a;
+  --success: #6ecb96;
+  --success-foreground: #0d2015;
 
-  --warning: #fbbf24;
-  --warning-foreground: #2b1a02;
+  --warning: #e3b25b;
+  --warning-foreground: #2b1c06;
 
-  --info: #60a5fa;
-  --info-foreground: #051329;
+  --info: #86a3d6;
+  --info-foreground: #0e1a2e;
 
-  --border: #262b40;
-  --input: #333a52;
-  --ring: #6a86ff;
+  --border: #2c2f26;
+  --input: #383c31;
+  --ring: #ef9359;
 
-  --sidebar: #0c0e17;
-  --sidebar-foreground: #eceefb;
-  --sidebar-border: #20243a;
-  --sidebar-active: #1c2246;
-  --sidebar-active-foreground: #b9c6ff;
+  /* --sidebar-* não é redefinido aqui de propósito — a sidebar grafite do
+     :root permanece igual nos dois temas (âncora de marca fixa, como em
+     Linear/Vercel), só o conteúdo troca entre claro e escuro. */
 
   --locacao-primary: #4ade80;
   --locacao-primary-hover: #86efac;
@@ -170,7 +172,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -17,7 +17,7 @@ export function LocacaoAppSidebar() {
       <div className="px-3">
         <Link
           href="/dashboard"
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-sidebar-border text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-secondary/15 hover:text-sidebar-foreground"
         >
           <ArrowLeft className="size-4" />
           Voltar à oficina
@@ -29,8 +29,8 @@ export function LocacaoAppSidebar() {
           <Scooter className="size-5.5" strokeWidth={2} />
         </div>
         <div>
-          <p className="font-display text-base font-bold leading-tight text-foreground">Locação</p>
-          <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+          <p className="font-display text-base font-bold leading-tight text-sidebar-foreground">Locação</p>
+          <p className="flex items-center gap-1 text-[11px] font-medium text-sidebar-foreground/60">
             <Zap className="size-3 fill-current text-locacao-spark" />
             VoltCity
           </p>
@@ -49,7 +49,7 @@ export function LocacaoAppSidebar() {
                 "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 ativo
                   ? "bg-sidebar-active text-sidebar-active-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-secondary hover:text-sidebar-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/15 hover:text-sidebar-foreground"
               )}
             >
               <Icon className="size-5 shrink-0" strokeWidth={2} />

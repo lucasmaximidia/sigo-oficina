@@ -23,7 +23,12 @@ export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () 
                 className={cn("mx-0.5 mb-1 mt-2 border-t border-sidebar-border/60", collapsed ? "pt-2" : "pb-1 pt-2.5")}
               >
                 {!collapsed && item.secao && (
-                  <p className="px-2.5 text-[10px] font-semibold uppercase tracking-wide text-primary/70">
+                  <p
+                    className={cn(
+                      "px-2.5 text-[10px] font-semibold uppercase tracking-wide",
+                      ehLocacao ? "text-primary/80" : "text-sidebar-foreground/45"
+                    )}
+                  >
                     {SECAO_LABEL[item.secao] ?? item.secao}
                   </p>
                 )}
@@ -37,10 +42,10 @@ export function SidebarNav({ onNavigate, collapsed = false }: { onNavigate?: () 
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors min-h-11",
                 collapsed && "justify-center px-0",
                 active
-                  ? "bg-sidebar-active text-sidebar-active-foreground"
+                  ? "bg-sidebar-active text-sidebar-active-foreground shadow-[inset_2px_0_0_var(--action)]"
                   : ehLocacao
-                    ? "text-primary/80 hover:bg-accent hover:text-primary"
-                    : "text-sidebar-foreground/80 hover:bg-secondary hover:text-sidebar-foreground"
+                    ? "text-primary/80 hover:bg-accent/15 hover:text-primary"
+                    : "text-sidebar-foreground/80 hover:bg-secondary/15 hover:text-sidebar-foreground"
               )}
             >
               <Icon className="size-5 shrink-0" strokeWidth={2} />
