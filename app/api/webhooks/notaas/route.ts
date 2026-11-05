@@ -37,6 +37,15 @@ function campo(obj: any, ...caminhos: string[]): string | null {
   return null;
 }
 
+// A Notaas manda urlPdf dentro do corpo do webhook — não dá pra confiar
+// cegamente nesse valor (o corpo vem de fora, e a assinatura acima é só
+// best-effort). Sem travar o host, qualquer um que conheça o id de uma
+// nota poderia fazer o nosso servidor buscar um endereço arbitrário
+// (SSRF) e guardar o resultado no nosso Storage público. Só aceita
+// domínios conhecidos da Notaas.
+const HOSTS_PDF_PERMITIDOS = ["storage.notaas.com.br", "platform.notaas.com.br"];
+const TAMANHO_MAXIMO_PDF = 15 * 1024 * 1024; // 15MB — generoso pra um DANFSe, barra abuso
+
 // Baixa o PDF da Notaas e guarda uma cópia permanente no nosso Storage —
 // não depender do link deles ficar no ar pra sempre. Se qualquer passo
 // falhar (rede, formato inesperado), cai pro link original da Notaas em
@@ -49,9 +58,23 @@ async function salvarPdfPermanente(
 ): Promise<string | null> {
   if (!urlPdfOriginal) return null;
   try {
-    const res = await fetch(urlPdfOriginal);
+    const url = new URL(urlPdfOriginal);
+    if (url.protocol !== "https:" || !HOSTS_PDF_PERMITIDOS.includes(url.hostname)) {
+      console.warn("Webhook Notaas: urlPdf fora dos domínios permitidos, ignorando", urlPdfOriginal);
+      return null;
+    }
+    const res = await fetch(url);
     if (!res.ok) return urlPdfOriginal;
+    const tamanho = Number(res.headers.get("content-length") ?? "0");
+    if (tamanho > TAMANHO_MAXIMO_PDF) {
+      console.warn("Webhook Notaas: PDF maior que o limite, ignorando", { notaId, tamanho });
+      return urlPdfOriginal;
+    }
     const bytes = await res.arrayBuffer();
+    if (bytes.byteLength > TAMANHO_MAXIMO_PDF) {
+      console.warn("Webhook Notaas: PDF maior que o limite (sem content-length), ignorando", { notaId });
+      return urlPdfOriginal;
+    }
     const caminho = `${notaId}.pdf`;
     const { error } = await supabase.storage
       .from("notas-fiscais")
