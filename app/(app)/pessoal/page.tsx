@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Scale, BarChart3, CreditCard } from "lucide-r
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { Button } from "@/components/ui/button";
 import { MesSeletor } from "@/components/pessoal/mes-seletor";
 import { RendaSection } from "@/components/pessoal/renda-section";
@@ -98,17 +98,14 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
           <ItensMesSection itens={itensMes ?? []} mes={mes} renda={renda ?? []} />
         </div>
         <div className="flex flex-col gap-4">
-          <Card className="h-fit">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="size-4.5 text-primary" />
-                Gastos do cartão por categoria
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CategoriaChart dados={categorias} />
-            </CardContent>
-          </Card>
+          <CollapsibleCard
+            id="gastos-categoria"
+            icon={<BarChart3 className="size-4.5 text-primary" />}
+            title="Gastos do cartão por categoria"
+            className="h-fit"
+          >
+            <CategoriaChart dados={categorias} />
+          </CollapsibleCard>
           <ARecemberSection lancamentos={lancamentos ?? []} renda={renda ?? []} mes={mes} />
         </div>
       </div>
