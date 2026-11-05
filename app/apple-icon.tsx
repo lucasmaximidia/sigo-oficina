@@ -24,7 +24,7 @@ export default async function AppleIcon() {
         {config?.logo_url ? (
           <img src={config.logo_url} width={130} height={130} style={{ objectFit: "contain" }} alt="" />
         ) : (
-          <span style={{ color: "#e2793d", fontSize: 96, fontWeight: 700 }}>S</span>
+          <span style={{ color: "#2542b8", fontSize: 96, fontWeight: 700 }}>S</span>
         )}
       </div>
     ),

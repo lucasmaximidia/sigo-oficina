@@ -25,7 +25,7 @@ export default async function Icon() {
         {config?.logo_url ? (
           <img src={config.logo_url} width={24} height={24} style={{ objectFit: "contain" }} alt="" />
         ) : (
-          <span style={{ color: "#e2793d", fontSize: 20, fontWeight: 700 }}>S</span>
+          <span style={{ color: "#2542b8", fontSize: 20, fontWeight: 700 }}>S</span>
         )}
       </div>
     ),

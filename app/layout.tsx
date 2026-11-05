@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { KeyboardInsetWatcher } from "@/components/layout/keyboard-inset-watcher";
 import "./globals.css";
@@ -9,10 +9,10 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#202522",
+  themeColor: "#2542b8",
   // Sem isso, o teclado virtual simplesmente sobrepõe a tela (o viewport não
   // encolhe) — qualquer modal ancorado embaixo (como os diálogos no celular)
   // fica escondido atrás do teclado assim que um campo de texto é focado.
@@ -48,7 +48,7 @@ const THEME_INIT_SCRIPT = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${manrope.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <KeyboardInsetWatcher />

@@ -53,7 +53,7 @@ export function AppSidebar() {
         <Link
           href="/ordens-servico/nova"
           title="Nova OS"
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-action px-4 text-sm font-semibold text-action-foreground shadow-sm transition-colors hover:bg-action-hover"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-foreground px-4 text-sm font-semibold text-background shadow-sm transition-colors hover:bg-foreground/90"
         >
           <Plus className="size-4.5 shrink-0" />
           {!collapsed && "Nova OS"}
@@ -67,7 +67,7 @@ export function AppSidebar() {
           type="button"
           onClick={() => setCollapsedPreference(!collapsed)}
           title={collapsed ? "Expandir menu" : "Encolher menu"}
-          className="flex min-h-9 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-secondary/15 hover:text-sidebar-foreground"
+          className="flex min-h-9 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-secondary hover:text-sidebar-foreground"
         >
           {collapsed ? <ChevronsRight className="size-4.5" /> : <ChevronsLeft className="size-4.5" />}
           {!collapsed && "Encolher"}
