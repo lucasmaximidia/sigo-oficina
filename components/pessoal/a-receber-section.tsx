@@ -47,6 +47,7 @@ export function ARecemberSection({
         </p>
       }
       actions={<LancarRecebivelTerceiroDialog mes={mes} />}
+      defaultOpen={temAlgo}
     >
       <div className="flex flex-col gap-4">
         {!temAlgo ? (

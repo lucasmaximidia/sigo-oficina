@@ -54,6 +54,7 @@ export function CartoesSection({
               </>
             }
             meta={<PrevistoReal previsto={totalPrevisto} real={totalReal} />}
+            defaultOpen={lancamentosDoCartao.length > 0}
             actions={
               <>
                 <CartaoDialog cartao={cartao} />

@@ -57,6 +57,7 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
             id={`itens-${secao}`}
             title={PESSOAL_SECAO_LABEL[secao]}
             meta={<PrevistoReal previsto={totalPrevisto} real={totalReal} />}
+            defaultOpen={itensDaSecao.length > 0}
             actions={
               <>
                 {secao === "dizimo" &&

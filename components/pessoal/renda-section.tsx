@@ -21,6 +21,7 @@ export function RendaSection({ renda, mes }: { renda: PessoalRenda[]; mes: strin
       title="Renda do mês"
       meta={<PrevistoReal previsto={totalPrevisto} real={totalReal} />}
       actions={<LancarRendaDialog mes={mes} />}
+      defaultOpen={renda.length > 0}
     >
       {renda.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nenhuma renda lançada ainda.</p>

@@ -103,6 +103,7 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
             icon={<BarChart3 className="size-4.5 text-primary" />}
             title="Gastos do cartão por categoria"
             className="h-fit"
+            defaultOpen={categorias.length > 0}
           >
             <CategoriaChart dados={categorias} />
           </CollapsibleCard>
