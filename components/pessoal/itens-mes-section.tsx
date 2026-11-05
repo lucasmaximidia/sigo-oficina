@@ -3,7 +3,8 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
+import { PrevistoReal } from "@/components/pessoal/previsto-real";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LancarItemMesDialog } from "@/components/pessoal/lancar-item-mes-dialog";
@@ -51,15 +52,14 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
         const totalReal = itensDaSecao.reduce((acc, i) => acc + (i.valor_real ?? 0), 0);
 
         return (
-          <Card key={secao}>
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <div>
-                <CardTitle>{PESSOAL_SECAO_LABEL[secao]}</CardTitle>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Previsto {formatCurrency(totalPrevisto)} · Real {formatCurrency(totalReal)}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
+          <CollapsibleCard
+            key={secao}
+            id={`itens-${secao}`}
+            title={PESSOAL_SECAO_LABEL[secao]}
+            meta={<PrevistoReal previsto={totalPrevisto} real={totalReal} />}
+            defaultOpen={itensDaSecao.length > 0}
+            actions={
+              <>
                 {secao === "dizimo" &&
                   DIZIMO_SUGESTOES.filter(
                     ({ descricao }) => !itensDaSecao.some((i) => i.descricao.toUpperCase() === descricao)
@@ -79,47 +79,46 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
                     );
                   })}
                 <LancarItemMesDialog mes={mes} secao={secao} />
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {itensDaSecao.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum item ainda.</p>
-              ) : (
-                itensDaSecao.map((item) => {
-                  const salarioDizimo = secao === "dizimo" ? salarioDoDizimo(renda, item.descricao) : null;
-                  const valorSugerido =
-                    salarioDizimo?.valor_real != null ? calcularDizimo(salarioDizimo.valor_real) : undefined;
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm"
-                    >
-                      <div className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="truncate font-medium text-foreground">{item.descricao}</span>
-                        <span className="text-xs text-muted-foreground">
-                          Previsto {formatCurrency(item.valor_previsto)}
-                          {item.forma_pagamento ? ` · ${item.forma_pagamento}` : ""}
-                          {item.pago_em ? ` · pago em ${formatDate(item.pago_em)}` : ""}
-                        </span>
-                      </div>
-                      {item.valor_real != null ? (
-                        <Badge variant="success">{formatCurrency(item.valor_real)}</Badge>
-                      ) : (
-                        <ConfirmarItemMesDialog
-                          id={item.id}
-                          descricao={item.descricao}
-                          valorPrevisto={item.valor_previsto}
-                          valorSugerido={valorSugerido}
-                        />
-                      )}
-                      <EditarItemMesDialog item={item} renda={renda} />
-                      <ExcluirItemMesButton id={item.id} descricao={item.descricao} />
+              </>
+            }
+          >
+            {itensDaSecao.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum item ainda.</p>
+            ) : (
+              itensDaSecao.map((item) => {
+                const salarioDizimo = secao === "dizimo" ? salarioDoDizimo(renda, item.descricao) : null;
+                const valorSugerido =
+                  salarioDizimo?.valor_real != null ? calcularDizimo(salarioDizimo.valor_real) : undefined;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="truncate font-medium text-foreground">{item.descricao}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Previsto {formatCurrency(item.valor_previsto)}
+                        {item.forma_pagamento ? ` · ${item.forma_pagamento}` : ""}
+                        {item.pago_em ? ` · pago em ${formatDate(item.pago_em)}` : ""}
+                      </span>
                     </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
+                    {item.valor_real != null ? (
+                      <Badge variant="success">{formatCurrency(item.valor_real)}</Badge>
+                    ) : (
+                      <ConfirmarItemMesDialog
+                        id={item.id}
+                        descricao={item.descricao}
+                        valorPrevisto={item.valor_previsto}
+                        valorSugerido={valorSugerido}
+                      />
+                    )}
+                    <EditarItemMesDialog item={item} renda={renda} />
+                    <ExcluirItemMesButton id={item.id} descricao={item.descricao} />
+                  </div>
+                );
+              })
+            )}
+          </CollapsibleCard>
         );
       })}
     </div>

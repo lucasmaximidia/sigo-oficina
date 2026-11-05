@@ -1,5 +1,5 @@
 import { HandCoins } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
 import { ConfirmarValorInline } from "@/components/pessoal/confirmar-valor-inline";
 import { EditarRendaDialog } from "@/components/pessoal/editar-renda-dialog";
 import { ExcluirRendaButton } from "@/components/pessoal/pessoal-excluir-buttons";
@@ -36,21 +36,20 @@ export function ARecemberSection({
   const temAlgo = porCategoria.length > 0 || avulsos.length > 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            <HandCoins className="size-4.5 text-primary" />
-            A receber de terceiros
-          </CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Gastos confirmados no cartão por conta de Oficina, VoltCity e empréstimos, mais recebíveis avulsos (ex:
-            taxas) — marque cada um quando receber de volta.
-          </p>
-        </div>
-        <LancarRecebivelTerceiroDialog mes={mes} />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <CollapsibleCard
+      id="a-receber"
+      icon={<HandCoins className="size-4.5 text-primary" />}
+      title="A receber de terceiros"
+      meta={
+        <p className="text-xs text-muted-foreground">
+          Gastos confirmados no cartão por conta de Oficina, VoltCity e empréstimos, mais recebíveis avulsos (ex:
+          taxas) — marque cada um quando receber de volta.
+        </p>
+      }
+      actions={<LancarRecebivelTerceiroDialog mes={mes} />}
+      defaultOpen={temAlgo}
+    >
+      <div className="flex flex-col gap-4">
         {!temAlgo ? (
           <p className="text-sm text-muted-foreground">Nenhum gasto ou recebível de terceiros neste mês ainda.</p>
         ) : (
@@ -114,7 +113,7 @@ export function ARecemberSection({
             </div>
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CollapsibleCard>
   );
 }

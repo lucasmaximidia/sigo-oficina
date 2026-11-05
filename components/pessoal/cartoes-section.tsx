@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/ui/collapsible-card";
+import { PrevistoReal } from "@/components/pessoal/previsto-real";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
 import { CartaoDialog } from "@/components/pessoal/cartao-dialog";
@@ -42,67 +43,65 @@ export function CartoesSection({
         const fatura = faturas.find((f) => f.cartao_id === cartao.id);
 
         return (
-          <Card key={cartao.id}>
-            <CardHeader className="flex flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <CreditCard className="size-4.5 text-primary" />
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {cartao.nome}
-                    {!cartao.ativo && <Badge variant="secondary">Inativo</Badge>}
-                    <CartaoDialog cartao={cartao} />
-                  </CardTitle>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Previsto {formatCurrency(totalPrevisto)} · Real {formatCurrency(totalReal)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-2">
+          <CollapsibleCard
+            key={cartao.id}
+            id={`cartao-${cartao.id}`}
+            icon={<CreditCard className="size-4.5 text-primary" />}
+            title={
+              <>
+                {cartao.nome}
+                {!cartao.ativo && <Badge variant="secondary">Inativo</Badge>}
+              </>
+            }
+            meta={<PrevistoReal previsto={totalPrevisto} real={totalReal} />}
+            defaultOpen={lancamentosDoCartao.length > 0}
+            actions={
+              <>
+                <CartaoDialog cartao={cartao} />
                 {cartao.ativo && <LancarCompraCartaoDialog cartoes={cartoesAtivos} mes={mes} cartaoIdPadrao={cartao.id} />}
                 {temPendente && <FecharFaturaButton cartaoId={cartao.id} mes={mes} />}
                 <MarcarFaturaPagaButton cartaoId={cartao.id} mes={mes} pagoEm={fatura?.pago_em ?? null} />
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {lancamentosDoCartao.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum lançamento neste mês.</p>
-              ) : (
-                lancamentosDoCartao.map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm"
-                  >
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="truncate font-medium text-foreground">
-                        {l.descricao}
-                        {l.parcela_total > 1 && (
-                          <span className="ml-1.5 text-xs text-muted-foreground">
-                            {l.parcela_atual}/{l.parcela_total}
-                          </span>
-                        )}
-                        {l.eh_fixa && <Badge variant="outline" className="ml-1.5 align-middle text-[10px]">Fixa</Badge>}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {PESSOAL_CARTAO_CATEGORIA_LABEL[l.categoria]} · Previsto {formatCurrency(l.valor_previsto)}
-                      </span>
-                    </div>
-                    <ConfirmarValorInline
-                      valorReal={l.valor_real}
-                      valorPrevisto={l.valor_previsto}
-                      onConfirm={confirmarLancamentoCartao.bind(null, l.id)}
-                    />
-                    <EditarLancamentoCartaoDialog lancamento={l} />
-                    <ExcluirLancamentoCartaoButton
-                      id={l.id}
-                      compraId={l.compra_id}
-                      parcelaTotal={l.parcela_total}
-                      descricao={l.descricao}
-                    />
+              </>
+            }
+          >
+            {lancamentosDoCartao.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum lançamento neste mês.</p>
+            ) : (
+              lancamentosDoCartao.map((l) => (
+                <div
+                  key={l.id}
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="truncate font-medium text-foreground">
+                      {l.descricao}
+                      {l.parcela_total > 1 && (
+                        <span className="ml-1.5 text-xs text-muted-foreground">
+                          {l.parcela_atual}/{l.parcela_total}
+                        </span>
+                      )}
+                      {l.eh_fixa && <Badge variant="outline" className="ml-1.5 align-middle text-[10px]">Fixa</Badge>}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {PESSOAL_CARTAO_CATEGORIA_LABEL[l.categoria]} · Previsto {formatCurrency(l.valor_previsto)}
+                    </span>
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                  <ConfirmarValorInline
+                    valorReal={l.valor_real}
+                    valorPrevisto={l.valor_previsto}
+                    onConfirm={confirmarLancamentoCartao.bind(null, l.id)}
+                  />
+                  <EditarLancamentoCartaoDialog lancamento={l} />
+                  <ExcluirLancamentoCartaoButton
+                    id={l.id}
+                    compraId={l.compra_id}
+                    parcelaTotal={l.parcela_total}
+                    descricao={l.descricao}
+                  />
+                </div>
+              ))
+            )}
+          </CollapsibleCard>
         );
       })}
     </div>
