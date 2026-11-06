@@ -1721,6 +1721,7 @@ export interface Database {
           mes: string;
           secao: PessoalItemSecao;
           descricao: string;
+          grupo: string | null;
           forma_pagamento: string | null;
           valor_previsto: number;
           valor_real: number | null;
@@ -1733,6 +1734,7 @@ export interface Database {
           mes: string;
           secao: PessoalItemSecao;
           descricao: string;
+          grupo?: string | null;
           forma_pagamento?: string | null;
           valor_previsto?: number;
           valor_real?: number | null;
@@ -1745,6 +1747,7 @@ export interface Database {
           mes?: string;
           secao?: PessoalItemSecao;
           descricao?: string;
+          grupo?: string | null;
           forma_pagamento?: string | null;
           valor_previsto?: number;
           valor_real?: number | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,19 @@ export function LancarItemMesDialog({
   triggerLabel,
   descricaoPadrao,
   valorPrevistoPadrao,
+  gruposExistentes,
 }: {
   mes: string;
   secao: PessoalItemSecao;
   triggerLabel?: string;
   descricaoPadrao?: string;
   valorPrevistoPadrao?: number;
+  /** Grupos já usados nessa seção (ex: "ENERGIA") — sugeridos no campo Grupo pra juntar itens no mesmo cluster. */
+  gruposExistentes?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const datalistId = useId();
 
   function handleSubmit(formData: FormData) {
     formData.set("mes", mes);
@@ -74,6 +78,19 @@ export function LancarItemMesDialog({
               placeholder="Ex: Água, Internet, Pedreiro..."
               className="uppercase"
             />
+          </div>
+          <div>
+            <Label htmlFor="grupo" className="mb-1.5 block">
+              Grupo <span className="font-normal text-muted-foreground">(opcional — junta itens parecidos, ex: Energia)</span>
+            </Label>
+            <Input id="grupo" name="grupo" list={datalistId} placeholder="Ex: Energia" className="uppercase" />
+            {gruposExistentes && gruposExistentes.length > 0 && (
+              <datalist id={datalistId}>
+                {gruposExistentes.map((g) => (
+                  <option key={g} value={g} />
+                ))}
+              </datalist>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

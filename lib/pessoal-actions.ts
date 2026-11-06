@@ -165,6 +165,7 @@ export async function createItemMes(formData: FormData) {
     mes,
     secao,
     descricao,
+    grupo: strUp(formData, "grupo"),
     forma_pagamento: str(formData, "forma_pagamento"),
     valor_previsto: num(formData, "valor_previsto"),
   });
@@ -172,9 +173,9 @@ export async function createItemMes(formData: FormData) {
   revalidarPessoal();
 }
 
-// Corrige descrição/forma de pagamento/previsto de um item já lançado.
-// "valor_real"/"pago_em" só vêm no formData quando o diálogo os mostra (item
-// já confirmado) — por isso só mexe neles quando presentes.
+// Corrige descrição/grupo/forma de pagamento/previsto de um item já
+// lançado. "valor_real"/"pago_em" só vêm no formData quando o diálogo os
+// mostra (item já confirmado) — por isso só mexe neles quando presentes.
 export async function updateItemMes(id: string, formData: FormData) {
   const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
@@ -183,6 +184,7 @@ export async function updateItemMes(id: string, formData: FormData) {
     .from("pessoal_itens_mes")
     .update({
       descricao,
+      grupo: strUp(formData, "grupo"),
       forma_pagamento: str(formData, "forma_pagamento"),
       valor_previsto: num(formData, "valor_previsto"),
       ...(formData.has("valor_real")
@@ -222,7 +224,7 @@ export async function copiarItensMesAnterior(mesAtual: string) {
   const [{ data: itensAnteriores }, { data: cartaoAnteriores }] = await Promise.all([
     supabase
       .from("pessoal_itens_mes")
-      .select("secao, descricao, forma_pagamento, valor_previsto")
+      .select("secao, descricao, grupo, forma_pagamento, valor_previsto")
       .eq("mes", mesAnterior)
       .in("secao", ["fixa", "carro", "dizimo"])
       .is("deletado_em", null),
@@ -244,6 +246,7 @@ export async function copiarItensMesAnterior(mesAtual: string) {
         mes: mesAtual,
         secao: item.secao,
         descricao: item.descricao,
+        grupo: item.grupo,
         forma_pagamento: item.forma_pagamento,
         valor_previsto: item.valor_previsto,
       }))
