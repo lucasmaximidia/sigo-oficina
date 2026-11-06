@@ -23,6 +23,11 @@ function num(fd: FormData, key: string) {
   const v = fd.get(key);
   return typeof v === "string" ? parseValor(v) : 0;
 }
+function numOuNull(fd: FormData, key: string) {
+  const v = fd.get(key);
+  if (typeof v !== "string" || v.trim() === "") return null;
+  return parseValor(v);
+}
 function intOuNull(fd: FormData, key: string) {
   const v = fd.get(key);
   if (typeof v !== "string" || v.trim() === "") return null;
@@ -174,12 +179,15 @@ export async function createItemMes(formData: FormData) {
 }
 
 // Corrige descrição/grupo/forma de pagamento/previsto de um item já
-// lançado. "valor_real"/"pago_em" só vêm no formData quando o diálogo os
-// mostra (item já confirmado) — por isso só mexe neles quando presentes.
+// lançado. Valor real e "pago" são independentes: dá pra registrar um valor
+// real sem marcar como pago (checkbox "pago" desmarcado limpa o pago_em,
+// mesmo que já existisse um antes) — é assim que corrige um item marcado
+// como pago sem querer.
 export async function updateItemMes(id: string, formData: FormData) {
   const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
   if (!descricao) throw new Error("Descrição é obrigatória");
+  const pago = formData.get("pago") === "on";
   const { error } = await supabase
     .from("pessoal_itens_mes")
     .update({
@@ -187,16 +195,17 @@ export async function updateItemMes(id: string, formData: FormData) {
       grupo: strUp(formData, "grupo"),
       forma_pagamento: str(formData, "forma_pagamento"),
       valor_previsto: num(formData, "valor_previsto"),
-      ...(formData.has("valor_real")
-        ? { valor_real: num(formData, "valor_real"), pago_em: str(formData, "pago_em") }
-        : {}),
+      valor_real: numOuNull(formData, "valor_real"),
+      pago_em: pago ? (str(formData, "pago_em") ?? hojeBR()) : null,
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidarPessoal();
 }
 
-export async function confirmarItemMes(id: string, valorReal: number, dataPagamento: string) {
+// dataPagamento null = valor confirmado mas ainda não pago (fica pendente
+// até alguém marcar como pago depois, no mesmo diálogo ou editando o item).
+export async function confirmarItemMes(id: string, valorReal: number, dataPagamento: string | null) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("pessoal_itens_mes")
