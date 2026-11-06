@@ -213,10 +213,13 @@ export async function deleteItemMes(id: string) {
   revalidarPessoal();
 }
 
-// Copia os itens de contas fixas/carro/dízimo do mês anterior pro mês atual
-// (sem valor real, como pendentes de novo) — poupa relançar todo mês os
-// mesmos nomes, só o que muda é confirmar o valor quando pago. Contas
-// extras não são copiadas, por natureza são avulsas.
+// Copia os itens de carro/dízimo do mês anterior pro mês atual (sem valor
+// real, como pendentes de novo) — poupa relançar todo mês os mesmos nomes,
+// só o que muda é confirmar o valor quando pago. Contas extras não são
+// copiadas, por natureza são avulsas. Contas Fixas não entram mais aqui:
+// repetem sozinhas (ver copiarContasFixasMesAtual em pessoal-copiar-fixas.ts),
+// usando o valor real do mês anterior como nova previsão — incluir de novo
+// aqui duplicaria o que já foi copiado automaticamente.
 export async function copiarItensMesAnterior(mesAtual: string) {
   const supabase = await createClient();
   const mesAnterior = somarMeses(mesAtual, -1);
@@ -226,7 +229,7 @@ export async function copiarItensMesAnterior(mesAtual: string) {
       .from("pessoal_itens_mes")
       .select("secao, descricao, grupo, forma_pagamento, valor_previsto")
       .eq("mes", mesAnterior)
-      .in("secao", ["fixa", "carro", "dizimo"])
+      .in("secao", ["carro", "dizimo"])
       .is("deletado_em", null),
     supabase
       .from("pessoal_cartao_lancamentos")

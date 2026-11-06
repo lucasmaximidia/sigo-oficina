@@ -43,7 +43,7 @@ export function ItensMesSection({ itens, mes, renda }: { itens: PessoalItemMes[]
       <div className="flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={handleCopiar} disabled={isPending}>
           <Copy className="size-4" />
-          {isPending ? "Copiando..." : "Copiar fixas/carro/dízimo/cartão do mês anterior"}
+          {isPending ? "Copiando..." : "Copiar carro/dízimo/cartão do mês anterior"}
         </Button>
       </div>
 
