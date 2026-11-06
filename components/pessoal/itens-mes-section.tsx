@@ -141,7 +141,7 @@ function GrupoCluster({
 }) {
   const totalPrevisto = itensDoGrupo.reduce((acc, i) => acc + i.valor_previsto, 0);
   const totalReal = itensDoGrupo.reduce((acc, i) => acc + (i.valor_real ?? 0), 0);
-  const todosPagos = itensDoGrupo.every((i) => i.valor_real != null);
+  const todosPagos = itensDoGrupo.every((i) => i.pago_em != null);
 
   // Nasce fechado assim que o grupo inteiro já foi pago — não precisa
   // continuar ocupando espaço depois de resolvido. Enquanto houver pendência
@@ -204,8 +204,19 @@ function ItemMesRow({
           {item.pago_em ? ` · pago em ${formatDate(item.pago_em)}` : ""}
         </span>
       </div>
-      {item.valor_real != null ? (
-        <Badge variant="success">{formatCurrency(item.valor_real)}</Badge>
+      {item.pago_em != null ? (
+        <Badge variant="success">{formatCurrency(item.valor_real!)}</Badge>
+      ) : item.valor_real != null ? (
+        <div className="flex items-center gap-2">
+          <Badge variant="warning">{formatCurrency(item.valor_real)}</Badge>
+          <ConfirmarItemMesDialog
+            id={item.id}
+            descricao={item.descricao}
+            valorPrevisto={item.valor_previsto}
+            valorAtual={item.valor_real}
+            triggerLabel="Marcar como pago"
+          />
+        </div>
       ) : (
         <ConfirmarItemMesDialog
           id={item.id}

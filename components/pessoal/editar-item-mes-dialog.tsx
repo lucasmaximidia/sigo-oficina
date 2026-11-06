@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ export function EditarItemMesDialog({
   const [open, setOpen] = useState(false);
   const [valorPrevisto, setValorPrevisto] = useState(item.valor_previsto);
   const [valorReal, setValorReal] = useState(item.valor_real ?? 0);
+  const [pago, setPago] = useState(item.pago_em != null);
   const [isPending, startTransition] = useTransition();
   const datalistId = useId();
 
@@ -48,6 +50,7 @@ export function EditarItemMesDialog({
     if (next) {
       setValorPrevisto(item.valor_previsto);
       setValorReal(item.valor_real ?? 0);
+      setPago(item.pago_em != null);
     }
   }
 
@@ -122,10 +125,10 @@ export function EditarItemMesDialog({
             </div>
           </div>
           {item.valor_real != null && (
-            <div className="grid grid-cols-2 gap-4">
+            <>
               <div>
                 <Label htmlFor="valor_real" className="mb-1.5 flex items-center justify-between gap-2">
-                  <span>Valor pago (R$)</span>
+                  <span>Valor real (R$)</span>
                   {sugestaoReal != null && sugestaoReal !== valorReal && (
                     <button
                       type="button"
@@ -138,13 +141,19 @@ export function EditarItemMesDialog({
                 </Label>
                 <NumericInput id="valor_real" name="valor_real" required value={valorReal} onValueChange={setValorReal} />
               </div>
-              <div>
-                <Label htmlFor="pago_em" className="mb-1.5 block">
-                  Data do pagamento
-                </Label>
-                <Input id="pago_em" name="pago_em" type="date" max={hojeBR()} defaultValue={item.pago_em ?? hojeBR()} />
-              </div>
-            </div>
+              <label className="flex items-center gap-2.5 text-sm font-medium text-foreground">
+                <Checkbox name="pago" checked={pago} onCheckedChange={(v) => setPago(v === true)} />
+                Já foi pago
+              </label>
+              {pago && (
+                <div>
+                  <Label htmlFor="pago_em" className="mb-1.5 block">
+                    Data do pagamento
+                  </Label>
+                  <Input id="pago_em" name="pago_em" type="date" max={hojeBR()} defaultValue={item.pago_em ?? hojeBR()} />
+                </div>
+              )}
+            </>
           )}
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
