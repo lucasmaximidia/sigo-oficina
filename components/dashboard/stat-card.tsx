@@ -11,7 +11,7 @@ export function StatCard({
   icon: LucideIcon;
   label: string;
   value: React.ReactNode;
-  hint?: string;
+  hint?: React.ReactNode;
   tone?: "default" | "danger" | "success" | "highlight";
 }) {
   return (
