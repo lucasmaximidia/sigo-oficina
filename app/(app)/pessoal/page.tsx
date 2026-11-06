@@ -81,14 +81,26 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={TrendingUp} label="Renda (real)" value={formatCurrency(totalRendaReal)} tone="success" hint={`Previsto ${formatCurrency(totalRendaPrevisto)}`} />
-        <StatCard icon={TrendingDown} label="Despesas (real)" value={formatCurrency(totalDespesasReal)} tone="danger" hint={`Previsto ${formatCurrency(totalDespesasPrevisto)}`} />
+        <StatCard
+          icon={TrendingUp}
+          label="Renda (real)"
+          value={formatCurrency(totalRendaReal)}
+          tone="success"
+          hint={<>Previsto <strong className="font-semibold text-foreground">{formatCurrency(totalRendaPrevisto)}</strong></>}
+        />
+        <StatCard
+          icon={TrendingDown}
+          label="Despesas (real)"
+          value={formatCurrency(totalDespesasReal)}
+          tone="danger"
+          hint={<>Previsto <strong className="font-semibold text-foreground">{formatCurrency(totalDespesasPrevisto)}</strong></>}
+        />
         <StatCard
           icon={Scale}
           label="Saldo (real)"
           value={formatCurrency(saldoReal)}
           tone={saldoReal >= 0 ? "success" : "danger"}
-          hint={`Previsto ${formatCurrency(saldoPrevisto)}`}
+          hint={<>Previsto <strong className="font-semibold text-foreground">{formatCurrency(saldoPrevisto)}</strong></>}
         />
         <StatCard icon={CreditCard} label="Cartões no mês" value={formatCurrency(totalCartaoReal || totalCartaoPrevisto)} hint={`${(lancamentos ?? []).length} lançamentos`} />
       </div>
