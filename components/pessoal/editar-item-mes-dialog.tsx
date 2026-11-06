@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,21 @@ import { calcularDizimo, salarioDoDizimo } from "@/lib/pessoal-status";
 import { formatCurrency, hojeBR } from "@/lib/utils";
 import type { PessoalItemMes, PessoalRenda } from "@/types";
 
-export function EditarItemMesDialog({ item, renda }: { item: PessoalItemMes; renda: PessoalRenda[] }) {
+export function EditarItemMesDialog({
+  item,
+  renda,
+  gruposExistentes,
+}: {
+  item: PessoalItemMes;
+  renda: PessoalRenda[];
+  /** Grupos já usados nessa seção (ex: "ENERGIA") — sugeridos no campo Grupo pra juntar itens no mesmo cluster. */
+  gruposExistentes?: string[];
+}) {
   const [open, setOpen] = useState(false);
   const [valorPrevisto, setValorPrevisto] = useState(item.valor_previsto);
   const [valorReal, setValorReal] = useState(item.valor_real ?? 0);
   const [isPending, startTransition] = useTransition();
+  const datalistId = useId();
 
   // Dízimo não recalcula sozinho quando o salário muda (combinado com o
   // dono: só sugere, não trava) — aqui é onde dá pra puxar a sugestão
@@ -74,6 +84,19 @@ export function EditarItemMesDialog({ item, renda }: { item: PessoalItemMes; ren
               Descrição
             </Label>
             <Input id="descricao" name="descricao" required defaultValue={item.descricao} className="uppercase" />
+          </div>
+          <div>
+            <Label htmlFor="grupo" className="mb-1.5 block">
+              Grupo <span className="font-normal text-muted-foreground">(opcional — junta itens parecidos, ex: Energia)</span>
+            </Label>
+            <Input id="grupo" name="grupo" list={datalistId} defaultValue={item.grupo ?? ""} placeholder="Ex: Energia" className="uppercase" />
+            {gruposExistentes && gruposExistentes.length > 0 && (
+              <datalist id={datalistId}>
+                {gruposExistentes.map((g) => (
+                  <option key={g} value={g} />
+                ))}
+              </datalist>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

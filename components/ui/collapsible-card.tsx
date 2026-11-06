@@ -1,39 +1,10 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLembrarAberto } from "@/lib/use-lembrar-aberto";
 import { cn } from "@/lib/utils";
-
-const STORAGE_PREFIX = "sigo-collapsible-";
-// Um único Set de listeners pra todos os cards da página — cada card só se
-// importa com a própria chave (lida de novo em getSnapshot quando notificado),
-// então não precisa de um canal por card. Mesmo padrão de
-// components/layout/app-sidebar.tsx pro "encolher" do menu lateral.
-const listeners = new Set<() => void>();
-
-function subscribe(callback: () => void) {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
-}
-
-function lerAberto(id: string, defaultOpen: boolean) {
-  try {
-    const salvo = localStorage.getItem(STORAGE_PREFIX + id);
-    return salvo === null ? defaultOpen : salvo === "1";
-  } catch {
-    return defaultOpen;
-  }
-}
-
-function alternarAberto(id: string, atual: boolean) {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + id, atual ? "0" : "1");
-  } catch {
-    // modo privado etc — perde só a preferência, não quebra o toggle
-  }
-  listeners.forEach((callback) => callback());
-}
 
 export function CollapsibleCard({
   id,
@@ -57,18 +28,14 @@ export function CollapsibleCard({
   className?: string;
   children: ReactNode;
 }) {
-  const aberto = useSyncExternalStore(
-    subscribe,
-    () => lerAberto(id, defaultOpen),
-    () => defaultOpen
-  );
+  const { aberto, alternar } = useLembrarAberto(id, defaultOpen);
 
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => alternarAberto(id, aberto)}
+          onClick={alternar}
           aria-expanded={aberto}
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left"
         >

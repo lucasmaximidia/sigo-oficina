@@ -13,7 +13,7 @@ import { CategoriaChart } from "@/components/pessoal/categoria-chart";
 import { ARecemberSection } from "@/components/pessoal/a-receber-section";
 import { formatCurrency } from "@/lib/utils";
 import { mesAtualStr } from "@/lib/pessoal-datas";
-import { copiarFixasCartaoMesAtual } from "@/lib/pessoal-copiar-fixas";
+import { copiarFixasCartaoMesAtual, copiarContasFixasMesAtual } from "@/lib/pessoal-copiar-fixas";
 import type { PessoalCartaoCategoria } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +23,12 @@ export default async function PessoalPage({ searchParams }: { searchParams: Prom
   const { mes: mesParam } = await searchParams;
   const mes = mesParam && /^\d{4}-\d{2}-\d{2}$/.test(mesParam) ? mesParam : mesAtualStr();
 
-  // Conta fixa no cartão repete sozinha a cada mês — ao abrir a página no
-  // mês atual, garante que já esteja copiada antes de buscar os dados
-  // (só faz sentido pro mês corrente, nunca ao navegar pra um mês passado).
+  // Conta fixa no cartão e Contas Fixas repetem sozinhas a cada mês — ao
+  // abrir a página no mês atual, garante que já estejam copiadas antes de
+  // buscar os dados (só faz sentido pro mês corrente, nunca ao navegar pra
+  // um mês passado).
   if (mes === mesAtualStr()) {
-    await copiarFixasCartaoMesAtual();
+    await Promise.all([copiarFixasCartaoMesAtual(), copiarContasFixasMesAtual()]);
   }
 
   const [{ data: renda }, { data: itensMes }, { data: cartoes }, { data: lancamentos }, { data: faturas }] = await Promise.all([

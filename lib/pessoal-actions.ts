@@ -165,6 +165,7 @@ export async function createItemMes(formData: FormData) {
     mes,
     secao,
     descricao,
+    grupo: strUp(formData, "grupo"),
     forma_pagamento: str(formData, "forma_pagamento"),
     valor_previsto: num(formData, "valor_previsto"),
   });
@@ -172,9 +173,9 @@ export async function createItemMes(formData: FormData) {
   revalidarPessoal();
 }
 
-// Corrige descrição/forma de pagamento/previsto de um item já lançado.
-// "valor_real"/"pago_em" só vêm no formData quando o diálogo os mostra (item
-// já confirmado) — por isso só mexe neles quando presentes.
+// Corrige descrição/grupo/forma de pagamento/previsto de um item já
+// lançado. "valor_real"/"pago_em" só vêm no formData quando o diálogo os
+// mostra (item já confirmado) — por isso só mexe neles quando presentes.
 export async function updateItemMes(id: string, formData: FormData) {
   const supabase = await createClient();
   const descricao = strUp(formData, "descricao");
@@ -183,6 +184,7 @@ export async function updateItemMes(id: string, formData: FormData) {
     .from("pessoal_itens_mes")
     .update({
       descricao,
+      grupo: strUp(formData, "grupo"),
       forma_pagamento: str(formData, "forma_pagamento"),
       valor_previsto: num(formData, "valor_previsto"),
       ...(formData.has("valor_real")
@@ -211,10 +213,13 @@ export async function deleteItemMes(id: string) {
   revalidarPessoal();
 }
 
-// Copia os itens de contas fixas/carro/dízimo do mês anterior pro mês atual
-// (sem valor real, como pendentes de novo) — poupa relançar todo mês os
-// mesmos nomes, só o que muda é confirmar o valor quando pago. Contas
-// extras não são copiadas, por natureza são avulsas.
+// Copia os itens de carro/dízimo do mês anterior pro mês atual (sem valor
+// real, como pendentes de novo) — poupa relançar todo mês os mesmos nomes,
+// só o que muda é confirmar o valor quando pago. Contas extras não são
+// copiadas, por natureza são avulsas. Contas Fixas não entram mais aqui:
+// repetem sozinhas (ver copiarContasFixasMesAtual em pessoal-copiar-fixas.ts),
+// usando o valor real do mês anterior como nova previsão — incluir de novo
+// aqui duplicaria o que já foi copiado automaticamente.
 export async function copiarItensMesAnterior(mesAtual: string) {
   const supabase = await createClient();
   const mesAnterior = somarMeses(mesAtual, -1);
@@ -222,9 +227,9 @@ export async function copiarItensMesAnterior(mesAtual: string) {
   const [{ data: itensAnteriores }, { data: cartaoAnteriores }] = await Promise.all([
     supabase
       .from("pessoal_itens_mes")
-      .select("secao, descricao, forma_pagamento, valor_previsto")
+      .select("secao, descricao, grupo, forma_pagamento, valor_previsto")
       .eq("mes", mesAnterior)
-      .in("secao", ["fixa", "carro", "dizimo"])
+      .in("secao", ["carro", "dizimo"])
       .is("deletado_em", null),
     supabase
       .from("pessoal_cartao_lancamentos")
@@ -244,6 +249,7 @@ export async function copiarItensMesAnterior(mesAtual: string) {
         mes: mesAtual,
         secao: item.secao,
         descricao: item.descricao,
+        grupo: item.grupo,
         forma_pagamento: item.forma_pagamento,
         valor_previsto: item.valor_previsto,
       }))

@@ -43,3 +43,51 @@ export async function copiarFixasCartaoMesAtual() {
     }))
   );
 }
+
+// Repete sozinho, todo mês, os itens de Contas Fixas (pessoal_itens_mes,
+// secao = "fixa") — e usa o valor REAL pago no mês anterior como nova
+// previsão: conta de energia/água varia mês a mês, então o que foi pago da
+// última vez é um palpite melhor que repetir a previsão antiga. Cai pro
+// valor previsto anterior só quando aquele item nunca chegou a ser
+// confirmado (ainda não tem valor_real). Só insere o que ainda não existe
+// no mês atual (mesma descrição), então chamar isso toda vez que a página
+// de Pessoal carrega não duplica nada — mesma ideia de
+// copiarFixasCartaoMesAtual, acima. Carro/Dízimo/Extras continuam só no
+// botão manual "Copiar do mês anterior" (não têm esse comportamento de
+// repetir sozinho).
+export async function copiarContasFixasMesAtual() {
+  const supabase = createServiceClient();
+  const mesAtual = mesAtualStr();
+  const mesAnterior = somarMeses(mesAtual, -1);
+
+  const { data: fixasAnteriores } = await supabase
+    .from("pessoal_itens_mes")
+    .select("descricao, grupo, forma_pagamento, valor_previsto, valor_real")
+    .eq("mes", mesAnterior)
+    .eq("secao", "fixa")
+    .is("deletado_em", null);
+
+  if (!fixasAnteriores || fixasAnteriores.length === 0) return;
+
+  const { data: existentesNoMes } = await supabase
+    .from("pessoal_itens_mes")
+    .select("descricao")
+    .eq("mes", mesAtual)
+    .eq("secao", "fixa")
+    .is("deletado_em", null);
+
+  const jaExiste = new Set((existentesNoMes ?? []).map((i) => i.descricao));
+  const faltando = fixasAnteriores.filter((f) => !jaExiste.has(f.descricao));
+  if (faltando.length === 0) return;
+
+  await supabase.from("pessoal_itens_mes").insert(
+    faltando.map((f) => ({
+      mes: mesAtual,
+      secao: "fixa" as const,
+      descricao: f.descricao,
+      grupo: f.grupo,
+      forma_pagamento: f.forma_pagamento,
+      valor_previsto: f.valor_real ?? f.valor_previsto,
+    }))
+  );
+}
