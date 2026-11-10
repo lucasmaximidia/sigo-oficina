@@ -1,6 +1,7 @@
 import { Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FecharContaAutorizadaButton } from "@/components/financeiro/fechar-conta-autorizada-button";
+import { FecharContaAutorizadaOsButton } from "@/components/financeiro/fechar-conta-autorizada-os-button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AutorizadaPendente } from "@/types";
 
@@ -32,7 +33,7 @@ export function AcertoAutorizadas({ autorizadas }: { autorizadas: AutorizadaPend
             {autorizada.itens.map((item) => (
               <div
                 key={item.osId}
-                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg border border-border p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-lg border border-border p-3 text-sm"
               >
                 <span className="text-foreground">
                   OS #OS-{String(item.osNumero).padStart(4, "0")}
@@ -40,7 +41,10 @@ export function AcertoAutorizadas({ autorizadas }: { autorizadas: AutorizadaPend
                     <span className="text-muted-foreground"> · {formatDate(item.dataFinalizacao)}</span>
                   )}
                 </span>
-                <span className="font-medium text-foreground">{formatCurrency(item.valor)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-foreground">{formatCurrency(item.valor)}</span>
+                  <FecharContaAutorizadaOsButton osId={item.osId} osNumero={item.osNumero} valor={item.valor} />
+                </div>
               </div>
             ))}
           </CardContent>
