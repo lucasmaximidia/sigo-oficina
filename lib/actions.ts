@@ -1263,6 +1263,35 @@ interface OsAutorizadaCandidata {
   desconto: number;
 }
 
+// Compartilhado entre o fechamento em lote (por empresa) e o individual (uma
+// OS só): lança o pagamento de mão de obra e marca a OS como paga, exatamente
+// como fecharContaAutorizada já fazia. Retorna false quando a OS já não tinha
+// saldo devedor (nada a fazer), pra quem chama decidir se foi "nada pendente".
+async function fecharOsDeAutorizada(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  osId: string,
+  data: string
+) {
+  const { total, totalPago } = await getOsTotais(osId);
+  const saldoDevedor = total - totalPago;
+  if (saldoDevedor <= 0.001) return false;
+
+  const { error: pagamentoError } = await supabase.from("os_pagamentos").insert({
+    os_id: osId,
+    forma_pagamento: "autorizada",
+    valor: saldoDevedor,
+    data,
+  });
+  if (pagamentoError) throw new Error(pagamentoError.message);
+
+  const { error: osError } = await supabase
+    .from("ordens_servico")
+    .update({ forma_pagamento: "autorizada", data_pagamento: data })
+    .eq("id", osId);
+  if (osError) throw new Error(osError.message);
+  return true;
+}
+
 export async function fecharContaAutorizada(empresaAutorizadaId: string) {
   const supabase = await createClient();
   const [{ data: empresa }, { data: osCandidatas }] = await Promise.all([
@@ -1281,27 +1310,33 @@ export async function fecharContaAutorizada(empresaAutorizadaId: string) {
   let algumaFechada = false;
 
   for (const os of osCandidatas) {
-    const { total, totalPago } = await getOsTotais(os.id);
-    const saldoDevedor = total - totalPago;
-    if (saldoDevedor <= 0.001) continue;
-    algumaFechada = true;
-
-    const { error: pagamentoError } = await supabase.from("os_pagamentos").insert({
-      os_id: os.id,
-      forma_pagamento: "autorizada",
-      valor: saldoDevedor,
-      data: agora,
-    });
-    if (pagamentoError) throw new Error(pagamentoError.message);
-
-    const { error: osError } = await supabase
-      .from("ordens_servico")
-      .update({ forma_pagamento: "autorizada", data_pagamento: agora })
-      .eq("id", os.id);
-    if (osError) throw new Error(osError.message);
+    if (await fecharOsDeAutorizada(supabase, os.id, agora)) algumaFechada = true;
   }
 
   if (!algumaFechada) throw new Error("Nada pendente com essa autorizada");
+
+  revalidatePath("/financeiro");
+  revalidatePath("/ordens-servico");
+  revalidatePath("/dashboard");
+}
+
+// Recebimento individual de uma OS de empresa autorizada — às vezes o
+// pagamento não cai em lote, cada OS é paga separada (ver
+// fecharContaAutorizada pro fechamento em lote da empresa inteira).
+export async function fecharContaAutorizadaOs(osId: string) {
+  const supabase = await createClient();
+  const { data: os } = await supabase
+    .from("ordens_servico")
+    .select("id, empresa_autorizada_id, status, forma_pagamento")
+    .eq("id", osId)
+    .single();
+  if (!os || !os.empresa_autorizada_id) throw new Error("OS não é de uma empresa autorizada");
+  if (os.status !== "finalizado" || os.forma_pagamento !== null) {
+    throw new Error("OS não está mais pendente de pagamento");
+  }
+
+  const fechou = await fecharOsDeAutorizada(supabase, osId, hojeBR());
+  if (!fechou) throw new Error("Nada pendente nessa OS");
 
   revalidatePath("/financeiro");
   revalidatePath("/ordens-servico");
