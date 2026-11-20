@@ -7,6 +7,7 @@ import { SessoesHistorico } from "@/components/locacao/sessoes-historico";
 import { ResumoDispositivos, type ResumoCarrinho, type ResumoPeriodo } from "@/components/locacao/resumo-dispositivos";
 import { ConfigDispositivosForm } from "@/components/locacao/config-dispositivos-form";
 import { FaturamentoCarrinhos } from "@/components/locacao/faturamento-carrinhos";
+import { FinanceiroCarrinhos } from "@/components/locacao/financeiro-carrinhos";
 import { hojeBR, agoraBR } from "@/lib/utils";
 import type { LocacaoVeiculo } from "@/types";
 
@@ -26,25 +27,36 @@ function acumular(periodo: ResumoPeriodo, cartaoTipo: string, minutos: number) {
 export default async function LocacaoCarrinhosPage() {
   const supabase = await createClient();
 
-  const [{ data: dispositivos }, { data: veiculosQuadriciclo }, { data: sessoesRaw }, { data: config }, { data: faturamento }] =
-    await Promise.all([
-      supabase
-        .from("locacao_dispositivos")
-        .select("*, locacao_veiculos(id, marca, modelo)")
-        .order("numero_carrinho", { ascending: true }),
-      supabase
-        .from("locacao_veiculos")
-        .select("id, marca, modelo")
-        .eq("tipo", "quadriciclo")
-        .order("marca", { ascending: true }),
-      supabase
-        .from("locacao_dispositivo_sessoes")
-        .select("*, locacao_dispositivos(numero_carrinho)")
-        .order("created_at", { ascending: false })
-        .limit(2000),
-      supabase.from("locacao_dispositivo_config").select("*").eq("id", 1).single(),
-      supabase.from("locacao_carrinhos_faturamento_diario").select("*").order("dia", { ascending: false }),
-    ]);
+  const [
+    { data: dispositivos },
+    { data: veiculosQuadriciclo },
+    { data: sessoesRaw },
+    { data: config },
+    { data: faturamento },
+    { data: diarias },
+  ] = await Promise.all([
+    supabase
+      .from("locacao_dispositivos")
+      .select("*, locacao_veiculos(id, marca, modelo)")
+      .order("numero_carrinho", { ascending: true }),
+    supabase
+      .from("locacao_veiculos")
+      .select("id, marca, modelo")
+      .eq("tipo", "quadriciclo")
+      .order("marca", { ascending: true }),
+    supabase
+      .from("locacao_dispositivo_sessoes")
+      .select("*, locacao_dispositivos(numero_carrinho)")
+      .order("created_at", { ascending: false })
+      .limit(2000),
+    supabase.from("locacao_dispositivo_config").select("*").eq("id", 1).single(),
+    supabase.from("locacao_carrinhos_faturamento_diario").select("*").order("dia", { ascending: false }),
+    supabase
+      .from("locacao_despesas")
+      .select("data, descricao, valor")
+      .eq("categoria", "DIARIA CARRINHOS")
+      .order("data", { ascending: false }),
+  ]);
 
   const veiculos = (veiculosQuadriciclo ?? []) as Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
 
@@ -105,6 +117,7 @@ export default async function LocacaoCarrinhosPage() {
           <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="faturamento">Faturamento</TabsTrigger>
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
           <TabsTrigger value="config">Configuração</TabsTrigger>
         </TabsList>
 
@@ -135,6 +148,10 @@ export default async function LocacaoCarrinhosPage() {
 
         <TabsContent value="faturamento">
           <FaturamentoCarrinhos linhas={faturamento ?? []} carrinhos={carrinhosPorId} />
+        </TabsContent>
+
+        <TabsContent value="financeiro">
+          <FinanceiroCarrinhos linhas={faturamento ?? []} diarias={diarias ?? []} />
         </TabsContent>
 
         <TabsContent value="config">{config && <ConfigDispositivosForm config={config} />}</TabsContent>
