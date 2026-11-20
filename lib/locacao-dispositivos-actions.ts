@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createDespesa } from "@/lib/locacao-actions";
 import { dataBR, formatDate } from "@/lib/utils";
 import type { LocacaoComandoDispositivo, LocacaoFormaPagamento } from "@/types";
 
@@ -308,6 +309,14 @@ export async function registrarPrestacaoContasCarrinhos(formData: FormData) {
   revalidarCarrinhos();
   revalidatePath("/locacao/financeiro");
   return { valorRecebido: lancamento?.valor ?? 0, diariaValor };
+}
+
+// Saída avulsa (manutenção, peça, etc.) — mesma despesa da locação (categoria
+// "CARRINHOS"), só com um atalho dedicado nessa aba.
+export async function registrarSaidaCarrinho(formData: FormData) {
+  formData.set("categoria", "CARRINHOS");
+  await createDespesa(formData);
+  revalidarCarrinhos();
 }
 
 // Recalcula só o que ainda não foi lançado no caixa — um aluguel já lançado

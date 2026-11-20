@@ -34,6 +34,7 @@ export default async function LocacaoCarrinhosPage() {
     { data: config },
     { data: faturamento },
     { data: diarias },
+    { data: saidas },
   ] = await Promise.all([
     supabase
       .from("locacao_dispositivos")
@@ -55,6 +56,11 @@ export default async function LocacaoCarrinhosPage() {
       .from("locacao_despesas")
       .select("data, descricao, valor")
       .eq("categoria", "DIARIA CARRINHOS")
+      .order("data", { ascending: false }),
+    supabase
+      .from("locacao_despesas")
+      .select("id, data, descricao, valor")
+      .eq("categoria", "CARRINHOS")
       .order("data", { ascending: false }),
   ]);
 
@@ -151,7 +157,7 @@ export default async function LocacaoCarrinhosPage() {
         </TabsContent>
 
         <TabsContent value="financeiro">
-          <FinanceiroCarrinhos linhas={faturamento ?? []} diarias={diarias ?? []} />
+          <FinanceiroCarrinhos linhas={faturamento ?? []} diarias={diarias ?? []} saidas={saidas ?? []} />
         </TabsContent>
 
         <TabsContent value="config">{config && <ConfigDispositivosForm config={config} />}</TabsContent>

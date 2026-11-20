@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { ResponsiveList } from "@/components/ui/responsive-list";
 import { TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
@@ -99,6 +100,7 @@ export function SessoesHistorico({
         onPeriodoFimChange={setPeriodoFim}
       />
 
+      <Card className="overflow-hidden p-0">
       <ResponsiveList
         items={sessoesOrdenadas}
         colSpan={10}
@@ -168,6 +170,7 @@ export function SessoesHistorico({
         )}
         empty={<p className="py-6 text-center text-sm text-muted-foreground">Nenhuma sessão encontrada.</p>}
       />
+      </Card>
     </div>
   );
 }
