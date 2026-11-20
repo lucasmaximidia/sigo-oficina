@@ -34,6 +34,8 @@ export type LocacaoVeiculoStatus = "disponivel" | "alugado" | "manutencao" | "in
 export type LocacaoTipoContrato = "padrao" | "infantil";
 export type LocacaoFormaPagamento = "pix" | "cartao" | "dinheiro" | "transferencia";
 export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
+export type LocacaoCartaoTipo = "15MIN" | "5MIN" | "LIVRE";
+export type LocacaoMotivoTerminoSessao = "tempo" | "fim";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
@@ -1520,6 +1522,126 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_dispositivos: {
+        Row: {
+          id: string;
+          veiculo_id: string | null;
+          numero_carrinho: number;
+          device_token: string;
+          firmware_versao: string | null;
+          ultima_conexao: string | null;
+          tensao_bateria: number | null;
+          horimetro_minutos: number;
+          contador_15min: number;
+          contador_5min: number;
+          contador_livre: number;
+          fila_pendente: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          veiculo_id?: string | null;
+          numero_carrinho: number;
+          device_token?: string;
+          firmware_versao?: string | null;
+          ultima_conexao?: string | null;
+          tensao_bateria?: number | null;
+          horimetro_minutos?: number;
+          contador_15min?: number;
+          contador_5min?: number;
+          contador_livre?: number;
+          fila_pendente?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          veiculo_id?: string | null;
+          numero_carrinho?: number;
+          device_token?: string;
+          firmware_versao?: string | null;
+          ultima_conexao?: string | null;
+          tensao_bateria?: number | null;
+          horimetro_minutos?: number;
+          contador_15min?: number;
+          contador_5min?: number;
+          contador_livre?: number;
+          fila_pendente?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_dispositivo_sessoes: {
+        Row: {
+          id: string;
+          dispositivo_id: string;
+          uid: string;
+          cartao_tipo: LocacaoCartaoTipo;
+          iniciado_em: string | null;
+          finalizado_em: string | null;
+          minutos: number;
+          minutos_liberados: number;
+          motivo_termino: LocacaoMotivoTerminoSessao;
+          quedas_energia: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          dispositivo_id: string;
+          uid: string;
+          cartao_tipo: LocacaoCartaoTipo;
+          iniciado_em?: string | null;
+          finalizado_em?: string | null;
+          minutos: number;
+          minutos_liberados?: number;
+          motivo_termino: LocacaoMotivoTerminoSessao;
+          quedas_energia?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          dispositivo_id?: string;
+          uid?: string;
+          cartao_tipo?: LocacaoCartaoTipo;
+          iniciado_em?: string | null;
+          finalizado_em?: string | null;
+          minutos?: number;
+          minutos_liberados?: number;
+          motivo_termino?: LocacaoMotivoTerminoSessao;
+          quedas_energia?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_dispositivo_config: {
+        Row: {
+          id: number;
+          minutos_cartao_15min: number;
+          minutos_cartao_5min: number;
+          firmware_versao_alvo: string | null;
+          firmware_url: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          minutos_cartao_15min?: number;
+          minutos_cartao_5min?: number;
+          firmware_versao_alvo?: string | null;
+          firmware_url?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          minutos_cartao_15min?: number;
+          minutos_cartao_5min?: number;
+          firmware_versao_alvo?: string | null;
+          firmware_url?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       locacao_despesas: {
         Row: {
           id: string;
@@ -1875,6 +1997,38 @@ export interface Database {
       };
     };
     Functions: {
+      dispositivo_heartbeat: {
+        Args: {
+          p_device_token: string;
+          p_firmware_versao: string | null;
+          p_tensao_bateria: number | null;
+          p_horimetro_minutos: number;
+          p_contador_15min: number;
+          p_contador_5min: number;
+          p_contador_livre: number;
+          p_fila_pendente: number;
+        };
+        Returns: {
+          minutos_cartao_15min: number;
+          minutos_cartao_5min: number;
+          firmware_versao_alvo: string | null;
+          firmware_url: string | null;
+        }[];
+      };
+      dispositivo_registrar_sessao: {
+        Args: {
+          p_device_token: string;
+          p_uid: string;
+          p_cartao_tipo: LocacaoCartaoTipo;
+          p_iniciado_em: string | null;
+          p_finalizado_em: string | null;
+          p_minutos: number;
+          p_minutos_liberados: number;
+          p_motivo_termino: LocacaoMotivoTerminoSessao;
+          p_quedas_energia: number;
+        };
+        Returns: undefined;
+      };
       incrementar_quantidade_peca: {
         Args: { p_peca_id: string; p_delta: number };
         Returns: undefined;
