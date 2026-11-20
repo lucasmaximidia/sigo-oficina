@@ -92,7 +92,7 @@ export default async function LocacaoCarrinhosPage() {
   const resumos = Array.from(resumoPorCarrinho.values());
 
   return (
-    <div>
+    <div className="pb-10">
       <PageHeader
         title="Carrinhos"
         description="Controle de tempo dos quadriciclos (ESP32) — status, histórico e configuração da frota"
