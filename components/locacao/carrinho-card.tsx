@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RegenerarTokenDialog } from "@/components/locacao/regenerar-token-dialog";
+import { ZerarCarrinhoControls } from "@/components/locacao/zerar-carrinho-controls";
+import { ApagarHistoricoTesteDialog } from "@/components/locacao/apagar-historico-teste-dialog";
 import { vincularVeiculoCarrinho } from "@/lib/locacao-dispositivos-actions";
 import { dispositivoEstaOnline, percentualBateria, formatarHorimetro } from "@/lib/locacao-dispositivos-status";
 import { formatDateTime } from "@/lib/utils";
@@ -44,10 +46,13 @@ export function CarrinhoCard({
           <Cpu className="size-4 text-muted-foreground" />
           <CardTitle>Carrinho #{dispositivo.numero_carrinho}</CardTitle>
         </div>
-        <Badge variant={online ? "success" : "secondary"} className="gap-1">
-          {online ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}
-          {online ? "Online" : "Offline"}
-        </Badge>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {dispositivo.em_uso && online && <Badge variant="info">Em uso</Badge>}
+          <Badge variant={online ? "success" : "secondary"} className="gap-1">
+            {online ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}
+            {online ? "Online" : "Offline"}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 pt-0">
         <div>
@@ -127,7 +132,18 @@ export function CarrinhoCard({
           )}
         </div>
 
-        <RegenerarTokenDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
+        <ZerarCarrinhoControls
+          dispositivoId={dispositivo.id}
+          comando={dispositivo.comando}
+          comandoCriadoEm={dispositivo.comando_criado_em}
+          comandoExecutadoEm={dispositivo.comando_executado_em}
+          comandoUltimo={dispositivo.comando_ultimo}
+        />
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <RegenerarTokenDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
+          <ApagarHistoricoTesteDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
+        </div>
       </CardContent>
     </Card>
   );

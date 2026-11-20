@@ -36,6 +36,7 @@ export type LocacaoFormaPagamento = "pix" | "cartao" | "dinheiro" | "transferenc
 export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
 export type LocacaoCartaoTipo = "15MIN" | "5MIN" | "LIVRE";
 export type LocacaoMotivoTerminoSessao = "tempo" | "fim";
+export type LocacaoComandoDispositivo = "zerar_contadores" | "zerar_tudo";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
@@ -1536,6 +1537,12 @@ export interface Database {
           contador_5min: number;
           contador_livre: number;
           fila_pendente: number;
+          comando: LocacaoComandoDispositivo | null;
+          comando_id: number | null;
+          comando_criado_em: string | null;
+          comando_executado_em: string | null;
+          comando_ultimo: string | null;
+          em_uso: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -1552,6 +1559,12 @@ export interface Database {
           contador_5min?: number;
           contador_livre?: number;
           fila_pendente?: number;
+          comando?: LocacaoComandoDispositivo | null;
+          comando_id?: number | null;
+          comando_criado_em?: string | null;
+          comando_executado_em?: string | null;
+          comando_ultimo?: string | null;
+          em_uso?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -1568,6 +1581,12 @@ export interface Database {
           contador_5min?: number;
           contador_livre?: number;
           fila_pendente?: number;
+          comando?: LocacaoComandoDispositivo | null;
+          comando_id?: number | null;
+          comando_criado_em?: string | null;
+          comando_executado_em?: string | null;
+          comando_ultimo?: string | null;
+          em_uso?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -1585,6 +1604,10 @@ export interface Database {
           minutos_liberados: number;
           motivo_termino: LocacaoMotivoTerminoSessao;
           quedas_energia: number;
+          qtd_15min: number;
+          qtd_5min: number;
+          valor: number;
+          entrada_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -1598,6 +1621,10 @@ export interface Database {
           minutos_liberados?: number;
           motivo_termino: LocacaoMotivoTerminoSessao;
           quedas_energia?: number;
+          qtd_15min?: number;
+          qtd_5min?: number;
+          valor?: number;
+          entrada_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -1611,6 +1638,10 @@ export interface Database {
           minutos_liberados?: number;
           motivo_termino?: LocacaoMotivoTerminoSessao;
           quedas_energia?: number;
+          qtd_15min?: number;
+          qtd_5min?: number;
+          valor?: number;
+          entrada_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -1622,6 +1653,13 @@ export interface Database {
           minutos_cartao_5min: number;
           firmware_versao_alvo: string | null;
           firmware_url: string | null;
+          preco_cartao_15min: number;
+          preco_cartao_5min: number;
+          preco_livre_hora: number;
+          bateria_minima: number;
+          bateria_aviso: number;
+          tempo_max_min: number;
+          livre_max_min: number;
           updated_at: string;
         };
         Insert: {
@@ -1630,6 +1668,13 @@ export interface Database {
           minutos_cartao_5min?: number;
           firmware_versao_alvo?: string | null;
           firmware_url?: string | null;
+          preco_cartao_15min?: number;
+          preco_cartao_5min?: number;
+          preco_livre_hora?: number;
+          bateria_minima?: number;
+          bateria_aviso?: number;
+          tempo_max_min?: number;
+          livre_max_min?: number;
           updated_at?: string;
         };
         Update: {
@@ -1638,6 +1683,13 @@ export interface Database {
           minutos_cartao_5min?: number;
           firmware_versao_alvo?: string | null;
           firmware_url?: string | null;
+          preco_cartao_15min?: number;
+          preco_cartao_5min?: number;
+          preco_livre_hora?: number;
+          bateria_minima?: number;
+          bateria_aviso?: number;
+          tempo_max_min?: number;
+          livre_max_min?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -1995,6 +2047,21 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_carrinhos_faturamento_diario: {
+        Row: {
+          dia: string;
+          dispositivo_id: string;
+          numero_carrinho: number;
+          alugueis: number;
+          alugueis_livre: number;
+          cartoes_15min: number;
+          cartoes_5min: number;
+          minutos_rodados: number;
+          valor_total: number;
+          valor_sem_lancamento: number;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       dispositivo_heartbeat: {
@@ -2015,6 +2082,32 @@ export interface Database {
           firmware_url: string | null;
         }[];
       };
+      dispositivo_heartbeat_v2: {
+        Args: {
+          p_device_token: string;
+          p_firmware_versao: string | null;
+          p_tensao_bateria: number | null;
+          p_horimetro_minutos: number;
+          p_contador_15min: number;
+          p_contador_5min: number;
+          p_contador_livre: number;
+          p_fila_pendente: number;
+          p_comando_executado: number | null;
+          p_em_uso: boolean | null;
+        };
+        Returns: {
+          minutos_cartao_15min: number;
+          minutos_cartao_5min: number;
+          firmware_versao_alvo: string | null;
+          firmware_url: string | null;
+          tempo_max_min: number;
+          livre_max_min: number;
+          bateria_minima: number;
+          bateria_aviso: number;
+          comando: LocacaoComandoDispositivo | null;
+          comando_id: number | null;
+        }[];
+      };
       dispositivo_registrar_sessao: {
         Args: {
           p_device_token: string;
@@ -2028,6 +2121,35 @@ export interface Database {
           p_quedas_energia: number;
         };
         Returns: undefined;
+      };
+      dispositivo_registrar_sessao_v2: {
+        Args: {
+          p_device_token: string;
+          p_uid: string;
+          p_cartao_tipo: LocacaoCartaoTipo;
+          p_iniciado_em: string | null;
+          p_finalizado_em: string | null;
+          p_minutos: number;
+          p_minutos_liberados: number;
+          p_motivo_termino: LocacaoMotivoTerminoSessao;
+          p_quedas_energia: number;
+          p_qtd_15min: number;
+          p_qtd_5min: number;
+        };
+        Returns: undefined;
+      };
+      locacao_carrinho_valor: {
+        Args: {
+          p_cartao_tipo: LocacaoCartaoTipo;
+          p_qtd_15min: number | null;
+          p_qtd_5min: number | null;
+          p_minutos: number | null;
+        };
+        Returns: number;
+      };
+      dispositivo_enviar_comando: {
+        Args: { p_dispositivo_id: string; p_comando: LocacaoComandoDispositivo };
+        Returns: number;
       };
       incrementar_quantidade_peca: {
         Args: { p_peca_id: string; p_delta: number };

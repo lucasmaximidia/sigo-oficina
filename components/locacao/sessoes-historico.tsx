@@ -8,7 +8,7 @@ import { ResponsiveList } from "@/components/ui/responsive-list";
 import { TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
-import { formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
 
 const CARTAO_LABEL: Record<string, string> = {
   "15MIN": "15 MIN",
@@ -31,6 +31,9 @@ interface SessaoHistorico {
   minutos_liberados: number;
   motivo_termino: string;
   quedas_energia: number;
+  qtd_15min: number;
+  qtd_5min: number;
+  valor: number;
   created_at: string;
 }
 
@@ -98,7 +101,7 @@ export function SessoesHistorico({
 
       <ResponsiveList
         items={sessoesOrdenadas}
-        colSpan={7}
+        colSpan={10}
         header={
           <>
             <TableHead>Carrinho</TableHead>
@@ -106,6 +109,9 @@ export function SessoesHistorico({
             <TableHead>Fim</TableHead>
             <TableHead>Cartão</TableHead>
             <TableHead>Minutos</TableHead>
+            <TableHead>Qtd 15</TableHead>
+            <TableHead>Qtd 5</TableHead>
+            <TableHead>Valor</TableHead>
             <TableHead>Terminou por</TableHead>
             <TableHead>Quedas</TableHead>
           </>
@@ -119,6 +125,9 @@ export function SessoesHistorico({
             <TableCell>
               {s.minutos} min{s.minutos_liberados > 0 ? ` (${s.minutos_liberados} liberados)` : ""}
             </TableCell>
+            <TableCell>{s.qtd_15min}</TableCell>
+            <TableCell>{s.qtd_5min}</TableCell>
+            <TableCell>{formatCurrency(s.valor)}</TableCell>
             <TableCell>{MOTIVO_LABEL[s.motivo_termino] ?? s.motivo_termino}</TableCell>
             <TableCell>
               {s.quedas_energia > 0 ? (
@@ -151,6 +160,9 @@ export function SessoesHistorico({
             <p className="text-muted-foreground">
               {s.minutos} min rodados{s.minutos_liberados > 0 ? ` · ${s.minutos_liberados} liberados` : ""} ·{" "}
               {MOTIVO_LABEL[s.motivo_termino] ?? s.motivo_termino}
+            </p>
+            <p className="text-muted-foreground">
+              Qtd 15: {s.qtd_15min} · Qtd 5: {s.qtd_5min} · Valor: {formatCurrency(s.valor)}
             </p>
           </div>
         )}

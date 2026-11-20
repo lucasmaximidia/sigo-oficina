@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { dataBR, formatDate } from "@/lib/utils";
+import type { LocacaoComandoDispositivo, LocacaoFormaPagamento } from "@/types";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
   return typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+}
+function num(fd: FormData, key: string) {
+  const v = fd.get(key);
+  const n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : NaN;
+  return Number.isFinite(n) ? n : 0;
 }
 function intOuNull(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -87,13 +94,22 @@ export async function salvarConfigDispositivos(formData: FormData) {
   const supabase = await createClient();
   const minutos15 = intOuNull(formData, "minutos_cartao_15min");
   const minutos5 = intOuNull(formData, "minutos_cartao_5min");
-  if (!minutos15 || !minutos5) throw new Error("Informe os minutos dos dois cartões");
+  const tempoMax = intOuNull(formData, "tempo_max_min");
+  const livreMax = intOuNull(formData, "livre_max_min");
+  if (!minutos15 || !minutos5 || !tempoMax || !livreMax) throw new Error("Informe os minutos e os limites de tempo");
 
   const { error } = await supabase
     .from("locacao_dispositivo_config")
     .update({
       minutos_cartao_15min: clamp(minutos15, 1, 60),
       minutos_cartao_5min: clamp(minutos5, 1, 60),
+      tempo_max_min: clamp(tempoMax, 10, 120),
+      livre_max_min: clamp(livreMax, 10, 720),
+      preco_cartao_15min: Math.max(0, num(formData, "preco_cartao_15min")),
+      preco_cartao_5min: Math.max(0, num(formData, "preco_cartao_5min")),
+      preco_livre_hora: Math.max(0, num(formData, "preco_livre_hora")),
+      bateria_minima: clamp(num(formData, "bateria_minima"), 0, 40),
+      bateria_aviso: clamp(num(formData, "bateria_aviso"), 0, 40),
       firmware_versao_alvo: str(formData, "firmware_versao_alvo"),
       firmware_url: str(formData, "firmware_url"),
       updated_at: new Date().toISOString(),
@@ -133,4 +149,151 @@ export async function enviarFirmware(formData: FormData) {
     .eq("id", 1);
   if (error) throw new Error(error.message);
   revalidarCarrinhos();
+}
+
+// ---------- Comandos remotos ----------
+
+// O carrinho só vê o comando no próximo heartbeat (até ~1 min no Wi-Fi) e o
+// confirma de volta via dispositivo_heartbeat_v2 — ver migration 0072.
+export async function enviarComandoCarrinho(dispositivoId: string, comando: LocacaoComandoDispositivo) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("dispositivo_enviar_comando", {
+    p_dispositivo_id: dispositivoId,
+    p_comando: comando,
+  });
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
+// Só sessões ainda não lançadas no caixa (entrada_id nulo) — é o critério
+// que diferencia "teste de bancada" de aluguel real já fechado.
+export async function apagarHistoricoTesteCarrinho(dispositivoId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("locacao_dispositivo_sessoes")
+    .delete()
+    .eq("dispositivo_id", dispositivoId)
+    .is("entrada_id", null);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
+// ---------- Faturamento ----------
+
+interface SessaoParaFaturar {
+  id: string;
+  valor: number;
+  finalizado_em: string | null;
+  created_at: string;
+  cartao_tipo: string;
+  qtd_15min: number;
+  qtd_5min: number;
+  minutos: number;
+}
+
+async function buscarSessoesSemLancamento(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  dispositivoId: string | null
+) {
+  let query = supabase
+    .from("locacao_dispositivo_sessoes")
+    .select("id, valor, finalizado_em, created_at, cartao_tipo, qtd_15min, qtd_5min, minutos")
+    .is("entrada_id", null);
+  if (dispositivoId) query = query.eq("dispositivo_id", dispositivoId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SessaoParaFaturar[];
+}
+
+function diaDaSessao(s: Pick<SessaoParaFaturar, "finalizado_em" | "created_at">) {
+  return dataBR(s.finalizado_em ?? s.created_at);
+}
+
+export async function lancarCarrinhosNoCaixa(formData: FormData) {
+  const supabase = await createClient();
+  const periodoInicio = str(formData, "periodo_inicio");
+  const periodoFim = str(formData, "periodo_fim");
+  const formaPagamento = str(formData, "forma_pagamento") as LocacaoFormaPagamento | null;
+  const dispositivoId = str(formData, "dispositivo_id");
+  if (!periodoInicio || !periodoFim || !formaPagamento) throw new Error("Informe o período e a forma de pagamento");
+
+  const sessoes = await buscarSessoesSemLancamento(supabase, dispositivoId);
+  const doPeriodo = sessoes.filter((s) => {
+    const dia = diaDaSessao(s);
+    return dia >= periodoInicio && dia <= periodoFim;
+  });
+  if (doPeriodo.length === 0) throw new Error("Nenhum aluguel sem lançamento nesse período");
+
+  const valorTotal = doPeriodo.reduce((acc, s) => acc + s.valor, 0);
+  const descricao =
+    periodoInicio === periodoFim
+      ? `Carrinhos ${formatDate(periodoInicio)} – ${doPeriodo.length} aluguel(éis)`
+      : `Carrinhos ${formatDate(periodoInicio)} a ${formatDate(periodoFim)} – ${doPeriodo.length} aluguel(éis)`;
+
+  const { data: entrada, error: errorEntrada } = await supabase
+    .from("locacao_outras_entradas")
+    .insert({
+      data: periodoFim,
+      descricao,
+      categoria: "CARRINHOS",
+      forma_pagamento: formaPagamento,
+      valor: valorTotal,
+    })
+    .select("id")
+    .single();
+  if (errorEntrada) throw new Error(errorEntrada.message);
+
+  const { error: errorSessoes } = await supabase
+    .from("locacao_dispositivo_sessoes")
+    .update({ entrada_id: entrada.id })
+    .in(
+      "id",
+      doPeriodo.map((s) => s.id)
+    );
+  if (errorSessoes) throw new Error(errorSessoes.message);
+
+  revalidarCarrinhos();
+  revalidatePath("/locacao/financeiro");
+  return { valor: valorTotal, quantidade: doPeriodo.length };
+}
+
+// Recalcula só o que ainda não foi lançado no caixa — um aluguel já lançado
+// representa dinheiro que já entrou com aquele valor, então não muda depois
+// que o preço é corrigido (ver locacao_carrinho_valor, migration 0072).
+export async function recalcularValoresCarrinhos(formData: FormData) {
+  const supabase = await createClient();
+  const periodoInicio = str(formData, "periodo_inicio");
+  const periodoFim = str(formData, "periodo_fim");
+  const dispositivoId = str(formData, "dispositivo_id");
+
+  const { data: config, error: errorConfig } = await supabase
+    .from("locacao_dispositivo_config")
+    .select("preco_cartao_15min, preco_cartao_5min, preco_livre_hora")
+    .eq("id", 1)
+    .single();
+  if (errorConfig) throw new Error(errorConfig.message);
+
+  const sessoes = await buscarSessoesSemLancamento(supabase, dispositivoId);
+  const doPeriodo = sessoes.filter((s) => {
+    if (!periodoInicio || !periodoFim) return true;
+    const dia = diaDaSessao(s);
+    return dia >= periodoInicio && dia <= periodoFim;
+  });
+
+  let atualizados = 0;
+  await Promise.all(
+    doPeriodo.map(async (s) => {
+      const novoValor =
+        s.cartao_tipo === "LIVRE"
+          ? Math.round(((s.minutos * config.preco_livre_hora) / 60) * 100) / 100
+          : s.qtd_15min * config.preco_cartao_15min + s.qtd_5min * config.preco_cartao_5min;
+      if (novoValor === s.valor) return;
+      const { error } = await supabase.from("locacao_dispositivo_sessoes").update({ valor: novoValor }).eq("id", s.id);
+      if (error) throw new Error(error.message);
+      atualizados += 1;
+    })
+  );
+
+  revalidarCarrinhos();
+  return { atualizados };
 }

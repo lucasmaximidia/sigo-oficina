@@ -6,6 +6,7 @@ import { CarrinhoCard } from "@/components/locacao/carrinho-card";
 import { SessoesHistorico } from "@/components/locacao/sessoes-historico";
 import { ResumoDispositivos, type ResumoCarrinho, type ResumoPeriodo } from "@/components/locacao/resumo-dispositivos";
 import { ConfigDispositivosForm } from "@/components/locacao/config-dispositivos-form";
+import { FaturamentoCarrinhos } from "@/components/locacao/faturamento-carrinhos";
 import { hojeBR, agoraBR } from "@/lib/utils";
 import type { LocacaoVeiculo } from "@/types";
 
@@ -25,7 +26,7 @@ function acumular(periodo: ResumoPeriodo, cartaoTipo: string, minutos: number) {
 export default async function LocacaoCarrinhosPage() {
   const supabase = await createClient();
 
-  const [{ data: dispositivos }, { data: veiculosQuadriciclo }, { data: sessoesRaw }, { data: config }] =
+  const [{ data: dispositivos }, { data: veiculosQuadriciclo }, { data: sessoesRaw }, { data: config }, { data: faturamento }] =
     await Promise.all([
       supabase
         .from("locacao_dispositivos")
@@ -42,6 +43,7 @@ export default async function LocacaoCarrinhosPage() {
         .order("created_at", { ascending: false })
         .limit(2000),
       supabase.from("locacao_dispositivo_config").select("*").eq("id", 1).single(),
+      supabase.from("locacao_carrinhos_faturamento_diario").select("*").order("dia", { ascending: false }),
     ]);
 
   const veiculos = (veiculosQuadriciclo ?? []) as Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
@@ -58,11 +60,15 @@ export default async function LocacaoCarrinhosPage() {
       minutos_liberados: s.minutos_liberados,
       motivo_termino: s.motivo_termino,
       quedas_energia: s.quedas_energia,
+      qtd_15min: s.qtd_15min,
+      qtd_5min: s.qtd_5min,
+      valor: s.valor,
       created_at: s.created_at,
     };
   });
 
   const carrinhosOpcoes = (dispositivos ?? []).map((d) => ({ id: d.numero_carrinho, label: `Carrinho #${d.numero_carrinho}` }));
+  const carrinhosPorId = (dispositivos ?? []).map((d) => ({ id: d.id, label: `Carrinho #${d.numero_carrinho}` }));
 
   // Resumo do dia e do mês — agrupado pelo dia em que a sessão foi
   // sincronizada (created_at), já que o horário do próprio carrinho
@@ -98,6 +104,7 @@ export default async function LocacaoCarrinhosPage() {
           <TabsTrigger value="status">Status</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
+          <TabsTrigger value="faturamento">Faturamento</TabsTrigger>
           <TabsTrigger value="config">Configuração</TabsTrigger>
         </TabsList>
 
@@ -124,6 +131,10 @@ export default async function LocacaoCarrinhosPage() {
 
         <TabsContent value="resumo">
           <ResumoDispositivos resumos={resumos} />
+        </TabsContent>
+
+        <TabsContent value="faturamento">
+          <FaturamentoCarrinhos linhas={faturamento ?? []} carrinhos={carrinhosPorId} />
         </TabsContent>
 
         <TabsContent value="config">{config && <ConfigDispositivosForm config={config} />}</TabsContent>
