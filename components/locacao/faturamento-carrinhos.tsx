@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Wallet, Bike, Clock, Timer, Infinity as InfinityIcon, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { StatCard } from "@/components/dashboard/stat-card";
 import { ResponsiveList } from "@/components/ui/responsive-list";
 import { TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { FaturamentoChart } from "@/components/locacao/faturamento-chart";
@@ -138,92 +140,66 @@ export function FaturamentoCarrinhos({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Valor</p>
-            <p className="font-display text-lg font-bold">{formatCurrency(totais.valor)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Aluguéis</p>
-            <p className="font-display text-lg font-bold">{totais.alugueis}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Cartão 15MIN</p>
-            <p className="font-display text-lg font-bold">{totais.cartoes15}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Cartão 5MIN</p>
-            <p className="font-display text-lg font-bold">{totais.cartoes5}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">LIVRE</p>
-            <p className="font-display text-lg font-bold">{totais.alugueisLivre}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">Ticket médio</p>
-            <p className="font-display text-lg font-bold">{formatCurrency(ticketMedio)}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <StatCard icon={Wallet} label="Valor" value={formatCurrency(totais.valor)} tone="highlight" />
+        <StatCard icon={Bike} label="Aluguéis" value={totais.alugueis} />
+        <StatCard icon={Clock} label="Cartão 15MIN" value={totais.cartoes15} />
+        <StatCard icon={Timer} label="Cartão 5MIN" value={totais.cartoes5} />
+        <StatCard icon={InfinityIcon} label="LIVRE" value={totais.alugueisLivre} />
+        <StatCard icon={TrendingUp} label="Ticket médio" value={formatCurrency(ticketMedio)} tone="success" />
       </div>
 
       <Card>
-        <CardContent className="p-4">
-          <p className="mb-3 text-sm font-semibold">Valor por dia</p>
+        <CardHeader>
+          <CardTitle>Valor por dia</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
           <FaturamentoChart pontos={pontosGrafico} />
         </CardContent>
       </Card>
 
-      <ResponsiveList
-        items={linhasTabela}
-        colSpan={7}
-        header={
-          <>
-            <TableHead>Dia</TableHead>
-            <TableHead>Carrinho</TableHead>
-            <TableHead>Aluguéis</TableHead>
-            <TableHead>15MIN</TableHead>
-            <TableHead>5MIN</TableHead>
-            <TableHead>LIVRE</TableHead>
-            <TableHead>Valor</TableHead>
-          </>
-        }
-        renderRow={(l) => (
-          <TableRow key={`${l.dia}-${l.dispositivo_id}`}>
-            <TableCell>{formatDate(l.dia)}</TableCell>
-            <TableCell>#{l.numero_carrinho}</TableCell>
-            <TableCell>{l.alugueis}</TableCell>
-            <TableCell>{l.cartoes_15min}</TableCell>
-            <TableCell>{l.cartoes_5min}</TableCell>
-            <TableCell>{l.alugueis_livre}</TableCell>
-            <TableCell>{formatCurrency(l.valor_total)}</TableCell>
-          </TableRow>
-        )}
-        renderCard={(l) => (
-          <div key={`${l.dia}-${l.dispositivo_id}`} className="flex flex-col gap-1 p-4 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">
-                {formatDate(l.dia)} · Carrinho #{l.numero_carrinho}
-              </span>
-              <span className="font-semibold">{formatCurrency(l.valor_total)}</span>
+      <Card className="overflow-hidden p-0">
+        <ResponsiveList
+          items={linhasTabela}
+          colSpan={7}
+          header={
+            <>
+              <TableHead>Dia</TableHead>
+              <TableHead>Carrinho</TableHead>
+              <TableHead>Aluguéis</TableHead>
+              <TableHead>15MIN</TableHead>
+              <TableHead>5MIN</TableHead>
+              <TableHead>LIVRE</TableHead>
+              <TableHead>Valor</TableHead>
+            </>
+          }
+          renderRow={(l) => (
+            <TableRow key={`${l.dia}-${l.dispositivo_id}`}>
+              <TableCell>{formatDate(l.dia)}</TableCell>
+              <TableCell>#{l.numero_carrinho}</TableCell>
+              <TableCell>{l.alugueis}</TableCell>
+              <TableCell>{l.cartoes_15min}</TableCell>
+              <TableCell>{l.cartoes_5min}</TableCell>
+              <TableCell>{l.alugueis_livre}</TableCell>
+              <TableCell>{formatCurrency(l.valor_total)}</TableCell>
+            </TableRow>
+          )}
+          renderCard={(l) => (
+            <div key={`${l.dia}-${l.dispositivo_id}`} className="flex flex-col gap-1 p-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  {formatDate(l.dia)} · Carrinho #{l.numero_carrinho}
+                </span>
+                <span className="font-semibold">{formatCurrency(l.valor_total)}</span>
+              </div>
+              <p className="text-muted-foreground">
+                {l.alugueis} aluguel(éis) · 15MIN {l.cartoes_15min} · 5MIN {l.cartoes_5min} · LIVRE {l.alugueis_livre}
+              </p>
             </div>
-            <p className="text-muted-foreground">
-              {l.alugueis} aluguel(éis) · 15MIN {l.cartoes_15min} · 5MIN {l.cartoes_5min} · LIVRE {l.alugueis_livre}
-            </p>
-          </div>
-        )}
-        empty={<p className="py-6 text-center text-sm text-muted-foreground">Nenhum faturamento no período.</p>}
-      />
+          )}
+          empty={<p className="py-6 text-center text-sm text-muted-foreground">Nenhum faturamento no período.</p>}
+        />
+      </Card>
     </div>
   );
 }

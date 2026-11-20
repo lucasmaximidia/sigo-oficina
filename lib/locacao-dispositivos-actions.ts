@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createDespesa } from "@/lib/locacao-actions";
 import { dataBR, formatDate } from "@/lib/utils";
 import type { LocacaoComandoDispositivo, LocacaoFormaPagamento } from "@/types";
 
@@ -209,20 +210,22 @@ function diaDaSessao(s: Pick<SessaoParaFaturar, "finalizado_em" | "created_at">)
   return dataBR(s.finalizado_em ?? s.created_at);
 }
 
-export async function lancarCarrinhosNoCaixa(formData: FormData) {
-  const supabase = await createClient();
-  const periodoInicio = str(formData, "periodo_inicio");
-  const periodoFim = str(formData, "periodo_fim");
-  const formaPagamento = str(formData, "forma_pagamento") as LocacaoFormaPagamento | null;
-  const dispositivoId = str(formData, "dispositivo_id");
-  if (!periodoInicio || !periodoFim || !formaPagamento) throw new Error("Informe o período e a forma de pagamento");
-
+// Núcleo do lançamento no caixa, compartilhado entre o "Lançar no caixa" (com
+// período livre, aba Faturamento) e a prestação de contas dia a dia (aba
+// Financeiro). Retorna null quando não há nada pendente no período.
+async function lancarNoCaixaCore(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  periodoInicio: string,
+  periodoFim: string,
+  dispositivoId: string | null,
+  formaPagamento: LocacaoFormaPagamento
+) {
   const sessoes = await buscarSessoesSemLancamento(supabase, dispositivoId);
   const doPeriodo = sessoes.filter((s) => {
     const dia = diaDaSessao(s);
     return dia >= periodoInicio && dia <= periodoFim;
   });
-  if (doPeriodo.length === 0) throw new Error("Nenhum aluguel sem lançamento nesse período");
+  if (doPeriodo.length === 0) return null;
 
   const valorTotal = doPeriodo.reduce((acc, s) => acc + s.valor, 0);
   const descricao =
@@ -252,9 +255,68 @@ export async function lancarCarrinhosNoCaixa(formData: FormData) {
     );
   if (errorSessoes) throw new Error(errorSessoes.message);
 
+  return { valor: valorTotal, quantidade: doPeriodo.length };
+}
+
+export async function lancarCarrinhosNoCaixa(formData: FormData) {
+  const supabase = await createClient();
+  const periodoInicio = str(formData, "periodo_inicio");
+  const periodoFim = str(formData, "periodo_fim");
+  const formaPagamento = str(formData, "forma_pagamento") as LocacaoFormaPagamento | null;
+  const dispositivoId = str(formData, "dispositivo_id");
+  if (!periodoInicio || !periodoFim || !formaPagamento) throw new Error("Informe o período e a forma de pagamento");
+
+  const resultado = await lancarNoCaixaCore(supabase, periodoInicio, periodoFim, dispositivoId, formaPagamento);
+  if (!resultado) throw new Error("Nenhum aluguel sem lançamento nesse período");
+
   revalidarCarrinhos();
   revalidatePath("/locacao/financeiro");
-  return { valor: valorTotal, quantidade: doPeriodo.length };
+  return resultado;
+}
+
+// ---------- Financeiro (prestação de contas dia a dia) ----------
+
+// O funcionário sai com os carrinhos, recebe em dinheiro na praça e presta
+// contas ao voltar: lança o valor do dia no caixa e, no mesmo passo, registra
+// a diária paga a ele (uma despesa — pode variar de funcionário e de valor a
+// cada dia, por isso é digitada aqui em vez de fixa na configuração).
+export async function registrarPrestacaoContasCarrinhos(formData: FormData) {
+  const supabase = await createClient();
+  const dia = str(formData, "dia");
+  if (!dia) throw new Error("Informe o dia");
+  const formaPagamento = (str(formData, "forma_pagamento") as LocacaoFormaPagamento | null) ?? "dinheiro";
+  const funcionario = str(formData, "funcionario_nome");
+  const diariaValor = Math.max(0, num(formData, "diaria_valor"));
+
+  const lancamento = await lancarNoCaixaCore(supabase, dia, dia, null, formaPagamento);
+
+  if (diariaValor > 0) {
+    const descricao = funcionario
+      ? `DIÁRIA CARRINHOS - ${funcionario.toUpperCase()} - ${formatDate(dia)}`
+      : `DIÁRIA CARRINHOS - ${formatDate(dia)}`;
+    const { error } = await supabase.from("locacao_despesas").insert({
+      data: dia,
+      descricao,
+      categoria: "DIARIA CARRINHOS",
+      forma_pagamento: formaPagamento,
+      valor: diariaValor,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  if (!lancamento && diariaValor === 0) throw new Error("Nada para registrar nesse dia");
+
+  revalidarCarrinhos();
+  revalidatePath("/locacao/financeiro");
+  return { valorRecebido: lancamento?.valor ?? 0, diariaValor };
+}
+
+// Saída avulsa (manutenção, peça, etc.) — mesma despesa da locação (categoria
+// "CARRINHOS"), só com um atalho dedicado nessa aba.
+export async function registrarSaidaCarrinho(formData: FormData) {
+  formData.set("categoria", "CARRINHOS");
+  await createDespesa(formData);
+  revalidarCarrinhos();
 }
 
 // Recalcula só o que ainda não foi lançado no caixa — um aluguel já lançado
