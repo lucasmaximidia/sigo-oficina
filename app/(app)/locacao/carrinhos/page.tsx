@@ -9,7 +9,7 @@ import { ConfigDispositivosForm } from "@/components/locacao/config-dispositivos
 import { FaturamentoCarrinhos } from "@/components/locacao/faturamento-carrinhos";
 import { FinanceiroCarrinhos } from "@/components/locacao/financeiro-carrinhos";
 import { hojeBR, agoraBR } from "@/lib/utils";
-import type { LocacaoVeiculo } from "@/types";
+import type { LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,7 @@ export default async function LocacaoCarrinhosPage() {
     { data: faturamento },
     { data: diarias },
     { data: saidas },
+    { data: comandosRaw },
   ] = await Promise.all([
     supabase
       .from("locacao_dispositivos")
@@ -62,6 +63,11 @@ export default async function LocacaoCarrinhosPage() {
       .select("id, data, descricao, valor")
       .eq("categoria", "CARRINHOS")
       .order("data", { ascending: false }),
+    supabase
+      .from("locacao_dispositivo_comandos")
+      .select("*")
+      .order("criado_em", { ascending: false })
+      .limit(500),
   ]);
 
   const veiculos = (veiculosQuadriciclo ?? []) as Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
@@ -87,6 +93,13 @@ export default async function LocacaoCarrinhosPage() {
 
   const carrinhosOpcoes = (dispositivos ?? []).map((d) => ({ id: d.numero_carrinho, label: `Carrinho #${d.numero_carrinho}` }));
   const carrinhosPorId = (dispositivos ?? []).map((d) => ({ id: d.id, label: `Carrinho #${d.numero_carrinho}` }));
+
+  const comandosPorDispositivo = new Map<string, LocacaoDispositivoComando[]>();
+  for (const c of comandosRaw ?? []) {
+    const lista = comandosPorDispositivo.get(c.dispositivo_id) ?? [];
+    lista.push(c);
+    comandosPorDispositivo.set(c.dispositivo_id, lista);
+  }
 
   // Resumo do dia e do mês — agrupado pelo dia em que a sessão foi
   // sincronizada (created_at), já que o horário do próprio carrinho
@@ -136,6 +149,8 @@ export default async function LocacaoCarrinhosPage() {
                   dispositivo={d}
                   veiculo={d.locacao_veiculos as unknown as Pick<LocacaoVeiculo, "id" | "marca" | "modelo"> | null}
                   veiculosDisponiveis={veiculos}
+                  horasManutencao={config?.horas_manutencao ?? 100}
+                  comandos={comandosPorDispositivo.get(d.id) ?? []}
                 />
               ))}
             </div>

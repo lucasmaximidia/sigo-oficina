@@ -1543,6 +1543,8 @@ export interface Database {
           comando_executado_em: string | null;
           comando_ultimo: string | null;
           em_uso: boolean;
+          manutencao_horimetro_min: number;
+          manutencao_em: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1565,6 +1567,8 @@ export interface Database {
           comando_executado_em?: string | null;
           comando_ultimo?: string | null;
           em_uso?: boolean;
+          manutencao_horimetro_min?: number;
+          manutencao_em?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1587,8 +1591,34 @@ export interface Database {
           comando_executado_em?: string | null;
           comando_ultimo?: string | null;
           em_uso?: boolean;
+          manutencao_horimetro_min?: number;
+          manutencao_em?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      locacao_dispositivo_comandos: {
+        Row: {
+          id: number;
+          dispositivo_id: string;
+          comando: LocacaoComandoDispositivo;
+          criado_em: string;
+          executado_em: string | null;
+        };
+        Insert: {
+          id: number;
+          dispositivo_id: string;
+          comando: LocacaoComandoDispositivo;
+          criado_em?: string;
+          executado_em?: string | null;
+        };
+        Update: {
+          id?: number;
+          dispositivo_id?: string;
+          comando?: LocacaoComandoDispositivo;
+          criado_em?: string;
+          executado_em?: string | null;
         };
         Relationships: [];
       };
@@ -1660,6 +1690,7 @@ export interface Database {
           bateria_aviso: number;
           tempo_max_min: number;
           livre_max_min: number;
+          horas_manutencao: number;
           updated_at: string;
         };
         Insert: {
@@ -1675,6 +1706,7 @@ export interface Database {
           bateria_aviso?: number;
           tempo_max_min?: number;
           livre_max_min?: number;
+          horas_manutencao?: number;
           updated_at?: string;
         };
         Update: {
@@ -1690,6 +1722,7 @@ export interface Database {
           bateria_aviso?: number;
           tempo_max_min?: number;
           livre_max_min?: number;
+          horas_manutencao?: number;
           updated_at?: string;
         };
         Relationships: [];

@@ -43,3 +43,24 @@ export function formatarHorimetro(minutos: number): string {
   const min = minutos % 60;
   return `${horas}h${min > 0 ? ` ${min}min` : ""}`;
 }
+
+export type StatusManutencao = "ok" | "proxima" | "vencida";
+
+export interface ManutencaoInfo {
+  status: StatusManutencao;
+  horasRodadas: number;
+  horasRestantes: number;
+}
+
+// Horas rodadas desde a última manutenção registrada (ou desde o cadastro do
+// carrinho, se nunca fez). "Próxima" a partir de 80% do intervalo.
+export function infoManutencao(
+  horimetroMinutos: number,
+  manutencaoHorimetroMin: number,
+  horasManutencao: number
+): ManutencaoInfo {
+  const horasRodadas = Math.max(0, horimetroMinutos - manutencaoHorimetroMin) / 60;
+  const horasRestantes = horasManutencao - horasRodadas;
+  const status: StatusManutencao = horasRestantes <= 0 ? "vencida" : horasRestantes <= horasManutencao * 0.2 ? "proxima" : "ok";
+  return { status, horasRodadas, horasRestantes };
+}

@@ -10,19 +10,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RegenerarTokenDialog } from "@/components/locacao/regenerar-token-dialog";
 import { ZerarCarrinhoControls } from "@/components/locacao/zerar-carrinho-controls";
 import { ApagarHistoricoTesteDialog } from "@/components/locacao/apagar-historico-teste-dialog";
+import { ManutencaoCarrinho } from "@/components/locacao/manutencao-carrinho";
+import { HistoricoComandosDialog } from "@/components/locacao/historico-comandos-dialog";
 import { vincularVeiculoCarrinho } from "@/lib/locacao-dispositivos-actions";
 import { dispositivoEstaOnline, percentualBateria, formatarHorimetro } from "@/lib/locacao-dispositivos-status";
 import { formatDateTime } from "@/lib/utils";
-import type { LocacaoDispositivo, LocacaoVeiculo } from "@/types";
+import type { LocacaoDispositivo, LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
 export function CarrinhoCard({
   dispositivo,
   veiculo,
   veiculosDisponiveis,
+  horasManutencao,
+  comandos,
 }: {
   dispositivo: LocacaoDispositivo;
   veiculo: Pick<LocacaoVeiculo, "id" | "marca" | "modelo"> | null;
   veiculosDisponiveis: Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
+  horasManutencao: number;
+  comandos: LocacaoDispositivoComando[];
 }) {
   const [isPending, startTransition] = useTransition();
   const online = dispositivoEstaOnline(dispositivo.ultima_conexao);
@@ -89,6 +95,14 @@ export function CarrinhoCard({
           </div>
         </div>
 
+        <ManutencaoCarrinho
+          dispositivoId={dispositivo.id}
+          horimetroMinutos={dispositivo.horimetro_minutos}
+          manutencaoHorimetroMin={dispositivo.manutencao_horimetro_min}
+          manutencaoEm={dispositivo.manutencao_em}
+          horasManutencao={horasManutencao}
+        />
+
         <div>
           <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -142,6 +156,7 @@ export function CarrinhoCard({
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <RegenerarTokenDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
+          <HistoricoComandosDialog numeroCarrinho={dispositivo.numero_carrinho} comandos={comandos} />
           <ApagarHistoricoTesteDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
         </div>
       </CardContent>
