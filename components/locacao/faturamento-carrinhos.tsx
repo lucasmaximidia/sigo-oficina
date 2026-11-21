@@ -83,12 +83,21 @@ export function FaturamentoCarrinhos({
 
   const ticketMedio = totais.alugueis > 0 ? totais.valor / totais.alugueis : 0;
 
-  const pontosGrafico = useMemo(() => {
-    const porDia = new Map<string, number>();
-    for (const l of linhasFiltradas) porDia.set(l.dia, (porDia.get(l.dia) ?? 0) + l.valor_total);
-    return Array.from(porDia.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([dia, valor]) => ({ dia, valor }));
+  // Uma série por carrinho (ordenada por número) — com só 1 carrinho no
+  // resultado, o gráfico desenha como série única (sem legenda).
+  const seriesGrafico = useMemo(() => {
+    const porCarrinho = new Map<string, { id: string; label: string; numero: number; pontos: { dia: string; valor: number }[] }>();
+    for (const l of linhasFiltradas) {
+      const serie = porCarrinho.get(l.dispositivo_id) ?? {
+        id: l.dispositivo_id,
+        label: `Carrinho #${l.numero_carrinho}`,
+        numero: l.numero_carrinho,
+        pontos: [],
+      };
+      serie.pontos.push({ dia: l.dia, valor: l.valor_total });
+      porCarrinho.set(l.dispositivo_id, serie);
+    }
+    return Array.from(porCarrinho.values()).sort((a, b) => a.numero - b.numero);
   }, [linhasFiltradas]);
 
   const linhasTabela = useMemo(
@@ -154,7 +163,7 @@ export function FaturamentoCarrinhos({
           <CardTitle>Valor por dia</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <FaturamentoChart pontos={pontosGrafico} />
+          <FaturamentoChart series={seriesGrafico} />
         </CardContent>
       </Card>
 

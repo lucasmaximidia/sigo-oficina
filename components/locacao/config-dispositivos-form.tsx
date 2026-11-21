@@ -16,6 +16,7 @@ export function ConfigDispositivosForm({ config }: { config: LocacaoDispositivoC
   const [minutos5, setMinutos5] = useState(config.minutos_cartao_5min);
   const [tempoMax, setTempoMax] = useState(config.tempo_max_min);
   const [livreMax, setLivreMax] = useState(config.livre_max_min);
+  const [horasManutencao, setHorasManutencao] = useState(config.horas_manutencao);
   const [isPendingConfig, startTransitionConfig] = useTransition();
   const [isPendingFirmware, startTransitionFirmware] = useTransition();
   const firmwareFormRef = useRef<HTMLFormElement>(null);
@@ -159,6 +160,22 @@ export function ConfigDispositivosForm({ config }: { config: LocacaoDispositivoC
               <p className="mt-1.5 text-xs text-muted-foreground">
                 Chumbo 24V: mínima 22,0 e aviso 23,0. Testando na bancada: 0 (desligado).
               </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-semibold">Manutenção</p>
+              <div className="max-w-xs">
+                <Label htmlFor="horas_manutencao" className="mb-1.5 block">
+                  Intervalo entre manutenções (h)
+                </Label>
+                <NumericInput
+                  id="horas_manutencao"
+                  name="horas_manutencao"
+                  decimal={false}
+                  value={horasManutencao}
+                  onValueChange={(v) => setHorasManutencao(Math.min(1000, Math.max(10, v)))}
+                />
+              </div>
             </div>
 
             <div>

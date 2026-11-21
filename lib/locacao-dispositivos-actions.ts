@@ -89,6 +89,32 @@ export async function vincularVeiculoCarrinho(dispositivoId: string, veiculoId: 
   revalidarCarrinhos();
 }
 
+// ---------- Manutenção ----------
+
+// Zera a contagem "horas desde a última manutenção" a partir do horímetro
+// atual do carrinho — não tem uma tabela de histórico, só a última data/base
+// (ver locacao_dispositivos.manutencao_horimetro_min/manutencao_em).
+export async function registrarManutencaoCarrinho(dispositivoId: string) {
+  const supabase = await createClient();
+  const { data: dispositivo, error: errorBusca } = await supabase
+    .from("locacao_dispositivos")
+    .select("horimetro_minutos")
+    .eq("id", dispositivoId)
+    .single();
+  if (errorBusca) throw new Error(errorBusca.message);
+
+  const { error } = await supabase
+    .from("locacao_dispositivos")
+    .update({
+      manutencao_horimetro_min: dispositivo.horimetro_minutos,
+      manutencao_em: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dispositivoId);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
 // ---------- Configuração da frota ----------
 
 export async function salvarConfigDispositivos(formData: FormData) {
@@ -97,7 +123,9 @@ export async function salvarConfigDispositivos(formData: FormData) {
   const minutos5 = intOuNull(formData, "minutos_cartao_5min");
   const tempoMax = intOuNull(formData, "tempo_max_min");
   const livreMax = intOuNull(formData, "livre_max_min");
-  if (!minutos15 || !minutos5 || !tempoMax || !livreMax) throw new Error("Informe os minutos e os limites de tempo");
+  const horasManutencao = intOuNull(formData, "horas_manutencao");
+  if (!minutos15 || !minutos5 || !tempoMax || !livreMax || !horasManutencao)
+    throw new Error("Informe os minutos, os limites de tempo e o intervalo de manutenção");
 
   const { error } = await supabase
     .from("locacao_dispositivo_config")
@@ -106,6 +134,7 @@ export async function salvarConfigDispositivos(formData: FormData) {
       minutos_cartao_5min: clamp(minutos5, 1, 60),
       tempo_max_min: clamp(tempoMax, 10, 120),
       livre_max_min: clamp(livreMax, 10, 720),
+      horas_manutencao: clamp(horasManutencao, 10, 1000),
       preco_cartao_15min: Math.max(0, num(formData, "preco_cartao_15min")),
       preco_cartao_5min: Math.max(0, num(formData, "preco_cartao_5min")),
       preco_livre_hora: Math.max(0, num(formData, "preco_livre_hora")),
