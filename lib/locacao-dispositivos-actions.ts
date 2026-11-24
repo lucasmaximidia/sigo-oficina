@@ -388,3 +388,39 @@ export async function recalcularValoresCarrinhos(formData: FormData) {
   revalidarCarrinhos();
   return { atualizados };
 }
+
+// ---------- Redes Wi-Fi da frota ----------
+
+// O carrinho só baixa a lista pela rede em que já está conectado (ver
+// dispositivo_heartbeat_v3, migration 0074) — por isso cadastrar aqui ANTES
+// de levar o carrinho pra um lugar novo.
+export async function adicionarRedeWifi(formData: FormData) {
+  const supabase = await createClient();
+  const ssid = str(formData, "ssid");
+  if (!ssid || ssid.length > 32) throw new Error("Nome da rede precisa ter de 1 a 32 caracteres");
+  const senha = formData.get("senha");
+  const senhaStr = typeof senha === "string" ? senha : "";
+  if (senhaStr.length > 64) throw new Error("Senha pode ter no máximo 64 caracteres");
+  const ordem = intOuNull(formData, "ordem") ?? 0;
+
+  const { error } = await supabase.from("locacao_dispositivo_redes").insert({ ssid, senha: senhaStr, ordem });
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
+export async function removerRedeWifi(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("locacao_dispositivo_redes").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
+export async function alternarRedeWifiAtiva(id: string, ativo: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("locacao_dispositivo_redes")
+    .update({ ativo, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}

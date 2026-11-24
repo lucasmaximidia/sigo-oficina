@@ -44,6 +44,32 @@ export function formatarHorimetro(minutos: number): string {
   return `${horas}h${min > 0 ? ` ${min}min` : ""}`;
 }
 
+// Compara "2.2.0" com "2.10.1" etc. (numérico por posição, não lexicográfico).
+function versaoMaiorOuIgual(versao: string | null, minima: string): boolean {
+  if (!versao) return false;
+  const a = versao.split(".").map((n) => parseInt(n, 10) || 0);
+  const b = minima.split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
+    if (av !== bv) return av > bv;
+  }
+  return true;
+}
+
+// O selo só aparece quando o firmware já suporta a lista de redes (2.2.0+) e
+// o carrinho conectou depois da última mudança nela — antes disso ele ainda
+// está rodando com a lista antiga (ver dispositivo_heartbeat_v3).
+export function redesWifiAtualizadas(
+  firmwareVersao: string | null,
+  ultimaConexao: string | null,
+  ultimaAtualizacaoRedes: string | null
+): boolean {
+  if (!ultimaAtualizacaoRedes || !ultimaConexao) return false;
+  if (!versaoMaiorOuIgual(firmwareVersao, "2.2.0")) return false;
+  return new Date(ultimaConexao).getTime() > new Date(ultimaAtualizacaoRedes).getTime();
+}
+
 export type StatusManutencao = "ok" | "proxima" | "vencida";
 
 export interface ManutencaoInfo {

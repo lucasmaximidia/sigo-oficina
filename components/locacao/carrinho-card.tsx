@@ -13,7 +13,7 @@ import { ApagarHistoricoTesteDialog } from "@/components/locacao/apagar-historic
 import { ManutencaoCarrinho } from "@/components/locacao/manutencao-carrinho";
 import { HistoricoComandosDialog } from "@/components/locacao/historico-comandos-dialog";
 import { vincularVeiculoCarrinho } from "@/lib/locacao-dispositivos-actions";
-import { dispositivoEstaOnline, percentualBateria, formatarHorimetro } from "@/lib/locacao-dispositivos-status";
+import { dispositivoEstaOnline, percentualBateria, formatarHorimetro, redesWifiAtualizadas } from "@/lib/locacao-dispositivos-status";
 import { formatDateTime } from "@/lib/utils";
 import type { LocacaoDispositivo, LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
@@ -23,12 +23,14 @@ export function CarrinhoCard({
   veiculosDisponiveis,
   horasManutencao,
   comandos,
+  ultimaAtualizacaoRedes,
 }: {
   dispositivo: LocacaoDispositivo;
   veiculo: Pick<LocacaoVeiculo, "id" | "marca" | "modelo"> | null;
   veiculosDisponiveis: Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
   horasManutencao: number;
   comandos: LocacaoDispositivoComando[];
+  ultimaAtualizacaoRedes: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const online = dispositivoEstaOnline(dispositivo.ultima_conexao);
@@ -136,14 +138,19 @@ export function CarrinhoCard({
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Gauge className="size-3.5" />
             Firmware {dispositivo.firmware_versao ?? "—"}
           </span>
-          {dispositivo.fila_pendente > 0 && (
-            <Badge variant="warning">{dispositivo.fila_pendente} pendente(s) de envio</Badge>
-          )}
+          <div className="flex items-center gap-1.5">
+            {redesWifiAtualizadas(dispositivo.firmware_versao, dispositivo.ultima_conexao, ultimaAtualizacaoRedes) && (
+              <Badge variant="success">Redes atualizadas</Badge>
+            )}
+            {dispositivo.fila_pendente > 0 && (
+              <Badge variant="warning">{dispositivo.fila_pendente} pendente(s) de envio</Badge>
+            )}
+          </div>
         </div>
 
         <ZerarCarrinhoControls
