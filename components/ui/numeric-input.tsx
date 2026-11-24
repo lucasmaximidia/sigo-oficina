@@ -39,16 +39,19 @@ export interface NumericInputProps {
  * "3,00"), em vez de só ser corrigida depois de pronto.
  */
 export function NumericInput({ value, defaultValue, onValueChange, decimal = true, ...props }: NumericInputProps) {
-  const [intText, setIntText] = React.useState(() =>
-    !decimal && (value ?? defaultValue) ? String(value ?? defaultValue) : ""
-  );
+  const [intText, setIntText] = React.useState(() => {
+    const inicial = value ?? defaultValue;
+    return !decimal && inicial !== undefined ? String(inicial) : "";
+  });
   const [cents, setCents] = React.useState(() => (decimal ? numberToCents(value ?? defaultValue) : 0));
   const [prevValue, setPrevValue] = React.useState(value);
 
+  // `value` pode legitimamente ser 0 (ex.: "sem limite") — não tratar como
+  // "vazio" igual a undefined, senão o campo mostra em branco no lugar do 0.
   if (value !== undefined && value !== prevValue) {
     setPrevValue(value);
     if (decimal) setCents(numberToCents(value));
-    else setIntText(value ? String(value) : "");
+    else setIntText(String(value));
   }
 
   function handleChangeDecimal(e: React.ChangeEvent<HTMLInputElement>) {
