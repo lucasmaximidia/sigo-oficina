@@ -1622,6 +1622,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      locacao_dispositivo_redes: {
+        Row: {
+          id: string;
+          ssid: string;
+          senha: string;
+          ativo: boolean;
+          ordem: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          ssid: string;
+          senha?: string;
+          ativo?: boolean;
+          ordem?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          ssid?: string;
+          senha?: string;
+          ativo?: boolean;
+          ordem?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       locacao_dispositivo_sessoes: {
         Row: {
           id: string;
@@ -2139,6 +2169,34 @@ export interface Database {
           bateria_aviso: number;
           comando: LocacaoComandoDispositivo | null;
           comando_id: number | null;
+        }[];
+      };
+      dispositivo_heartbeat_v3: {
+        Args: {
+          p_device_token: string;
+          p_firmware_versao: string | null;
+          p_tensao_bateria: number | null;
+          p_horimetro_minutos: number;
+          p_contador_15min: number;
+          p_contador_5min: number;
+          p_contador_livre: number;
+          p_fila_pendente: number;
+          p_comando_executado: number | null;
+          p_em_uso: boolean | null;
+        };
+        Returns: {
+          minutos_cartao_15min: number;
+          minutos_cartao_5min: number;
+          firmware_versao_alvo: string | null;
+          firmware_url: string | null;
+          tempo_max_min: number;
+          livre_max_min: number;
+          bateria_minima: number;
+          bateria_aviso: number;
+          comando: LocacaoComandoDispositivo | null;
+          comando_id: number | null;
+          redes: unknown;
+          redes_hash: string;
         }[];
       };
       dispositivo_registrar_sessao: {

@@ -8,6 +8,7 @@ import { ResumoDispositivos, type ResumoCarrinho, type ResumoPeriodo } from "@/c
 import { ConfigDispositivosForm } from "@/components/locacao/config-dispositivos-form";
 import { FaturamentoCarrinhos } from "@/components/locacao/faturamento-carrinhos";
 import { FinanceiroCarrinhos } from "@/components/locacao/financeiro-carrinhos";
+import { RedesWifiCarrinhos } from "@/components/locacao/redes-wifi-carrinhos";
 import { hojeBR, agoraBR } from "@/lib/utils";
 import type { LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
@@ -36,6 +37,7 @@ export default async function LocacaoCarrinhosPage() {
     { data: diarias },
     { data: saidas },
     { data: comandosRaw },
+    { data: redes },
   ] = await Promise.all([
     supabase
       .from("locacao_dispositivos")
@@ -68,6 +70,7 @@ export default async function LocacaoCarrinhosPage() {
       .select("*")
       .order("criado_em", { ascending: false })
       .limit(500),
+    supabase.from("locacao_dispositivo_redes").select("*").order("ordem", { ascending: true }),
   ]);
 
   const veiculos = (veiculosQuadriciclo ?? []) as Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
@@ -100,6 +103,11 @@ export default async function LocacaoCarrinhosPage() {
     lista.push(c);
     comandosPorDispositivo.set(c.dispositivo_id, lista);
   }
+
+  const ultimaAtualizacaoRedes = (redes ?? []).reduce<string | null>(
+    (max, r) => (!max || r.updated_at > max ? r.updated_at : max),
+    null
+  );
 
   // Resumo do dia e do mês — agrupado pelo dia em que a sessão foi
   // sincronizada (created_at), já que o horário do próprio carrinho
@@ -151,6 +159,7 @@ export default async function LocacaoCarrinhosPage() {
                   veiculosDisponiveis={veiculos}
                   horasManutencao={config?.horas_manutencao ?? 100}
                   comandos={comandosPorDispositivo.get(d.id) ?? []}
+                  ultimaAtualizacaoRedes={ultimaAtualizacaoRedes}
                 />
               ))}
             </div>
@@ -175,7 +184,12 @@ export default async function LocacaoCarrinhosPage() {
           <FinanceiroCarrinhos linhas={faturamento ?? []} diarias={diarias ?? []} saidas={saidas ?? []} />
         </TabsContent>
 
-        <TabsContent value="config">{config && <ConfigDispositivosForm config={config} />}</TabsContent>
+        <TabsContent value="config">
+          <div className="flex flex-col gap-4">
+            {config && <ConfigDispositivosForm config={config} />}
+            <RedesWifiCarrinhos redes={redes ?? []} />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
