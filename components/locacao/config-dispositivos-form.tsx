@@ -17,6 +17,7 @@ export function ConfigDispositivosForm({ config }: { config: LocacaoDispositivoC
   const [tempoMax, setTempoMax] = useState(config.tempo_max_min);
   const [livreMax, setLivreMax] = useState(config.livre_max_min);
   const [horasManutencao, setHorasManutencao] = useState(config.horas_manutencao);
+  const [pausaMax, setPausaMax] = useState(config.pausa_max_min);
   const [isPendingConfig, startTransitionConfig] = useTransition();
   const [isPendingFirmware, startTransitionFirmware] = useTransition();
   const firmwareFormRef = useRef<HTMLFormElement>(null);
@@ -137,6 +138,22 @@ export function ConfigDispositivosForm({ config }: { config: LocacaoDispositivoC
                     value={livreMax}
                     onValueChange={(v) => setLivreMax(Math.min(720, Math.max(10, v)))}
                   />
+                </div>
+                <div>
+                  <Label htmlFor="pausa_max_min" className="mb-1.5 block">
+                    Pausa máxima (min)
+                  </Label>
+                  <NumericInput
+                    id="pausa_max_min"
+                    name="pausa_max_min"
+                    decimal={false}
+                    value={pausaMax}
+                    onValueChange={(v) => setPausaMax(Math.min(60, Math.max(0, v)))}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    0 = sem limite. Se o carrinho ficar pausado mais que isso, o aluguel é encerrado. 30 s antes o
+                    carrinho apita 3 vezes.
+                  </p>
                 </div>
               </div>
             </div>

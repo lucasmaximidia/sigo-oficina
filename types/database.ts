@@ -35,7 +35,7 @@ export type LocacaoTipoContrato = "padrao" | "infantil";
 export type LocacaoFormaPagamento = "pix" | "cartao" | "dinheiro" | "transferencia";
 export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
 export type LocacaoCartaoTipo = "15MIN" | "5MIN" | "LIVRE";
-export type LocacaoMotivoTerminoSessao = "tempo" | "fim";
+export type LocacaoMotivoTerminoSessao = "tempo" | "fim" | "pausa";
 export type LocacaoComandoDispositivo = "zerar_contadores" | "zerar_tudo";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
@@ -1721,6 +1721,7 @@ export interface Database {
           tempo_max_min: number;
           livre_max_min: number;
           horas_manutencao: number;
+          pausa_max_min: number;
           updated_at: string;
         };
         Insert: {
@@ -1737,6 +1738,7 @@ export interface Database {
           tempo_max_min?: number;
           livre_max_min?: number;
           horas_manutencao?: number;
+          pausa_max_min?: number;
           updated_at?: string;
         };
         Update: {
@@ -1753,6 +1755,7 @@ export interface Database {
           tempo_max_min?: number;
           livre_max_min?: number;
           horas_manutencao?: number;
+          pausa_max_min?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -2197,6 +2200,7 @@ export interface Database {
           comando_id: number | null;
           redes: unknown;
           redes_hash: string;
+          pausa_max_min: number;
         }[];
       };
       dispositivo_registrar_sessao: {

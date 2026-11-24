@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Zap } from "lucide-react";
+import { Zap, Pause } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,20 @@ const CARTAO_LABEL: Record<string, string> = {
 const MOTIVO_LABEL: Record<string, string> = {
   tempo: "Tempo esgotado",
   fim: "Finalizado no cartão",
+  pausa: "Pausa longa",
 };
+
+function TerminouPor({ motivo }: { motivo: string }) {
+  if (motivo === "pausa") {
+    return (
+      <Badge variant="warning" className="gap-1">
+        <Pause className="size-3" />
+        Pausa longa
+      </Badge>
+    );
+  }
+  return <>{MOTIVO_LABEL[motivo] ?? motivo}</>;
+}
 
 interface SessaoHistorico {
   id: string;
@@ -130,7 +143,9 @@ export function SessoesHistorico({
             <TableCell>{s.qtd_15min}</TableCell>
             <TableCell>{s.qtd_5min}</TableCell>
             <TableCell>{formatCurrency(s.valor)}</TableCell>
-            <TableCell>{MOTIVO_LABEL[s.motivo_termino] ?? s.motivo_termino}</TableCell>
+            <TableCell>
+              <TerminouPor motivo={s.motivo_termino} />
+            </TableCell>
             <TableCell>
               {s.quedas_energia > 0 ? (
                 <Badge variant="destructive" className="gap-1">
@@ -159,9 +174,9 @@ export function SessoesHistorico({
             <p className="text-muted-foreground">
               {horarioOuSemHorario(s.iniciado_em)} → {horarioOuSemHorario(s.finalizado_em)}
             </p>
-            <p className="text-muted-foreground">
+            <p className="flex flex-wrap items-center gap-1.5 text-muted-foreground">
               {s.minutos} min rodados{s.minutos_liberados > 0 ? ` · ${s.minutos_liberados} liberados` : ""} ·{" "}
-              {MOTIVO_LABEL[s.motivo_termino] ?? s.motivo_termino}
+              <TerminouPor motivo={s.motivo_termino} />
             </p>
             <p className="text-muted-foreground">
               Qtd 15: {s.qtd_15min} · Qtd 5: {s.qtd_5min} · Valor: {formatCurrency(s.valor)}

@@ -124,7 +124,8 @@ export async function salvarConfigDispositivos(formData: FormData) {
   const tempoMax = intOuNull(formData, "tempo_max_min");
   const livreMax = intOuNull(formData, "livre_max_min");
   const horasManutencao = intOuNull(formData, "horas_manutencao");
-  if (!minutos15 || !minutos5 || !tempoMax || !livreMax || !horasManutencao)
+  const pausaMax = intOuNull(formData, "pausa_max_min");
+  if (!minutos15 || !minutos5 || !tempoMax || !livreMax || !horasManutencao || pausaMax === null)
     throw new Error("Informe os minutos, os limites de tempo e o intervalo de manutenção");
 
   const { error } = await supabase
@@ -135,6 +136,7 @@ export async function salvarConfigDispositivos(formData: FormData) {
       tempo_max_min: clamp(tempoMax, 10, 120),
       livre_max_min: clamp(livreMax, 10, 720),
       horas_manutencao: clamp(horasManutencao, 10, 1000),
+      pausa_max_min: clamp(pausaMax, 0, 60),
       preco_cartao_15min: Math.max(0, num(formData, "preco_cartao_15min")),
       preco_cartao_5min: Math.max(0, num(formData, "preco_cartao_5min")),
       preco_livre_hora: Math.max(0, num(formData, "preco_livre_hora")),
