@@ -433,6 +433,39 @@ export async function recalcularValoresCarrinhos(formData: FormData) {
   return { atualizados };
 }
 
+// ---------- Dados de teste (reset completo) ----------
+
+// Apaga TODO o histórico de aluguéis de TODOS os carrinhos (lançados no
+// caixa ou não), junto com as entradas de caixa e despesas (diária/saída)
+// geradas a partir deles — para zerar o período de teste antes de começar a
+// valer pra valer. Não mexe no cadastro dos carrinhos (número, token, tipo e
+// limites de bateria) nem nos contadores ao vivo do firmware (isso é "Zerar
+// tudo", por carrinho, na aba Status).
+export async function limparDadosTesteCarrinhos() {
+  const supabase = await createClient();
+
+  const { error: errorSessoes } = await supabase
+    .from("locacao_dispositivo_sessoes")
+    .delete()
+    .not("id", "is", null);
+  if (errorSessoes) throw new Error(errorSessoes.message);
+
+  const { error: errorEntradas } = await supabase
+    .from("locacao_outras_entradas")
+    .delete()
+    .eq("categoria", "CARRINHOS");
+  if (errorEntradas) throw new Error(errorEntradas.message);
+
+  const { error: errorDespesas } = await supabase
+    .from("locacao_despesas")
+    .delete()
+    .in("categoria", ["CARRINHOS", "DIARIA CARRINHOS"]);
+  if (errorDespesas) throw new Error(errorDespesas.message);
+
+  revalidarCarrinhos();
+  revalidatePath("/locacao/financeiro");
+}
+
 // ---------- Redes Wi-Fi da frota ----------
 
 // O carrinho só baixa a lista pela rede em que já está conectado (ver
