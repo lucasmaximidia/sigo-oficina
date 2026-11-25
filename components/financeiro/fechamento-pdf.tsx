@@ -97,6 +97,10 @@ function formatCurrencyPdf(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+function formatPercentPdf(value: number) {
+  return `${value.toFixed(1)}%`;
+}
+
 const MESES = [
   "Janeiro",
   "Fevereiro",
@@ -170,6 +174,8 @@ export function FechamentoPdf({
   lucroPecasOficinaMes,
   entradasPecasLojaMes,
   entradasFreteMes,
+  pctDespesasPecaMes,
+  pctDespesasMaoObraMes,
   detalheDespesas,
   detalheContas,
   detalheFretes,
@@ -193,6 +199,8 @@ export function FechamentoPdf({
   lucroPecasOficinaMes: number;
   entradasPecasLojaMes: number;
   entradasFreteMes: number;
+  pctDespesasPecaMes: number;
+  pctDespesasMaoObraMes: number;
   detalheDespesas: ItemDetalhado[];
   detalheContas: ItemDetalhado[];
   detalheFretes: ItemDetalhado[];
@@ -308,9 +316,22 @@ export function FechamentoPdf({
             <Text style={styles.totalValor}>{formatCurrencyPdf(lucroPecasOficinaMes)}</Text>
           </View>
         </View>
+
+        <Text style={[styles.secaoTitulo, { marginTop: 12 }]}>Quanto das Saídas cada fonte cobriria sozinha</Text>
+        <View style={styles.tabela}>
+          <View style={styles.linhaPrimeira}>
+            <Text style={styles.linhaLabel}>Lucro em Peças (Oficina) ÷ Total de Saídas</Text>
+            <Text style={styles.linhaValorNeutro}>{formatPercentPdf(pctDespesasPecaMes)}</Text>
+          </View>
+          <View style={styles.linha}>
+            <Text style={styles.linhaLabel}>Mão de Obra ÷ Total de Saídas</Text>
+            <Text style={styles.linhaValorNeutro}>{formatPercentPdf(pctDespesasMaoObraMes)}</Text>
+          </View>
+        </View>
         <Text style={[styles.emissao, { marginTop: 6 }]}>
-          Rateio proporcional pelo peso de cada componente em cada OS/venda — um pagamento parcial mantém a mesma
-          proporção da OS inteira. O custo da peça usa o preço de custo atual dela, não o de quando foi vendida.
+          Não precisa somar 100%: abaixo disso é rombo coberto pelo caixa/economia, acima é sobra do mês. Rateio
+          proporcional pelo peso de cada componente em cada OS/venda — um pagamento parcial mantém a mesma proporção
+          da OS inteira. O custo da peça usa o preço de custo atual dela, não o de quando foi vendida.
         </Text>
 
         <DetalheTabela titulo="Despesas" itens={detalheDespesas} />
