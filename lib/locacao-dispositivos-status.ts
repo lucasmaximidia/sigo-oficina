@@ -2,6 +2,14 @@
 // próprio dispositivo reporta em cada heartbeat (ver dispositivo_heartbeat,
 // migration 0071_locacao_dispositivos.sql).
 
+import type { LocacaoTipoBateria } from "@/types";
+
+export const TIPO_BATERIA_LABEL: Record<LocacaoTipoBateria, string> = {
+  chumbo: "Chumbo",
+  litio: "Lítio 7S",
+  lifepo4: "LiFePO4 8S",
+};
+
 // "Online" é calculado no momento da renderização (não é um valor salvo) —
 // como qualquer página deste app, só atualiza quando a tela é recarregada.
 const ONLINE_JANELA_MINUTOS = 3;
@@ -12,27 +20,30 @@ export function dispositivoEstaOnline(ultimaConexao: string | null): boolean {
   return diffMs >= 0 && diffMs <= ONLINE_JANELA_MINUTOS * 60_000;
 }
 
-// Curva de descarga de uma bateria de chumbo-ácido 24V (4 pontos medidos),
-// interpolada linearmente entre eles — fora da faixa, satura em 0%/100%.
-const CURVA_BATERIA_24V: [volts: number, percentual: number][] = [
-  [21.0, 0],
-  [22.6, 10],
-  [24.1, 50],
-  [25.4, 100],
-];
+// Curvas de descarga 24V por tipo de bateria (11 pontos, 0% a 100% de 10 em
+// 10), interpoladas linearmente entre eles — fora da faixa, satura em
+// 0%/100%. Mesma tabela do firmware 2.4.
+const CURVA_BATERIA_24V: Record<LocacaoTipoBateria, number[]> = {
+  chumbo: [21.0, 22.6, 23.2, 23.5, 23.8, 24.1, 24.4, 24.6, 24.8, 25.0, 25.4],
+  litio: [23.1, 24.9, 25.6, 25.9, 26.2, 26.5, 27.0, 27.4, 28.0, 28.7, 29.3],
+  lifepo4: [24.0, 25.6, 26.0, 26.2, 26.4, 26.5, 26.6, 26.7, 26.8, 27.2, 27.6],
+};
 
-export function percentualBateria(volts: number | null): number | null {
+export function percentualBateria(
+  volts: number | null,
+  tipoBateria: LocacaoTipoBateria = "chumbo"
+): number | null {
   if (volts == null) return null;
-  if (volts <= CURVA_BATERIA_24V[0][0]) return 0;
-  const ultimo = CURVA_BATERIA_24V[CURVA_BATERIA_24V.length - 1];
-  if (volts >= ultimo[0]) return 100;
+  const curva = CURVA_BATERIA_24V[tipoBateria];
+  if (volts <= curva[0]) return 0;
+  if (volts >= curva[curva.length - 1]) return 100;
 
-  for (let i = 0; i < CURVA_BATERIA_24V.length - 1; i++) {
-    const [v0, p0] = CURVA_BATERIA_24V[i];
-    const [v1, p1] = CURVA_BATERIA_24V[i + 1];
+  for (let i = 0; i < curva.length - 1; i++) {
+    const v0 = curva[i];
+    const v1 = curva[i + 1];
     if (volts >= v0 && volts <= v1) {
       const t = (volts - v0) / (v1 - v0);
-      return Math.round(p0 + t * (p1 - p0));
+      return Math.round((i + t) * 10);
     }
   }
   return 0;

@@ -12,8 +12,15 @@ import { ZerarCarrinhoControls } from "@/components/locacao/zerar-carrinho-contr
 import { ApagarHistoricoTesteDialog } from "@/components/locacao/apagar-historico-teste-dialog";
 import { ManutencaoCarrinho } from "@/components/locacao/manutencao-carrinho";
 import { HistoricoComandosDialog } from "@/components/locacao/historico-comandos-dialog";
+import { BateriaCarrinhoDialog } from "@/components/locacao/bateria-carrinho-dialog";
 import { vincularVeiculoCarrinho } from "@/lib/locacao-dispositivos-actions";
-import { dispositivoEstaOnline, percentualBateria, formatarHorimetro, redesWifiAtualizadas } from "@/lib/locacao-dispositivos-status";
+import {
+  dispositivoEstaOnline,
+  percentualBateria,
+  formatarHorimetro,
+  redesWifiAtualizadas,
+  TIPO_BATERIA_LABEL,
+} from "@/lib/locacao-dispositivos-status";
 import { formatDateTime } from "@/lib/utils";
 import type { LocacaoDispositivo, LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
@@ -22,6 +29,8 @@ export function CarrinhoCard({
   veiculo,
   veiculosDisponiveis,
   horasManutencao,
+  frotaBateriaMinima,
+  frotaBateriaAviso,
   comandos,
   ultimaAtualizacaoRedes,
 }: {
@@ -29,12 +38,16 @@ export function CarrinhoCard({
   veiculo: Pick<LocacaoVeiculo, "id" | "marca" | "modelo"> | null;
   veiculosDisponiveis: Pick<LocacaoVeiculo, "id" | "marca" | "modelo">[];
   horasManutencao: number;
+  frotaBateriaMinima: number;
+  frotaBateriaAviso: number;
   comandos: LocacaoDispositivoComando[];
   ultimaAtualizacaoRedes: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const online = dispositivoEstaOnline(dispositivo.ultima_conexao);
-  const bateriaPct = percentualBateria(dispositivo.tensao_bateria);
+  const bateriaPct = percentualBateria(dispositivo.tensao_bateria, dispositivo.tipo_bateria);
+  const bateriaMinimaEmUso = dispositivo.bateria_minima ?? frotaBateriaMinima;
+  const bateriaAvisoEmUso = dispositivo.bateria_aviso ?? frotaBateriaAviso;
 
   function vincular(veiculoId: string) {
     startTransition(async () => {
@@ -109,7 +122,7 @@ export function CarrinhoCard({
           <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               {bateriaPct != null && bateriaPct <= 10 && <BatteryWarning className="size-3.5 text-destructive" />}
-              Bateria
+              Bateria · {TIPO_BATERIA_LABEL[dispositivo.tipo_bateria]}
             </span>
             <span className="font-medium text-foreground">
               {dispositivo.tensao_bateria != null
@@ -121,6 +134,13 @@ export function CarrinhoCard({
             value={bateriaPct ?? 0}
             indicatorClassName={bateriaPct != null && bateriaPct <= 10 ? "bg-destructive" : undefined}
           />
+          <p className="mt-1 text-xs text-muted-foreground">
+            mín. {bateriaMinimaEmUso.toFixed(1)} V{" "}
+            <span className="text-muted-foreground/70">({dispositivo.bateria_minima != null ? "deste carrinho" : "da frota"})</span>
+            {" · "}
+            aviso {bateriaAvisoEmUso.toFixed(1)} V{" "}
+            <span className="text-muted-foreground/70">({dispositivo.bateria_aviso != null ? "deste carrinho" : "da frota"})</span>
+          </p>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center text-sm">
@@ -163,6 +183,15 @@ export function CarrinhoCard({
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <RegenerarTokenDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
+          <BateriaCarrinhoDialog
+            dispositivoId={dispositivo.id}
+            numeroCarrinho={dispositivo.numero_carrinho}
+            tipoBateriaAtual={dispositivo.tipo_bateria}
+            bateriaMinimaAtual={dispositivo.bateria_minima}
+            bateriaAvisoAtual={dispositivo.bateria_aviso}
+            frotaMinima={frotaBateriaMinima}
+            frotaAviso={frotaBateriaAviso}
+          />
           <HistoricoComandosDialog numeroCarrinho={dispositivo.numero_carrinho} comandos={comandos} />
           <ApagarHistoricoTesteDialog dispositivoId={dispositivo.id} numeroCarrinho={dispositivo.numero_carrinho} />
         </div>

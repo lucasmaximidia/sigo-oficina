@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createDespesa } from "@/lib/locacao-actions";
 import { dataBR, formatDate } from "@/lib/utils";
-import type { LocacaoComandoDispositivo, LocacaoFormaPagamento } from "@/types";
+import type { LocacaoComandoDispositivo, LocacaoFormaPagamento, LocacaoTipoBateria } from "@/types";
 
 function str(fd: FormData, key: string) {
   const v = fd.get(key);
@@ -19,6 +19,12 @@ function intOuNull(fd: FormData, key: string) {
   const v = fd.get(key);
   if (typeof v !== "string" || v.trim() === "") return null;
   const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
+}
+function numOuNull(fd: FormData, key: string) {
+  const v = fd.get(key);
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const n = parseFloat(v.replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 function clamp(n: number, min: number, max: number) {
@@ -84,6 +90,42 @@ export async function vincularVeiculoCarrinho(dispositivoId: string, veiculoId: 
   const { error } = await supabase
     .from("locacao_dispositivos")
     .update({ veiculo_id: veiculoId, updated_at: new Date().toISOString() })
+    .eq("id", dispositivoId);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
+// ---------- Bateria por carrinho ----------
+
+const TIPOS_BATERIA: LocacaoTipoBateria[] = ["chumbo", "litio", "lifepo4"];
+
+// bateria_minima/bateria_aviso em branco = NULL (usa o valor da frota, ver
+// dispositivo_heartbeat_v3). 0 em qualquer um dos dois desativa o bloqueio/
+// aviso só neste carrinho.
+export async function salvarBateriaCarrinho(dispositivoId: string, formData: FormData) {
+  const supabase = await createClient();
+  const tipoBateria = str(formData, "tipo_bateria") as LocacaoTipoBateria | null;
+  if (!tipoBateria || !TIPOS_BATERIA.includes(tipoBateria)) throw new Error("Tipo de bateria inválido");
+  const bateriaMinima = numOuNull(formData, "bateria_minima");
+  const bateriaAviso = numOuNull(formData, "bateria_aviso");
+  if (
+    bateriaMinima !== null &&
+    bateriaAviso !== null &&
+    bateriaMinima !== 0 &&
+    bateriaAviso !== 0 &&
+    bateriaAviso < bateriaMinima
+  ) {
+    throw new Error("O aviso precisa ser maior ou igual à mínima");
+  }
+
+  const { error } = await supabase
+    .from("locacao_dispositivos")
+    .update({
+      tipo_bateria: tipoBateria,
+      bateria_minima: bateriaMinima !== null ? clamp(bateriaMinima, 0, 40) : null,
+      bateria_aviso: bateriaAviso !== null ? clamp(bateriaAviso, 0, 40) : null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", dispositivoId);
   if (error) throw new Error(error.message);
   revalidarCarrinhos();
