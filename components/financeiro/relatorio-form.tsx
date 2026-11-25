@@ -213,7 +213,13 @@ export function RelatorioForm({ lojas }: { lojas: LojaParceira[] }) {
               <span className="text-sm text-foreground">{RELATORIO_OPCAO_RESUMO.label}</span>
             </label>
             <p className="mt-1 text-xs text-muted-foreground">
-              Mostra os cartões de total recebido e faturamento da oficina no fim do PDF.
+              Mostra os cartões de total recebido, faturamento da oficina, lucro em fretes e lucro em peças no fim do
+              PDF.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              O custo da peça (e o lucro) usa o preço de custo atual da peça quando ela saiu do seu estoque — pode
+              diferir um pouco se você reajustou o custo depois da venda. Peças de loja parceira não entram no
+              cálculo: o valor delas é repassado inteiro ao parceiro.
             </p>
           </div>
         </div>

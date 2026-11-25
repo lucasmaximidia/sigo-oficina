@@ -74,6 +74,8 @@ export interface RelatorioLinha {
   valor_pecas_loja: number;
   mao_obra: number;
   valor_pecas_oficina: number;
+  custo_pecas_oficina: number;
+  lucro_pecas_oficina: number;
   frete_pago: number;
   frete_cobrado: number;
   frete_margem: number;
@@ -123,6 +125,7 @@ export function RelatorioPdf({
   const totalComDesconto = linhas.reduce((acc, l) => acc + l.valor_com_desconto, 0);
   const faturamentoOficina = linhas.reduce((acc, l) => acc + l.mao_obra + l.valor_pecas_oficina + l.frete_cobrado, 0);
   const totalLucroFrete = linhas.reduce((acc, l) => acc + l.frete_margem, 0);
+  const totalLucroPecas = linhas.reduce((acc, l) => acc + l.lucro_pecas_oficina, 0);
 
   return (
     <Document title={`Relatorio-Financeiro-${inicio}-a-${fim}`}>
@@ -191,6 +194,10 @@ export function RelatorioPdf({
             <View style={styles.resumoCard}>
               <Text style={styles.resumoLabel}>Lucro em Fretes (Cobrado - Pago)</Text>
               <Text style={styles.resumoValor}>{formatCurrencyPdf(totalLucroFrete)}</Text>
+            </View>
+            <View style={styles.resumoCard}>
+              <Text style={styles.resumoLabel}>Lucro em Peças (Oficina)</Text>
+              <Text style={styles.resumoValor}>{formatCurrencyPdf(totalLucroPecas)}</Text>
             </View>
           </View>
         )}
