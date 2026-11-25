@@ -92,6 +92,7 @@ export default async function LocacaoCarrinhosPage() {
       qtd_5min: s.qtd_5min,
       valor: s.valor,
       created_at: s.created_at,
+      entrada_id: s.entrada_id,
     };
   });
 

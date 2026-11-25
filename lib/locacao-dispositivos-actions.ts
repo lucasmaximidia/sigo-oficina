@@ -252,6 +252,25 @@ export async function apagarHistoricoTesteCarrinho(dispositivoId: string) {
   revalidarCarrinhos();
 }
 
+// Apaga um único aluguel do Histórico (ex.: um teste feito já em operação,
+// sem precisar zerar o dia inteiro). Só funciona se ainda não foi lançado no
+// caixa — depois disso o valor já foi conferido e contabilizado, apagar a
+// sessão deixaria o lançamento sem lastro.
+export async function apagarSessaoCarrinho(sessaoId: string) {
+  const supabase = await createClient();
+  const { data: sessao, error: errorBusca } = await supabase
+    .from("locacao_dispositivo_sessoes")
+    .select("entrada_id")
+    .eq("id", sessaoId)
+    .single();
+  if (errorBusca) throw new Error(errorBusca.message);
+  if (sessao.entrada_id) throw new Error("Esse aluguel já foi lançado no caixa e não pode ser apagado individualmente");
+
+  const { error } = await supabase.from("locacao_dispositivo_sessoes").delete().eq("id", sessaoId);
+  if (error) throw new Error(error.message);
+  revalidarCarrinhos();
+}
+
 // ---------- Faturamento ----------
 
 interface SessaoParaFaturar {

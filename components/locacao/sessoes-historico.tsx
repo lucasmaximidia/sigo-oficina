@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ResponsiveList } from "@/components/ui/responsive-list";
 import { TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { FiltroOrdenacaoBar } from "@/components/ui/filtro-ordenacao-bar";
+import { SessaoDeleteButton } from "@/components/locacao/sessao-delete-button";
 import { filtrarEOrdenar, type Ordenacao } from "@/lib/filtro-ordenacao";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 
@@ -49,6 +50,7 @@ interface SessaoHistorico {
   qtd_5min: number;
   valor: number;
   created_at: string;
+  entrada_id: string | null;
 }
 
 function horarioOuSemHorario(valor: string | null) {
@@ -116,7 +118,7 @@ export function SessoesHistorico({
       <Card className="overflow-hidden p-0">
       <ResponsiveList
         items={sessoesOrdenadas}
-        colSpan={10}
+        colSpan={11}
         header={
           <>
             <TableHead>Carrinho</TableHead>
@@ -129,6 +131,7 @@ export function SessoesHistorico({
             <TableHead>Valor</TableHead>
             <TableHead>Terminou por</TableHead>
             <TableHead>Quedas</TableHead>
+            <TableHead />
           </>
         }
         renderRow={(s) => (
@@ -156,6 +159,9 @@ export function SessoesHistorico({
                 "—"
               )}
             </TableCell>
+            <TableCell>
+              <SessaoDeleteButton id={s.id} lancado={s.entrada_id != null} />
+            </TableCell>
           </TableRow>
         )}
         renderCard={(s) => (
@@ -164,12 +170,15 @@ export function SessoesHistorico({
               <span className="font-medium">
                 Carrinho #{s.numero_carrinho} · {CARTAO_LABEL[s.cartao_tipo] ?? s.cartao_tipo}
               </span>
-              {s.quedas_energia > 0 && (
-                <Badge variant="destructive" className="gap-1">
-                  <Zap className="size-3" />
-                  {s.quedas_energia}
-                </Badge>
-              )}
+              <div className="flex shrink-0 items-center gap-1">
+                {s.quedas_energia > 0 && (
+                  <Badge variant="destructive" className="gap-1">
+                    <Zap className="size-3" />
+                    {s.quedas_energia}
+                  </Badge>
+                )}
+                <SessaoDeleteButton id={s.id} lancado={s.entrada_id != null} />
+              </div>
             </div>
             <p className="text-muted-foreground">
               {horarioOuSemHorario(s.iniciado_em)} → {horarioOuSemHorario(s.finalizado_em)}
