@@ -217,6 +217,22 @@ export async function GET(request: Request) {
           .in("venda_id", vendaIdsDoMes)
       : { data: [] as VendaItemMes[] };
 
+  // Custo real do frete de cada OS (tabela fretes), pra saber se sobrou
+  // alguma coisa do frete cobrado do cliente — independente de quando o
+  // freteiro foi pago (isso é "Fretes Pagos", já contado nas saídas).
+  interface FreteCustoMes {
+    os_id: string;
+    valor_custo: number;
+  }
+  const { data: fretesDasOsDoMes } =
+    osIdsComPagamentoNoMes.length > 0
+      ? await supabase.from("fretes").select<string, FreteCustoMes>("os_id, valor_custo").in("os_id", osIdsComPagamentoNoMes)
+      : { data: [] as FreteCustoMes[] };
+  const custoFretePorOsId = new Map<string, number>();
+  for (const f of fretesDasOsDoMes ?? []) {
+    custoFretePorOsId.set(f.os_id, (custoFretePorOsId.get(f.os_id) ?? 0) + f.valor_custo);
+  }
+
   const pecaIdsDoMes = [
     ...new Set(
       [
@@ -242,6 +258,7 @@ export async function GET(request: Request) {
   let custoPecasOficinaMes = 0;
   let entradasPecasLojaMes = 0;
   let entradasFreteMes = 0;
+  let custoFreteMes = 0;
 
   for (const p of pagamentosOsDoMes) {
     const os = osPorId.get(p.os_id);
@@ -257,6 +274,7 @@ export async function GET(request: Request) {
         return acc + i.quantidade * custo;
       }, 0);
     const valorPecasLoja = itensDaOs.filter((i) => i.origem === "loja_parceira").reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+    const custoFreteDaOs = custoFretePorOsId.get(p.os_id) ?? 0;
 
     const totalBruto = os.valor_mao_obra + valorPecasOficina + valorPecasLoja + os.valor_frete;
     if (totalBruto <= 0) continue;
@@ -267,6 +285,7 @@ export async function GET(request: Request) {
     custoPecasOficinaMes += cash * (valorPecasOficina > 0 ? custoPecasOficina / totalBruto : 0);
     entradasPecasLojaMes += cash * (valorPecasLoja / totalBruto);
     entradasFreteMes += cash * (os.valor_frete / totalBruto);
+    custoFreteMes += cash * (custoFreteDaOs / totalBruto);
   }
 
   const itensPorVendaDoMes = new Map<string, NonNullable<typeof itensDasVendasDoMes>>();
@@ -293,16 +312,24 @@ export async function GET(request: Request) {
   }
 
   const lucroPecasOficinaMes = entradasPecasOficinaMes - custoPecasOficinaMes;
+  // Frete também é lucro do caixa da oficina (cobrado do cliente menos o que
+  // de fato se paga ao freteiro) — segue o mesmo critério de "mês do
+  // pagamento do cliente" já usado no resto da página (não a data em que o
+  // freteiro foi pago, que é um evento de caixa separado e já contado em
+  // "Fretes Pagos").
+  const lucroFreteMes = entradasFreteMes - custoFreteMes;
 
-  // Quem pagou as despesas do mês: o lucro real do mês (peça + mão de obra,
-  // já descontado o custo da peça) é o dinheiro de verdade que sobra pra
-  // pagar conta — rateamos ele nessa mesma proporção entre as duas fontes.
+  // Quem pagou as despesas do mês: o lucro real do mês (peça + frete + mão
+  // de obra, já descontados os custos) é o dinheiro de verdade que sobra pra
+  // pagar conta — rateamos ele nessa mesma proporção entre as três fontes.
   // Se o lucro total não cobrir as saídas, o resto saiu do caixa/economia
   // (não necessariamente negativo).
-  const lucroTotalMes = lucroPecasOficinaMes + entradasMaoObraMes;
+  const lucroTotalMes = lucroPecasOficinaMes + lucroFreteMes + entradasMaoObraMes;
   const pctPecaDoLucroMes = lucroTotalMes !== 0 ? (lucroPecasOficinaMes / lucroTotalMes) * 100 : 0;
+  const pctFreteDoLucroMes = lucroTotalMes !== 0 ? (lucroFreteMes / lucroTotalMes) * 100 : 0;
   const pctMaoObraDoLucroMes = lucroTotalMes !== 0 ? (entradasMaoObraMes / lucroTotalMes) * 100 : 0;
   const despesaPagaPelaPecaMes = saidasMes * (pctPecaDoLucroMes / 100);
+  const despesaPagaPelaFreteMes = saidasMes * (pctFreteDoLucroMes / 100);
   const despesaPagaPelaMaoObraMes = saidasMes * (pctMaoObraDoLucroMes / 100);
   const romboMes = Math.max(0, saidasMes - lucroTotalMes);
 
@@ -325,9 +352,13 @@ export async function GET(request: Request) {
       lucroPecasOficinaMes,
       entradasPecasLojaMes,
       entradasFreteMes,
+      custoFreteMes,
+      lucroFreteMes,
       pctPecaDoLucroMes,
+      pctFreteDoLucroMes,
       pctMaoObraDoLucroMes,
       despesaPagaPelaPecaMes,
+      despesaPagaPelaFreteMes,
       despesaPagaPelaMaoObraMes,
       romboMes,
       detalheDespesas: noMes(saidasDespesas),
