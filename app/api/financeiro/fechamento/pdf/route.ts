@@ -294,6 +294,12 @@ export async function GET(request: Request) {
 
   const lucroPecasOficinaMes = entradasPecasOficinaMes - custoPecasOficinaMes;
 
+  // Quanto das SAÍDAS do mês (despesas + contas + fretes + retiradas) o
+  // lucro de cada fonte, sozinho, teria dado pra cobrir — não precisa somar
+  // 100%: abaixo disso é rombo coberto por caixa/economia; acima é sobra.
+  const pctDespesasPecaMes = saidasMes > 0 ? (lucroPecasOficinaMes / saidasMes) * 100 : 0;
+  const pctDespesasMaoObraMes = saidasMes > 0 ? (entradasMaoObraMes / saidasMes) * 100 : 0;
+
   const buffer = await renderToBuffer(
     FechamentoPdf({
       config,
@@ -313,6 +319,8 @@ export async function GET(request: Request) {
       lucroPecasOficinaMes,
       entradasPecasLojaMes,
       entradasFreteMes,
+      pctDespesasPecaMes,
+      pctDespesasMaoObraMes,
       detalheDespesas: noMes(saidasDespesas),
       detalheContas: noMes(saidasContas),
       detalheFretes: noMes(saidasFretes),
