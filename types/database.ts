@@ -37,6 +37,7 @@ export type LocacaoStatusPagamento = "pago" | "pendente" | "parcial";
 export type LocacaoCartaoTipo = "15MIN" | "5MIN" | "LIVRE";
 export type LocacaoMotivoTerminoSessao = "tempo" | "fim" | "pausa";
 export type LocacaoComandoDispositivo = "zerar_contadores" | "zerar_tudo";
+export type LocacaoTipoBateria = "chumbo" | "litio" | "lifepo4";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
@@ -1545,6 +1546,9 @@ export interface Database {
           em_uso: boolean;
           manutencao_horimetro_min: number;
           manutencao_em: string | null;
+          tipo_bateria: LocacaoTipoBateria;
+          bateria_minima: number | null;
+          bateria_aviso: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -1569,6 +1573,9 @@ export interface Database {
           em_uso?: boolean;
           manutencao_horimetro_min?: number;
           manutencao_em?: string | null;
+          tipo_bateria?: LocacaoTipoBateria;
+          bateria_minima?: number | null;
+          bateria_aviso?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1593,6 +1600,9 @@ export interface Database {
           em_uso?: boolean;
           manutencao_horimetro_min?: number;
           manutencao_em?: string | null;
+          tipo_bateria?: LocacaoTipoBateria;
+          bateria_minima?: number | null;
+          bateria_aviso?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2201,6 +2211,7 @@ export interface Database {
           redes: unknown;
           redes_hash: string;
           pausa_max_min: number;
+          tipo_bateria: LocacaoTipoBateria | null;
         }[];
       };
       dispositivo_registrar_sessao: {

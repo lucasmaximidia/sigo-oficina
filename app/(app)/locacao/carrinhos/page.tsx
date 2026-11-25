@@ -158,6 +158,8 @@ export default async function LocacaoCarrinhosPage() {
                   veiculo={d.locacao_veiculos as unknown as Pick<LocacaoVeiculo, "id" | "marca" | "modelo"> | null}
                   veiculosDisponiveis={veiculos}
                   horasManutencao={config?.horas_manutencao ?? 100}
+                  frotaBateriaMinima={config?.bateria_minima ?? 22}
+                  frotaBateriaAviso={config?.bateria_aviso ?? 23}
                   comandos={comandosPorDispositivo.get(d.id) ?? []}
                   ultimaAtualizacaoRedes={ultimaAtualizacaoRedes}
                 />
