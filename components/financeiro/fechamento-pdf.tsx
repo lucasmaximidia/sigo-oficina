@@ -12,10 +12,12 @@ const cores = {
   destructive: "#c0392b",
   warning: "#b45309",
   warningBg: "#fef3e2",
-  // Mesma ordem fixa de cores usada nos gráficos do app (--chart-1/--chart-2
-  // em app/globals.css) — mão de obra sempre azul, peça sempre laranja.
+  // Mesma ordem fixa de cores usada nos gráficos do app (--chart-1/2/3 em
+  // app/globals.css) — mão de obra sempre azul, peça sempre laranja, frete
+  // sempre verde.
   chartMaoObra: "#2a78d6",
   chartPeca: "#eb6834",
+  chartFrete: "#1baf7a",
 };
 
 const styles = StyleSheet.create({
@@ -103,7 +105,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 12,
   },
-  legendaRow: { flexDirection: "row", gap: 18, marginBottom: 2 },
+  legendaRow: { flexDirection: "row", flexWrap: "wrap", gap: 14, marginBottom: 2 },
   legendaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendaSwatch: { width: 8, height: 8, borderRadius: 2 },
   legendaLabel: { fontSize: 8.5, color: cores.muted },
@@ -211,9 +213,13 @@ export function FechamentoPdf({
   lucroPecasOficinaMes,
   entradasPecasLojaMes,
   entradasFreteMes,
+  custoFreteMes,
+  lucroFreteMes,
   pctPecaDoLucroMes,
+  pctFreteDoLucroMes,
   pctMaoObraDoLucroMes,
   despesaPagaPelaPecaMes,
+  despesaPagaPelaFreteMes,
   despesaPagaPelaMaoObraMes,
   romboMes,
   detalheDespesas,
@@ -239,9 +245,13 @@ export function FechamentoPdf({
   lucroPecasOficinaMes: number;
   entradasPecasLojaMes: number;
   entradasFreteMes: number;
+  custoFreteMes: number;
+  lucroFreteMes: number;
   pctPecaDoLucroMes: number;
+  pctFreteDoLucroMes: number;
   pctMaoObraDoLucroMes: number;
   despesaPagaPelaPecaMes: number;
+  despesaPagaPelaFreteMes: number;
   despesaPagaPelaMaoObraMes: number;
   romboMes: number;
   detalheDespesas: ItemDetalhado[];
@@ -353,11 +363,23 @@ export function FechamentoPdf({
               <Text style={styles.linhaLabel}>Frete</Text>
               <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasFreteMes)}</Text>
             </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Custo do Frete</Text>
+              <Text style={styles.linhaValorNegativo}>-{formatCurrencyPdf(custoFreteMes)}</Text>
+            </View>
           </View>
           <View style={[styles.tabela, { marginTop: 8 }]}>
+            <View style={styles.linhaPrimeira}>
+              <Text style={styles.linhaLabel}>Lucro em Peças (Oficina) no mês</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(lucroPecasOficinaMes)}</Text>
+            </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Lucro em Frete no mês</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(lucroFreteMes)}</Text>
+            </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Lucro em Peças (Oficina) no mês</Text>
-              <Text style={styles.totalValor}>{formatCurrencyPdf(lucroPecasOficinaMes)}</Text>
+              <Text style={styles.totalLabel}>Lucro Total da Oficina no mês</Text>
+              <Text style={styles.totalValor}>{formatCurrencyPdf(lucroPecasOficinaMes + lucroFreteMes)}</Text>
             </View>
           </View>
         </View>
@@ -367,6 +389,7 @@ export function FechamentoPdf({
 
           <View style={styles.barra}>
             <View style={{ flexGrow: Math.max(0, pctPecaDoLucroMes), backgroundColor: cores.chartPeca }} />
+            <View style={{ flexGrow: Math.max(0, pctFreteDoLucroMes), backgroundColor: cores.chartFrete }} />
             <View style={{ flexGrow: Math.max(0, pctMaoObraDoLucroMes), backgroundColor: cores.chartMaoObra }} />
           </View>
 
@@ -377,6 +400,15 @@ export function FechamentoPdf({
                 <Text style={styles.legendaLabel}>Lucro em Peças (Oficina)</Text>
                 <Text style={styles.legendaValor}>
                   {formatCurrencyPdf(despesaPagaPelaPecaMes)} ({formatPercentPdf(pctPecaDoLucroMes)})
+                </Text>
+              </View>
+            </View>
+            <View style={styles.legendaItem}>
+              <View style={[styles.legendaSwatch, { backgroundColor: cores.chartFrete }]} />
+              <View>
+                <Text style={styles.legendaLabel}>Lucro em Frete</Text>
+                <Text style={styles.legendaValor}>
+                  {formatCurrencyPdf(despesaPagaPelaFreteMes)} ({formatPercentPdf(pctFreteDoLucroMes)})
                 </Text>
               </View>
             </View>
@@ -400,9 +432,11 @@ export function FechamentoPdf({
 
           <Text style={[styles.emissao, { marginTop: 10 }]}>
             As despesas de {formatCurrencyPdf(saidasMes)} foram divididas nessa proporção a partir do lucro real do
-            mês (peça + mão de obra, já descontado o custo da peça) — rateado pelo peso de cada fonte no lucro total.
-            Peças de loja parceira e frete não entram aqui por não gerarem lucro pra oficina. O custo da peça usa o
-            preço de custo atual dela, não o de quando foi vendida.
+            mês (peça + frete + mão de obra, já descontados os custos) — rateado pelo peso de cada fonte no lucro
+            total. Peças de loja parceira não entram aqui por serem repassadas inteiras ao parceiro (margem zero pra
+            oficina). O custo da peça usa o preço de custo atual dela, não o de quando foi vendida; o custo do frete
+            segue o mesmo critério de mês usado no resto da página (mês em que o cliente pagou a OS, não em que o
+            freteiro foi pago).
           </Text>
         </View>
 
