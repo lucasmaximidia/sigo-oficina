@@ -74,7 +74,10 @@ export async function GET(request: Request) {
   const [{ data: itens }, { data: fretes }] =
     osIds.length > 0
       ? await Promise.all([
-          supabase.from("os_itens").select("os_id, descricao, origem, loja_parceira_id, quantidade, valor_unitario").in("os_id", osIds),
+          supabase
+            .from("os_itens")
+            .select("os_id, descricao, origem, loja_parceira_id, peca_id, quantidade, valor_unitario, custo_unitario")
+            .in("os_id", osIds),
           supabase.from("fretes").select("os_id, valor_custo").in("os_id", osIds),
         ])
       : [{ data: [] }, { data: [] }];
@@ -91,6 +94,15 @@ export async function GET(request: Request) {
     fretePagoPorOs.set(f.os_id, (fretePagoPorOs.get(f.os_id) ?? 0) + f.valor_custo);
   }
 
+  // Custo das peças do próprio estoque: não fica gravado no item da OS (só a
+  // compra emergencial tem custo_unitario próprio) — vem do preço de custo
+  // ATUAL da peça, então o lucro aqui é uma aproximação se o custo mudou
+  // desde a venda.
+  const pecaIds = [...new Set((itens ?? []).filter((i) => i.origem === "estoque" && i.peca_id).map((i) => i.peca_id as string))];
+  const { data: pecasCusto } =
+    pecaIds.length > 0 ? await supabase.from("pecas").select("id, preco_custo").in("id", pecaIds) : { data: [] };
+  const custoPecaPorId = new Map((pecasCusto ?? []).map((p) => [p.id, p.preco_custo]));
+
   const linhas: RelatorioLinha[] = ordens.map((os) => {
     const itensDaOs = itensPorOs.get(os.id) ?? [];
     const itensLoja = lojaParceiraId
@@ -103,6 +115,14 @@ export async function GET(request: Request) {
     const valorTotal = valorPecasLoja + os.valor_mao_obra + valorPecasOficina + os.valor_frete;
     const fretePago = fretePagoPorOs.get(os.id) ?? 0;
 
+    // Loja parceira não entra aqui: o valor inteiro é repassado ao parceiro
+    // (fecharContaParceiro), a margem da oficina nela é zero.
+    const custoPecasOficina = itensOficina.reduce((acc, i) => {
+      const custo = i.origem === "compra_emergencial" ? (i.custo_unitario ?? 0) : (custoPecaPorId.get(i.peca_id ?? "") ?? 0);
+      return acc + i.quantidade * custo;
+    }, 0);
+    const lucroPecasOficina = valorPecasOficina - custoPecasOficina;
+
     const equipamento = os.equipamentos;
     const produto = equipamento ? [equipamento.marca, equipamento.modelo].filter(Boolean).join(" ") || equipamento.tipo : "—";
 
@@ -114,6 +134,8 @@ export async function GET(request: Request) {
       valor_pecas_loja: valorPecasLoja,
       mao_obra: os.valor_mao_obra,
       valor_pecas_oficina: valorPecasOficina,
+      custo_pecas_oficina: custoPecasOficina,
+      lucro_pecas_oficina: lucroPecasOficina,
       frete_pago: fretePago,
       frete_cobrado: os.valor_frete,
       frete_margem: os.valor_frete - fretePago,

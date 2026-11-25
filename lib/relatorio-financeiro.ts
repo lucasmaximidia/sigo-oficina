@@ -19,6 +19,8 @@ export const RELATORIO_COLUNAS: RelatorioColuna[] = [
   { key: "produto", label: "Produto", tipo: "texto", flex: 1.6 },
   { key: "valor_pecas_loja", label: "Valor Peças (Loja)", tipo: "moeda", align: "right", flex: 1 },
   { key: "valor_pecas_oficina", label: "Valor Peças (Oficina)", tipo: "moeda", align: "right", flex: 1 },
+  { key: "custo_pecas_oficina", label: "Custo Peças (Oficina)", tipo: "moeda", align: "right", flex: 1 },
+  { key: "lucro_pecas_oficina", label: "Lucro Peças (Oficina)", tipo: "moeda", align: "right", flex: 1 },
   { key: "pecas_loja_desc", label: "Itens Utilizados (Loja)", tipo: "texto", flex: 2 },
   { key: "valor_total", label: "Valor Total", tipo: "moeda", align: "right", flex: 1 },
   { key: "data_pagamento", label: "Data de Pagamento", tipo: "data", flex: 1 },

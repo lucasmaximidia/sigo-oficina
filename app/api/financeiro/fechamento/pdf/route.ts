@@ -5,6 +5,7 @@ import { FechamentoPdf } from "@/components/financeiro/fechamento-pdf";
 import { formaPagamentoLabel } from "@/lib/relatorio-financeiro";
 import { retiradaTipoMap } from "@/lib/status";
 import { dataBR } from "@/lib/utils";
+import type { ItemOrigem, VendaItemTipo } from "@/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 // próprio, datado do dia em que o dinheiro entrou de verdade — inclusive um
 // adiantamento numa OS ainda não quitada por completo.
 interface PagamentoOsRow {
+  os_id: string;
   data: string;
   forma_pagamento: string;
   valor: number;
@@ -59,7 +61,7 @@ export async function GET(request: Request) {
     { data: retiradas },
     { data: ajustes },
   ] = await Promise.all([
-    supabase.from("os_pagamentos").select<string, PagamentoOsRow>("data, forma_pagamento, valor, valor_recebido_liquido"),
+    supabase.from("os_pagamentos").select<string, PagamentoOsRow>("os_id, data, forma_pagamento, valor, valor_recebido_liquido"),
     supabase.from("vendas_pdv").select("id, created_at, total, forma_pagamento").is("deletado_em", null),
     // Despesas no cartão nunca contam aqui — só a retirada lançada ao
     // fechar a fatura representa o dinheiro saindo de verdade.
@@ -162,6 +164,136 @@ export async function GET(request: Request) {
     return { forma, label: formaPagamentoLabel[forma] ?? forma, valor: totalOs + totalPdv };
   }).filter((f) => f.valor > 0);
 
+  // ---------- Peça x Mão de Obra (quanto do dinheiro que entrou é de cada) ----------
+  //
+  // Um pagamento (os_pagamentos/venda) é um valor só, sem dizer se veio de
+  // peça, mão de obra ou frete — então rateamos pelo peso de cada componente
+  // na OS/venda inteira (mesmo se for um adiantamento parcial, a proporção
+  // dessa OS específica se mantém). A soma dos 4 baldes sempre bate exatamente
+  // com o dinheiro recebido daquela OS/venda, não importa o rateio.
+  const pagamentosOsDoMes = (pagamentosOs ?? []).filter((p) => p.data >= inicioMes && p.data <= fimMes);
+  const osIdsComPagamentoNoMes = [...new Set(pagamentosOsDoMes.map((p) => p.os_id))];
+
+  interface OsComponentes {
+    id: string;
+    valor_mao_obra: number;
+    valor_frete: number;
+  }
+  const { data: osDoMes } =
+    osIdsComPagamentoNoMes.length > 0
+      ? await supabase.from("ordens_servico").select<string, OsComponentes>("id, valor_mao_obra, valor_frete").in("id", osIdsComPagamentoNoMes)
+      : { data: [] as OsComponentes[] };
+
+  interface OsItemMes {
+    os_id: string;
+    origem: ItemOrigem;
+    peca_id: string | null;
+    quantidade: number;
+    valor_unitario: number;
+    custo_unitario: number | null;
+  }
+  const { data: itensDasOsDoMes } =
+    osIdsComPagamentoNoMes.length > 0
+      ? await supabase
+          .from("os_itens")
+          .select<string, OsItemMes>("os_id, origem, peca_id, quantidade, valor_unitario, custo_unitario")
+          .in("os_id", osIdsComPagamentoNoMes)
+      : { data: [] as OsItemMes[] };
+
+  const vendasDoMes = (vendas ?? []).filter((v) => dataBR(v.created_at) >= inicioMes && dataBR(v.created_at) <= fimMes);
+  const vendaIdsDoMes = vendasDoMes.map((v) => v.id);
+  interface VendaItemMes {
+    venda_id: string;
+    peca_id: string | null;
+    tipo: VendaItemTipo;
+    quantidade: number;
+    valor_unitario: number;
+  }
+  const { data: itensDasVendasDoMes } =
+    vendaIdsDoMes.length > 0
+      ? await supabase
+          .from("venda_itens")
+          .select<string, VendaItemMes>("venda_id, peca_id, tipo, quantidade, valor_unitario")
+          .in("venda_id", vendaIdsDoMes)
+      : { data: [] as VendaItemMes[] };
+
+  const pecaIdsDoMes = [
+    ...new Set(
+      [
+        ...(itensDasOsDoMes ?? []).filter((i) => i.origem === "estoque" && i.peca_id).map((i) => i.peca_id as string),
+        ...(itensDasVendasDoMes ?? []).filter((i) => i.tipo === "peca" && i.peca_id).map((i) => i.peca_id as string),
+      ].filter(Boolean)
+    ),
+  ];
+  const { data: pecasCustoDoMes } =
+    pecaIdsDoMes.length > 0 ? await supabase.from("pecas").select("id, preco_custo").in("id", pecaIdsDoMes) : { data: [] };
+  const custoPecaPorIdMes = new Map((pecasCustoDoMes ?? []).map((p) => [p.id, p.preco_custo]));
+
+  const itensPorOsDoMes = new Map<string, NonNullable<typeof itensDasOsDoMes>>();
+  for (const item of itensDasOsDoMes ?? []) {
+    const lista = itensPorOsDoMes.get(item.os_id) ?? [];
+    lista.push(item);
+    itensPorOsDoMes.set(item.os_id, lista);
+  }
+  const osPorId = new Map((osDoMes ?? []).map((os) => [os.id, os]));
+
+  let entradasMaoObraMes = 0;
+  let entradasPecasOficinaMes = 0;
+  let custoPecasOficinaMes = 0;
+  let entradasPecasLojaMes = 0;
+  let entradasFreteMes = 0;
+
+  for (const p of pagamentosOsDoMes) {
+    const os = osPorId.get(p.os_id);
+    if (!os) continue;
+    const itensDaOs = itensPorOsDoMes.get(p.os_id) ?? [];
+    const valorPecasOficina = itensDaOs
+      .filter((i) => i.origem === "estoque" || i.origem === "compra_emergencial")
+      .reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+    const custoPecasOficina = itensDaOs
+      .filter((i) => i.origem === "estoque" || i.origem === "compra_emergencial")
+      .reduce((acc, i) => {
+        const custo = i.origem === "compra_emergencial" ? (i.custo_unitario ?? 0) : (custoPecaPorIdMes.get(i.peca_id ?? "") ?? 0);
+        return acc + i.quantidade * custo;
+      }, 0);
+    const valorPecasLoja = itensDaOs.filter((i) => i.origem === "loja_parceira").reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+
+    const totalBruto = os.valor_mao_obra + valorPecasOficina + valorPecasLoja + os.valor_frete;
+    if (totalBruto <= 0) continue;
+
+    const cash = valorPagamentoOs(p);
+    entradasMaoObraMes += cash * (os.valor_mao_obra / totalBruto);
+    entradasPecasOficinaMes += cash * (valorPecasOficina / totalBruto);
+    custoPecasOficinaMes += cash * (valorPecasOficina > 0 ? custoPecasOficina / totalBruto : 0);
+    entradasPecasLojaMes += cash * (valorPecasLoja / totalBruto);
+    entradasFreteMes += cash * (os.valor_frete / totalBruto);
+  }
+
+  const itensPorVendaDoMes = new Map<string, NonNullable<typeof itensDasVendasDoMes>>();
+  for (const item of itensDasVendasDoMes ?? []) {
+    const lista = itensPorVendaDoMes.get(item.venda_id) ?? [];
+    lista.push(item);
+    itensPorVendaDoMes.set(item.venda_id, lista);
+  }
+
+  for (const v of vendasDoMes) {
+    const itensDaVenda = itensPorVendaDoMes.get(v.id) ?? [];
+    const valorPeca = itensDaVenda.filter((i) => i.tipo === "peca").reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+    const custoPeca = itensDaVenda
+      .filter((i) => i.tipo === "peca")
+      .reduce((acc, i) => acc + i.quantidade * (custoPecaPorIdMes.get(i.peca_id ?? "") ?? 0), 0);
+    const valorServico = itensDaVenda.filter((i) => i.tipo === "servico").reduce((acc, i) => acc + i.quantidade * i.valor_unitario, 0);
+    const subtotal = valorPeca + valorServico;
+    if (subtotal <= 0) continue;
+
+    const cash = valorLiquidoPorVenda.get(v.id) ?? v.total;
+    entradasPecasOficinaMes += cash * (valorPeca / subtotal);
+    custoPecasOficinaMes += cash * (custoPeca / subtotal);
+    entradasMaoObraMes += cash * (valorServico / subtotal);
+  }
+
+  const lucroPecasOficinaMes = entradasPecasOficinaMes - custoPecasOficinaMes;
+
   const buffer = await renderToBuffer(
     FechamentoPdf({
       config,
@@ -175,6 +307,12 @@ export async function GET(request: Request) {
       ajustesMes,
       saldoFinal,
       formasNoMes,
+      entradasMaoObraMes,
+      entradasPecasOficinaMes,
+      custoPecasOficinaMes,
+      lucroPecasOficinaMes,
+      entradasPecasLojaMes,
+      entradasFreteMes,
       detalheDespesas: noMes(saidasDespesas),
       detalheContas: noMes(saidasContas),
       detalheFretes: noMes(saidasFretes),
