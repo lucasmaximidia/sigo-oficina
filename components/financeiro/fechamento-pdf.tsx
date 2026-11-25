@@ -10,6 +10,12 @@ const cores = {
   bgMuted: "#f2f4f6",
   success: "#1a7f37",
   destructive: "#c0392b",
+  warning: "#b45309",
+  warningBg: "#fef3e2",
+  // Mesma ordem fixa de cores usada nos gráficos do app (--chart-1/--chart-2
+  // em app/globals.css) — mão de obra sempre azul, peça sempre laranja.
+  chartMaoObra: "#2a78d6",
+  chartPeca: "#eb6834",
 };
 
 const styles = StyleSheet.create({
@@ -82,6 +88,37 @@ const styles = StyleSheet.create({
   detalheTh: { padding: 5, fontSize: 7, fontFamily: "Helvetica-Bold", color: cores.muted, textTransform: "uppercase" },
   detalheRow: { flexDirection: "row", borderTopWidth: 1, borderTopColor: cores.border },
   detalheTd: { padding: 5, fontSize: 8 },
+  cardDestaque: {
+    borderWidth: 1,
+    borderColor: cores.border,
+    borderRadius: 4,
+    padding: 14,
+    backgroundColor: cores.bgMuted,
+  },
+  barra: {
+    flexDirection: "row",
+    height: 22,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  legendaRow: { flexDirection: "row", gap: 18, marginBottom: 2 },
+  legendaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  legendaSwatch: { width: 8, height: 8, borderRadius: 2 },
+  legendaLabel: { fontSize: 8.5, color: cores.muted },
+  legendaValor: { fontSize: 9, fontFamily: "Helvetica-Bold", color: cores.text },
+  romboBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    padding: 9,
+    borderRadius: 4,
+    backgroundColor: cores.warningBg,
+  },
+  romboLabel: { fontSize: 8.5, color: cores.warning },
+  romboValor: { fontSize: 9, fontFamily: "Helvetica-Bold", color: cores.warning },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -174,8 +211,11 @@ export function FechamentoPdf({
   lucroPecasOficinaMes,
   entradasPecasLojaMes,
   entradasFreteMes,
-  pctDespesasPecaMes,
-  pctDespesasMaoObraMes,
+  pctPecaDoLucroMes,
+  pctMaoObraDoLucroMes,
+  despesaPagaPelaPecaMes,
+  despesaPagaPelaMaoObraMes,
+  romboMes,
   detalheDespesas,
   detalheContas,
   detalheFretes,
@@ -199,8 +239,11 @@ export function FechamentoPdf({
   lucroPecasOficinaMes: number;
   entradasPecasLojaMes: number;
   entradasFreteMes: number;
-  pctDespesasPecaMes: number;
-  pctDespesasMaoObraMes: number;
+  pctPecaDoLucroMes: number;
+  pctMaoObraDoLucroMes: number;
+  despesaPagaPelaPecaMes: number;
+  despesaPagaPelaMaoObraMes: number;
+  romboMes: number;
   detalheDespesas: ItemDetalhado[];
   detalheContas: ItemDetalhado[];
   detalheFretes: ItemDetalhado[];
@@ -232,7 +275,7 @@ export function FechamentoPdf({
         </View>
 
         <Text style={styles.secaoTitulo}>Movimentação do mês</Text>
-        <View style={styles.tabela}>
+        <View style={styles.tabela} wrap={false}>
           <View style={styles.linhaPrimeira}>
             <Text style={styles.linhaLabel}>Entradas (serviços + PDV)</Text>
             <Text style={styles.linhaValorPositivo}>+{formatCurrencyPdf(entradasMes)}</Text>
@@ -266,7 +309,7 @@ export function FechamentoPdf({
           </View>
         </View>
 
-        <View style={[styles.tabela, { marginTop: 16 }]}>
+        <View style={[styles.tabela, { marginTop: 16 }]} wrap={false}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Saldo Final</Text>
             <Text style={styles.totalValor}>{formatCurrencyPdf(saldoFinal)}</Text>
@@ -274,7 +317,7 @@ export function FechamentoPdf({
         </View>
 
         {formasNoMes.length > 0 && (
-          <>
+          <View wrap={false}>
             <Text style={styles.secaoTitulo}>Recebimentos por Forma de Pagamento</Text>
             <View style={styles.tabela}>
               {formasNoMes.map((forma, index) => (
@@ -284,55 +327,84 @@ export function FechamentoPdf({
                 </View>
               ))}
             </View>
-          </>
+          </View>
         )}
 
-        <Text style={styles.secaoTitulo}>Composição das Entradas (Peça x Mão de Obra)</Text>
-        <View style={styles.tabela}>
-          <View style={styles.linhaPrimeira}>
-            <Text style={styles.linhaLabel}>Mão de Obra</Text>
-            <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasMaoObraMes)}</Text>
+        <View wrap={false}>
+          <Text style={styles.secaoTitulo}>Composição das Entradas (Peça x Mão de Obra)</Text>
+          <View style={styles.tabela}>
+            <View style={styles.linhaPrimeira}>
+              <Text style={styles.linhaLabel}>Mão de Obra</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasMaoObraMes)}</Text>
+            </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Peças (Oficina)</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasPecasOficinaMes)}</Text>
+            </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Custo das Peças (Oficina)</Text>
+              <Text style={styles.linhaValorNegativo}>-{formatCurrencyPdf(custoPecasOficinaMes)}</Text>
+            </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Peças (Loja Parceira — repasse, sem margem)</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasPecasLojaMes)}</Text>
+            </View>
+            <View style={styles.linha}>
+              <Text style={styles.linhaLabel}>Frete</Text>
+              <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasFreteMes)}</Text>
+            </View>
           </View>
-          <View style={styles.linha}>
-            <Text style={styles.linhaLabel}>Peças (Oficina)</Text>
-            <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasPecasOficinaMes)}</Text>
-          </View>
-          <View style={styles.linha}>
-            <Text style={styles.linhaLabel}>Custo das Peças (Oficina)</Text>
-            <Text style={styles.linhaValorNegativo}>-{formatCurrencyPdf(custoPecasOficinaMes)}</Text>
-          </View>
-          <View style={styles.linha}>
-            <Text style={styles.linhaLabel}>Peças (Loja Parceira — repasse, sem margem)</Text>
-            <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasPecasLojaMes)}</Text>
-          </View>
-          <View style={styles.linha}>
-            <Text style={styles.linhaLabel}>Frete</Text>
-            <Text style={styles.linhaValorNeutro}>{formatCurrencyPdf(entradasFreteMes)}</Text>
-          </View>
-        </View>
-        <View style={[styles.tabela, { marginTop: 8 }]}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Lucro em Peças (Oficina) no mês</Text>
-            <Text style={styles.totalValor}>{formatCurrencyPdf(lucroPecasOficinaMes)}</Text>
+          <View style={[styles.tabela, { marginTop: 8 }]}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Lucro em Peças (Oficina) no mês</Text>
+              <Text style={styles.totalValor}>{formatCurrencyPdf(lucroPecasOficinaMes)}</Text>
+            </View>
           </View>
         </View>
 
-        <Text style={[styles.secaoTitulo, { marginTop: 12 }]}>Quanto das Saídas cada fonte cobriria sozinha</Text>
-        <View style={styles.tabela}>
-          <View style={styles.linhaPrimeira}>
-            <Text style={styles.linhaLabel}>Lucro em Peças (Oficina) ÷ Total de Saídas</Text>
-            <Text style={styles.linhaValorNeutro}>{formatPercentPdf(pctDespesasPecaMes)}</Text>
+        <View style={[styles.cardDestaque, { marginTop: 16 }]} wrap={false}>
+          <Text style={styles.saldoLabel}>Quem pagou as despesas do mês</Text>
+
+          <View style={styles.barra}>
+            <View style={{ flexGrow: Math.max(0, pctPecaDoLucroMes), backgroundColor: cores.chartPeca }} />
+            <View style={{ flexGrow: Math.max(0, pctMaoObraDoLucroMes), backgroundColor: cores.chartMaoObra }} />
           </View>
-          <View style={styles.linha}>
-            <Text style={styles.linhaLabel}>Mão de Obra ÷ Total de Saídas</Text>
-            <Text style={styles.linhaValorNeutro}>{formatPercentPdf(pctDespesasMaoObraMes)}</Text>
+
+          <View style={styles.legendaRow}>
+            <View style={styles.legendaItem}>
+              <View style={[styles.legendaSwatch, { backgroundColor: cores.chartPeca }]} />
+              <View>
+                <Text style={styles.legendaLabel}>Lucro em Peças (Oficina)</Text>
+                <Text style={styles.legendaValor}>
+                  {formatCurrencyPdf(despesaPagaPelaPecaMes)} ({formatPercentPdf(pctPecaDoLucroMes)})
+                </Text>
+              </View>
+            </View>
+            <View style={styles.legendaItem}>
+              <View style={[styles.legendaSwatch, { backgroundColor: cores.chartMaoObra }]} />
+              <View>
+                <Text style={styles.legendaLabel}>Mão de Obra</Text>
+                <Text style={styles.legendaValor}>
+                  {formatCurrencyPdf(despesaPagaPelaMaoObraMes)} ({formatPercentPdf(pctMaoObraDoLucroMes)})
+                </Text>
+              </View>
+            </View>
           </View>
+
+          {romboMes > 0.01 && (
+            <View style={styles.romboBox}>
+              <Text style={styles.romboLabel}>Rombo do mês (coberto por caixa/economia):</Text>
+              <Text style={styles.romboValor}>{formatCurrencyPdf(romboMes)}</Text>
+            </View>
+          )}
+
+          <Text style={[styles.emissao, { marginTop: 10 }]}>
+            As despesas de {formatCurrencyPdf(saidasMes)} foram divididas nessa proporção a partir do lucro real do
+            mês (peça + mão de obra, já descontado o custo da peça) — rateado pelo peso de cada fonte no lucro total.
+            Peças de loja parceira e frete não entram aqui por não gerarem lucro pra oficina. O custo da peça usa o
+            preço de custo atual dela, não o de quando foi vendida.
+          </Text>
         </View>
-        <Text style={[styles.emissao, { marginTop: 6 }]}>
-          Não precisa somar 100%: abaixo disso é rombo coberto pelo caixa/economia, acima é sobra do mês. Rateio
-          proporcional pelo peso de cada componente em cada OS/venda — um pagamento parcial mantém a mesma proporção
-          da OS inteira. O custo da peça usa o preço de custo atual dela, não o de quando foi vendida.
-        </Text>
 
         <DetalheTabela titulo="Despesas" itens={detalheDespesas} />
         <DetalheTabela titulo="Contas Pagas" itens={detalheContas} />
