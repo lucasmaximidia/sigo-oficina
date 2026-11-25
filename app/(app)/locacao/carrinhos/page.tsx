@@ -9,6 +9,7 @@ import { ConfigDispositivosForm } from "@/components/locacao/config-dispositivos
 import { FaturamentoCarrinhos } from "@/components/locacao/faturamento-carrinhos";
 import { FinanceiroCarrinhos } from "@/components/locacao/financeiro-carrinhos";
 import { RedesWifiCarrinhos } from "@/components/locacao/redes-wifi-carrinhos";
+import { LimparDadosTeste } from "@/components/locacao/limpar-dados-teste";
 import { hojeBR, agoraBR } from "@/lib/utils";
 import type { LocacaoDispositivoComando, LocacaoVeiculo } from "@/types";
 
@@ -190,6 +191,7 @@ export default async function LocacaoCarrinhosPage() {
           <div className="flex flex-col gap-4">
             {config && <ConfigDispositivosForm config={config} />}
             <RedesWifiCarrinhos redes={redes ?? []} />
+            <LimparDadosTeste />
           </div>
         </TabsContent>
       </Tabs>
