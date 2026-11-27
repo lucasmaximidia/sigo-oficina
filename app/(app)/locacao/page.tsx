@@ -61,7 +61,7 @@ export default async function LocacaoPage() {
   }
 
   return (
-    <div>
+    <div className="pb-10">
       <PageHeader
         title="Locação"
         description="Scooters e bicicletas elétricas alugadas"
