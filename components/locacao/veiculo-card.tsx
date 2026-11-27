@@ -260,10 +260,22 @@ export function VeiculoCard({
 
       <div className="mt-auto flex w-full gap-2 pt-1">
         {veiculo.status === "disponivel" && (
-          <Button type="button" size="sm" className="flex-1 gap-1.5" onClick={() => setAlugarOpen(true)}>
-            <PlayCircle className="size-3.5" />
-            Alugar
-          </Button>
+          <>
+            <Button type="button" size="sm" className="flex-1 gap-1.5" onClick={() => setAlugarOpen(true)}>
+              <PlayCircle className="size-3.5" />
+              Alugar
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="flex-1 gap-1.5"
+              onClick={() => updateVeiculoStatus(veiculo.id, "manutencao")}
+            >
+              <Wrench className="size-3.5" />
+              Manutenção
+            </Button>
+          </>
         )}
         {veiculo.status === "alugado" && aluguel && (
           <>
