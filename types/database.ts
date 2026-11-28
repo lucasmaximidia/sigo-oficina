@@ -40,6 +40,10 @@ export type LocacaoComandoDispositivo = "zerar_contadores" | "zerar_tudo";
 export type LocacaoTipoBateria = "chumbo" | "litio" | "lifepo4";
 export type NotaFiscalStatus = "pendente" | "emitida" | "erro" | "cancelada" | "nao_emitir";
 
+export type KidsRole = "admin" | "operador_kids";
+export type KidsFormaPagamento = "pix" | "dinheiro" | "maquininha";
+export type KidsStatusPagamento = "aguardando" | "pago" | "expirado" | "cancelamento_solicitado" | "cancelado";
+
 export type EtiquetaTipo = "peca" | "os" | "autorizada";
 export type EtiquetaAlinhamento = "left" | "center" | "right";
 export type EtiquetaTamanhoFonte = "pequena" | "media" | "grande";
@@ -2100,6 +2104,117 @@ export interface Database {
           mes?: string;
           pago_em?: string;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      profiles: {
+        Row: {
+          id: string;
+          role: KidsRole;
+          nome: string | null;
+          ativo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          role?: KidsRole;
+          nome?: string | null;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          role?: KidsRole;
+          nome?: string | null;
+          ativo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      kids_precos: {
+        Row: {
+          id: string;
+          tempo_min: number;
+          valor: number;
+          ativo: boolean;
+          ordem: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tempo_min: number;
+          valor: number;
+          ativo?: boolean;
+          ordem?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tempo_min?: number;
+          valor?: number;
+          ativo?: boolean;
+          ordem?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      kids_pagamentos: {
+        Row: {
+          id: string;
+          operador_id: string;
+          tempo_min: number;
+          valor: number;
+          forma_pagamento: KidsFormaPagamento;
+          status: KidsStatusPagamento;
+          pagamento_manual: boolean;
+          provedor_pagamento_id: string | null;
+          pix_copia_cola: string | null;
+          pix_qr_base64: string | null;
+          pix_expira_em: string | null;
+          created_at: string;
+          pago_em: string | null;
+          motivo_cancelamento: string | null;
+          evento_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          operador_id: string;
+          tempo_min: number;
+          valor: number;
+          forma_pagamento: KidsFormaPagamento;
+          status?: KidsStatusPagamento;
+          pagamento_manual?: boolean;
+          provedor_pagamento_id?: string | null;
+          pix_copia_cola?: string | null;
+          pix_qr_base64?: string | null;
+          pix_expira_em?: string | null;
+          created_at?: string;
+          pago_em?: string | null;
+          motivo_cancelamento?: string | null;
+          evento_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          operador_id?: string;
+          tempo_min?: number;
+          valor?: number;
+          forma_pagamento?: KidsFormaPagamento;
+          status?: KidsStatusPagamento;
+          pagamento_manual?: boolean;
+          provedor_pagamento_id?: string | null;
+          pix_copia_cola?: string | null;
+          pix_qr_base64?: string | null;
+          pix_expira_em?: string | null;
+          created_at?: string;
+          pago_em?: string | null;
+          motivo_cancelamento?: string | null;
+          evento_id?: string | null;
+          updated_at?: string;
         };
         Relationships: [];
       };

@@ -1,4 +1,4 @@
-import { Bike, History, Users, Wallet, BarChart3, Image as ImageIcon, Cpu } from "lucide-react";
+import { Bike, History, Users, Wallet, BarChart3, Image as ImageIcon, Cpu, Baby } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface LocacaoNavItem {
@@ -15,6 +15,7 @@ export const LOCACAO_NAV_ITEMS: LocacaoNavItem[] = [
   { href: "/locacao/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/locacao/icones", label: "Ícones", icon: ImageIcon },
   { href: "/locacao/carrinhos", label: "Carrinhos", icon: Cpu },
+  { href: "/locacao/kids", label: "Kids", icon: Baby },
 ];
 
 export function locacaoItemAtivo(pathname: string, href: string) {
