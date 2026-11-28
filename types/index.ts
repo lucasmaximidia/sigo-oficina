@@ -45,6 +45,10 @@ export type LocacaoDispositivoConfig = Database["public"]["Tables"]["locacao_dis
 export type LocacaoDispositivoComando = Database["public"]["Tables"]["locacao_dispositivo_comandos"]["Row"];
 export type LocacaoDispositivoRede = Database["public"]["Tables"]["locacao_dispositivo_redes"]["Row"];
 export type LocacaoCarrinhoFaturamentoDiario = Database["public"]["Views"]["locacao_carrinhos_faturamento_diario"]["Row"];
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type KidsPreco = Database["public"]["Tables"]["kids_precos"]["Row"];
+export type KidsPagamento = Database["public"]["Tables"]["kids_pagamentos"]["Row"];
 export type PessoalRenda = Database["public"]["Tables"]["pessoal_renda"]["Row"];
 export type PessoalItemMes = Database["public"]["Tables"]["pessoal_itens_mes"]["Row"];
 export type PessoalCartao = Database["public"]["Tables"]["pessoal_cartoes"]["Row"];

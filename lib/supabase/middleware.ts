@@ -66,6 +66,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // operador_kids só enxerga a tela de pagamento da VoltCity KIDS — qualquer
+  // outra rota (inclusive o resto do app) manda de volta pra lá. É só a
+  // navegação; o acesso de verdade é negado pelo RLS, não por este redirect.
+  if (user) {
+    const { data: perfil } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (perfil?.role === "operador_kids" && !request.nextUrl.pathname.startsWith("/kids/pagamento")) {
+      const kidsUrl = request.nextUrl.clone();
+      kidsUrl.pathname = "/kids/pagamento";
+      kidsUrl.search = "";
+      return NextResponse.redirect(kidsUrl);
+    }
+  }
+
   if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/")) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
